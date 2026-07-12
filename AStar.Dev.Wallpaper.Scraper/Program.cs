@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.ReactiveUI;
 using System;
 
 namespace AStar.Dev.Wallpaper.Scraper;
@@ -20,5 +21,6 @@ internal sealed class Program
             .WithDeveloperTools()
 #endif
             .WithInterFont()
-            .LogToTrace();
+            .LogToTrace()
+            .UseReactiveUI();
 }
