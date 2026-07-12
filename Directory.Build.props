@@ -135,4 +135,15 @@
     <NoWarn>$(NoWarn);CA1707;CA1859;IDE1006</NoWarn>
   </PropertyGroup>
 
+  <!--
+    Microsoft.Testing.Extensions.CodeCoverage enables the MTP-native
+    "coverage" command-line options on dotnet test, used by CI to produce
+    Cobertura output. Referenced here once so every test project gets it
+    automatically.
+  -->
+  <ItemGroup Condition="$(MSBuildProjectName.Contains('.Tests'))
+                      Or $(MSBuildProjectName.EndsWith('.IntegrationTests'))">
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+  </ItemGroup>
+
 </Project>
