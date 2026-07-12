@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AStar.Dev.Wallpaper.Scraper.Tests.Unit/AStar.Dev.Wallpaper.Scraper.Tests.Unit.csproj" />
+  <Project Path="AStar.Dev.Wallpaper.Scraper/AStar.Dev.Wallpaper.Scraper.csproj" />
+</Solution>
