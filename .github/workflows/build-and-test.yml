@@ -34,6 +34,12 @@ jobs:
       # so `dotnet test` runs the MTP executables directly. The coverage flags
       # come from Microsoft.Testing.Extensions.CodeCoverage, referenced by every
       # test project via Directory.Build.props.
+      #
+      # No --coverage-output filename: each test module then writes a uniquely
+      # named <guid>.cobertura.xml, so parallel modules cannot overwrite each
+      # other. --results-directory collects them in one predictable folder
+      # regardless of SDK patch version (10.0.1xx and 10.0.3xx default to
+      # different locations).
       - name: Test with coverage
         run: >
           dotnet test
@@ -41,12 +47,12 @@ jobs:
           --no-build
           --coverage
           --coverage-output-format cobertura
-          --coverage-output coverage.cobertura.xml
+          --results-directory ./TestResults
 
       - name: Generate coverage report
         uses: danielpalme/ReportGenerator-GitHub-Action@v5.5.9
         with:
-          reports: "artifacts/bin/*/Release/*/TestResults/coverage.cobertura.xml"
+          reports: "TestResults/*.cobertura.xml"
           targetdir: coveragereport
           reporttypes: "HtmlInline;Cobertura;MarkdownSummaryGithub"
 
