@@ -1,6 +1,6 @@
 namespace AStar.Dev.Utilities.Tests.Unit;
 
-public class RegexExtensionsShould
+public class GivenRegexExtensions
 {
     [Theory]
     [InlineData("",    false)]
@@ -9,7 +9,7 @@ public class RegexExtensionsShould
     [InlineData("a",   true)]
     [InlineData("AaA", true)]
     [InlineData("12a", true)]
-    public void ContainTheContainsAtLeastOneLowercaseLetterExtensionReturningTheExpectedResponse(string sut, bool expectedResponse)
+    public void when_contains_at_least_one_lowercase_letter_is_called_then_returns_the_expected_response(string sut, bool expectedResponse)
         => sut.ContainsAtLeastOneLowercaseLetter().ShouldBe(expectedResponse);
 
     [Theory]
@@ -19,7 +19,7 @@ public class RegexExtensionsShould
     [InlineData("AAA", true)]
     [InlineData("aaA", true)]
     [InlineData("12A", true)]
-    public void ContainTheContainsAtLeastOneUppercaseLetterExtensionReturningTheExpectedResponse(string sut, bool expectedResponse)
+    public void when_contains_at_least_one_uppercase_letter_is_called_then_returns_the_expected_response(string sut, bool expectedResponse)
         => sut.ContainsAtLeastOneUppercaseLetter().ShouldBe(expectedResponse);
 
     [Theory]
@@ -29,7 +29,7 @@ public class RegexExtensionsShould
     [InlineData("123", true)]
     [InlineData("aa1", true)]
     [InlineData("12A", true)]
-    public void ContainTheContainsAtLeastOneDigitExtensionReturningTheExpectedResponse(string sut, bool expectedResponse)
+    public void when_contains_at_least_one_digit_is_called_then_returns_the_expected_response(string sut, bool expectedResponse)
         => sut.ContainsAtLeastOneDigit().ShouldBe(expectedResponse);
 
     [Theory]
@@ -49,6 +49,6 @@ public class RegexExtensionsShould
     [InlineData("12A¬",  true)]
     [InlineData("12A#",  true)]
     [InlineData("12A~",  true)]
-    public void ContainTheContainsAtLeastOneSpecialCharacterExtensionReturningTheExpectedResponse(string sut, bool expectedResponse)
+    public void when_contains_at_least_one_special_character_is_called_then_returns_the_expected_response(string sut, bool expectedResponse)
         => sut.ContainsAtLeastOneSpecialCharacter().ShouldBe(expectedResponse);
 }

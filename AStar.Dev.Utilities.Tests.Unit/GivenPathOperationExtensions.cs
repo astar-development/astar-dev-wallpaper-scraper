@@ -1,9 +1,9 @@
 namespace AStar.Dev.Utilities.Tests.Unit;
 
-public sealed class PathOperationExtensionsShould
+public sealed class GivenPathOperationExtensions
 {
     [Fact]
-    public void CombinePath_ReturnsCombinedPathForRelativeSegments()
+    public void when_combine_path_is_called_with_relative_segments_then_returns_the_combined_path()
     {
         string basePath = Path.Join("root", "base");
 
@@ -13,7 +13,7 @@ public sealed class PathOperationExtensionsShould
     }
 
     [Fact]
-    public void CombinePath_AllowsChainingWithoutRootedSegments()
+    public void when_combine_path_calls_are_chained_without_rooted_segments_then_returns_the_combined_path()
     {
         string result = "base".CombinePath("child2").CombinePath("file.txt");
 

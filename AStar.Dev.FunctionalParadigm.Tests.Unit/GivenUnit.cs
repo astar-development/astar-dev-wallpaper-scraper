@@ -6,7 +6,7 @@ namespace AStar.Dev.FunctionalParadigm.Tests.Unit;
 public class GivenUnit
 {
     [Fact]
-    public void unit_value_is_singleton_like()
+    public void when_unit_values_are_compared_then_they_are_all_equal()
     {
         var a = global::AStar.Dev.FunctionalParadigm.Unit.Value;
         var b = new global::AStar.Dev.FunctionalParadigm.Unit();

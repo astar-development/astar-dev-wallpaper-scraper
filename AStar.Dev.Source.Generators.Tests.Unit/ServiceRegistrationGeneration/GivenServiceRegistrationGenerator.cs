@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace AStar.Dev.Source.Generators.Tests.Unit.ServiceRegistrationGeneration;
 
-public class ServiceRegistrationGeneratorShould()
+public class GivenServiceRegistrationGenerator()
 {
     private const string AttributeSource = @"using System;
 
@@ -46,7 +46,7 @@ namespace AStar.Dev.Source.Generators.Attributes
     }
 
     [Fact]
-    public void RegisterClassWithSingleInterface_DefaultScoped()
+    public void when_class_has_single_interface_then_registers_as_scoped_by_default()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 
@@ -84,7 +84,7 @@ public static class GeneratedServiceCollectionExtensions
     }
 
     [Fact]
-    public void RegisterClassWithSingleInterface_SingletonLifetime()
+    public void when_singleton_lifetime_is_specified_then_registers_class_with_single_interface_as_singleton()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 
@@ -121,7 +121,7 @@ public static class GeneratedServiceCollectionExtensions
     }
 
     [Fact]
-    public void RegisterClassWithSingleInterface_AsSelfTrue()
+    public void when_as_self_is_true_with_single_interface_then_registers_class_as_self()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 
@@ -159,7 +159,7 @@ public static class GeneratedServiceCollectionExtensions
     }
 
     [Fact]
-    public void RegisterClassWithTwoInterfaces_AsOverride()
+    public void when_class_has_two_interfaces_and_as_override_is_specified_then_registers_using_the_as_override()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 
@@ -198,7 +198,7 @@ public static class GeneratedServiceCollectionExtensions
     }
 
     [Fact]
-    public void RegisterClassWithNoInterface_AsSelfTrue()
+    public void when_class_has_no_interface_and_as_self_is_true_then_registers_as_self()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 
@@ -234,7 +234,7 @@ public static class GeneratedServiceCollectionExtensions
     }
 
     [Fact]
-    public void DoesNotRegisterAbstractOrNonPublicOrGenericClasses()
+    public void when_class_is_abstract_or_non_public_or_generic_then_does_not_register()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 
@@ -264,7 +264,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void DoesNotRegisterClassWithoutServiceAttribute()
+    public void when_class_has_no_service_attribute_then_does_not_register()
     {
         const string input = @"namespace TestNamespace
 {
@@ -288,7 +288,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void DoesNotRegisterClassWithMultipleInterfacesAndNoAsSpecified()
+    public void when_class_has_multiple_interfaces_and_no_as_is_specified_then_does_not_register()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 namespace TestNamespace
