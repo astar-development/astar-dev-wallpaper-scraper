@@ -1,16 +1,16 @@
 namespace AStar.Dev.Utilities.Tests.Unit;
 
 // ReSharper disable once InconsistentNaming
-public class ApplicationPathsProvider_should
+public class GivenApplicationPathsProvider
 {
     [Fact]
-    public void return_the_expected_application_directory()
+    public void when_application_directory_is_requested_then_returns_the_expected_directory()
     {
         "test-application-name".ApplicationDirectory()
             .ShouldEndWith("/.config/test-application-name");
     }
     [Fact]
-    public void return_the_expected_logs_directory()
+    public void when_logs_directory_is_requested_then_returns_the_expected_directory()
     {
         try
         {
@@ -25,7 +25,7 @@ public class ApplicationPathsProvider_should
         }
     }
     [Fact]
-    public void return_the_expected_users_directory()
+    public void when_users_directory_is_requested_then_returns_the_expected_directory()
     {
         try
         {

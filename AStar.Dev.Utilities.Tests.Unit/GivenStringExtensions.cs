@@ -1,6 +1,6 @@
 namespace AStar.Dev.Utilities.Tests.Unit;
 
-public sealed class StringExtensionsShould
+public sealed class GivenStringExtensions
 {
     private const string AnyJson = "{\"AnyInt\":0,\"AnyString\":\"\"}";
     private const string NotNullString = "value does not matter";
@@ -10,27 +10,27 @@ public sealed class StringExtensionsShould
 #pragma warning restore CA1805
 
     [Fact]
-    public void ContainTheIsNullMethodWhichReturnsTheResult() =>
+    public void when_is_null_is_called_then_returns_the_expected_result() =>
         nullString.IsNull().ShouldBeTrue();
 
     [Fact]
-    public void ContainTheIsNotNullMethodWhichReturnsTheResult() =>
+    public void when_is_not_null_is_called_then_returns_the_expected_result() =>
         NotNullString.IsNotNull().ShouldBeTrue();
 
     [Fact]
-    public void ContainTheIsNullOrWhiteSpaceMethodWhichReturnsTheResult() =>
+    public void when_is_null_or_white_space_is_called_then_returns_the_expected_result() =>
         WhitespaceString.IsNullOrWhiteSpace().ShouldBeTrue();
 
     [Fact]
-    public void ContainTheIsNotNullOrWhiteSpaceMethodWhichReturnsTheResult() =>
+    public void when_is_not_null_or_white_space_is_called_then_returns_the_expected_result() =>
         NotNullString.IsNotNullOrWhiteSpace().ShouldBeTrue();
 
     [Fact]
-    public void ContainTheFromJsonMethodWhichReturnsTheResult() =>
+    public void when_from_json_is_called_then_returns_the_expected_result() =>
         AnyJson.FromJson<AnyClass>().ShouldBeEquivalentTo(new AnyClass());
 
     [Fact]
-    public void ContainTheFromJsonTakingJsonSerializerOptionsMethodWhichReturnsTheResult() =>
+    public void when_from_json_is_called_with_json_serializer_options_then_returns_the_expected_result() =>
         AnyJson.FromJson<AnyClass>(new()).ShouldBeEquivalentTo(new AnyClass());
 
     [Theory]
@@ -43,7 +43,7 @@ public sealed class StringExtensionsShould
     [InlineData("Correct-Extension.bmp", true)]
     [InlineData("Write-Extension.png", true)]
     [InlineData("Correct-Extension.gif", true)]
-    public void ContainTheIsImageExtensionReturningTheExpectedResults(string fileName, bool expectedResponse) =>
+    public void when_is_image_is_called_then_returns_the_expected_results(string fileName, bool expectedResponse) =>
         fileName.IsImage().ShouldBe(expectedResponse);
 
     [Theory]
@@ -60,7 +60,7 @@ public sealed class StringExtensionsShould
     [InlineData("Write-Truncation.png", 10, "Write-Trun")]
     [InlineData("Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String--Truncation.gif", 160,
                 "Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String-Large-String--Tru")]
-    public void ContainTheTruncateIfRequiredReturningTheExpectedResults(string fileName, int truncateLength, string expectedResponse) =>
+    public void when_truncate_if_required_is_called_then_returns_the_expected_results(string fileName, int truncateLength, string expectedResponse) =>
         fileName.TruncateIfRequired(truncateLength).ShouldBe(expectedResponse);
 
     [Theory]
@@ -71,7 +71,7 @@ public sealed class StringExtensionsShould
     [InlineData("1", true)]
     [InlineData("12", true)]
     [InlineData("123456", true)]
-    public void ContainTheIsNumberOnlyExtensionReturningTheExpectedResults(string fileName, bool expectedResponse) =>
+    public void when_is_number_only_is_called_then_returns_the_expected_results(string fileName, bool expectedResponse) =>
         fileName.IsNumberOnly().ShouldBe(expectedResponse);
 
 
@@ -80,7 +80,7 @@ public sealed class StringExtensionsShould
     [InlineData("folder/sub-folder/file_name.txt", "folder sub folder file name.txt")]
     [InlineData("already clean.txt", "already clean.txt")]
     [InlineData("-_-", "   ")]
-    public void ContainTheSanitizeFilePathMethodWhichReturnsTheExpectedResult(string input, string expected) => input.SanitizeFilePath().ShouldBe(expected);
+    public void when_sanitize_file_path_is_called_then_returns_the_expected_result(string input, string expected) => input.SanitizeFilePath().ShouldBe(expected);
 
     [Theory]
     [InlineData(1, "1 B")]
@@ -92,11 +92,11 @@ public sealed class StringExtensionsShould
     [InlineData(1536, "1.5 KB")]
     [InlineData(5 * 1024 * 1024, "5.0 MB")]
     [InlineData((5 * 1024 * 1024) + (512 * 1024 * 1024), "517.0 MB")]
-    public void ConvertTheFileSizeToHumanReadableFormat(long fileSizeToConvert, string expected) => fileSizeToConvert.FileSizeToText().ShouldBe(expected);
+    public void when_file_size_to_text_is_called_then_returns_the_human_readable_format(long fileSizeToConvert, string expected) => fileSizeToConvert.FileSizeToText().ShouldBe(expected);
 
     [Theory]
     [InlineData("example text", "Example Text")]
     [InlineData("exampletext", "Exampletext")]
     [InlineData("EXAMPLE TEXT", "Example Text")]
-    public void ContainTheToTitleCaseMethodWhichReturnsTheExpectedResult(string input, string expected) => input.ToTitleCase().ShouldBe(expected);
+    public void when_to_title_case_is_called_then_returns_the_expected_result(string input, string expected) => input.ToTitleCase().ShouldBe(expected);
 }

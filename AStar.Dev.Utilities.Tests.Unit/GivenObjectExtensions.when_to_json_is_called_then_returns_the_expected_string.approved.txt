@@ -1,4 +1,4 @@
-﻿{
+{
   "anyInt": 0,
   "anyString": ""
 }

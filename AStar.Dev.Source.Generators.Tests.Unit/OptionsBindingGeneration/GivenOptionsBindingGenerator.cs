@@ -5,10 +5,10 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace AStar.Dev.Source.Generators.Tests.Unit.OptionsBindingGeneration;
 
-public class OptionsBindingGeneratorShould
+public class GivenOptionsBindingGenerator
 {
     [Fact]
-    public void GenerateRegistrationForClassWithAttributeSectionName()
+    public void when_class_has_attribute_section_name_then_generates_registration()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +33,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void GenerateRegistrationForStructWithAttributeSectionName()
+    public void when_struct_has_attribute_section_name_then_generates_registration()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,7 +57,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void GenerateRegistrationForClassWithConstSectionNameField()
+    public void when_class_has_const_section_name_field_then_generates_registration()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -81,7 +81,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void PreferAttributeSectionNameOverField()
+    public void when_attribute_and_field_section_names_both_exist_then_attribute_section_name_is_preferred()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -106,7 +106,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void EmitDiagnosticIfNoSectionName()
+    public void when_no_section_name_is_available_then_emits_diagnostic()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -128,7 +128,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void GenerateRegistrationsForMultipleTypes()
+    public void when_multiple_types_have_the_attribute_then_generates_registrations_for_all()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 using Microsoft.Extensions.DependencyInjection;
@@ -156,7 +156,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void DoesNotGenerateForTypesWithoutAttribute()
+    public void when_type_has_no_attribute_then_does_not_generate()
     {
         const string input = @"using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;

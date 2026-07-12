@@ -5,10 +5,10 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace AStar.Dev.Source.Generators.Tests.Unit.StrongIdCodeGeneration;
 
-public class StrongIdGeneratorShould
+public class GivenStrongIdGenerator
 {
     [Fact]
-    public void GeneratePartialStructWithIdPropertyWithTypeOfIntWhenSpecifiedForValidReadonlyRecordStruct()
+    public void when_int_id_type_is_specified_for_valid_readonly_record_struct_then_generates_partial_struct_with_int_id_property()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 namespace TestNamespace
@@ -31,7 +31,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void GeneratePartialStructWithIdPropertyWithTypeOfStringWhenSpecifiedForValidReadonlyRecordStruct()
+    public void when_string_id_type_is_specified_for_valid_readonly_record_struct_then_generates_partial_struct_with_string_id_property()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 namespace TestNamespace
@@ -54,7 +54,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void GeneratePartialStructWithIdPropertyWithTypeOfGuidWhenSpecifiedForValidReadonlyRecordStruct()
+    public void when_guid_id_type_is_specified_for_valid_readonly_record_struct_then_generates_partial_struct_with_guid_id_property()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 namespace TestNamespace
@@ -77,7 +77,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void GeneratePartialStructWithIdPropertyWithDefaultTypeOfGuidWhenNotSpecifiedForValidReadonlyRecordStruct()
+    public void when_no_id_type_is_specified_for_valid_readonly_record_struct_then_generates_partial_struct_with_default_guid_id_property()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 namespace TestNamespace
@@ -100,7 +100,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void DoesNotGenerate_ForNonReadonlyOrNonRecordStruct()
+    public void when_struct_is_not_readonly_or_not_a_record_then_does_not_generate()
     {
         const string input = @"using AStar.Dev.Source.Generators.Attributes;
 namespace TestNamespace

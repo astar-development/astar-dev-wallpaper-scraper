@@ -119,6 +119,7 @@
     CA1707 (identifier contains underscores) is suppressed because the repo
     mandates the when_[action]_then_[outcome] snake_case naming convention
     for all test methods; underscores are intentional and required by style.
+    Test classes are named Given[SubjectUnderTest].
 
     IDE1006 (naming style violation) is suppressed for the same reason: the
     naming-style analyzer flags the snake_case when_..._then_... test method
@@ -131,8 +132,13 @@
     <!--
       CA1859: Use concrete types for fields — suppressed in tests because the
       sut field must be typed to the interface to exercise the public contract.
+
+      CA1711: Identifiers should not have incorrect suffix — suppressed in
+      tests because the Given[SubjectUnderTest] class naming convention
+      legitimately produces names ending in 'Attribute' (etc.) when the
+      subject under test is an attribute.
     -->
-    <NoWarn>$(NoWarn);CA1707;CA1859;IDE1006</NoWarn>
+    <NoWarn>$(NoWarn);CA1707;CA1711;CA1859;IDE1006</NoWarn>
   </PropertyGroup>
 
   <!--
