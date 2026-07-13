@@ -2,6 +2,7 @@ using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit;
@@ -10,6 +11,7 @@ public class GivenAddApplicationServices
 {
     private readonly ServiceProvider serviceProvider = new ServiceCollection()
         .AddApplicationServices()
+        .AddLogging()
         .BuildServiceProvider();
 
     [Fact]

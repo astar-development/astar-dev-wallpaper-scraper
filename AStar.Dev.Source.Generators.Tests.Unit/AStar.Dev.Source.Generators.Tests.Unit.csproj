@@ -16,7 +16,7 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Shouldly" />
-        <PackageReference Include="xunit.v3.mtp-v2" />
+        <PackageReference Include="xunit.v3.mtp-v1" />
         <PackageReference Include="xunit.runner.visualstudio">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -34,12 +34,14 @@
 <Target Name="AddGeneratorAnalyzerRefs" BeforeTargets="CoreCompile">
     <MSBuild Projects="..\AStar.Dev.Source.Generators\AStar.Dev.Source.Generators.csproj"
              Targets="GetTargetPath"
-             Properties="Configuration=$(Configuration)">
+             Properties="Configuration=$(Configuration)"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;Platform">
         <Output TaskParameter="TargetOutputs" ItemName="Analyzer" />
     </MSBuild>
     <MSBuild Projects="..\AStar.Dev.Source.Generators.Attributes\AStar.Dev.Source.Generators.Attributes.csproj"
              Targets="GetTargetPath"
-             Properties="Configuration=$(Configuration)">
+             Properties="Configuration=$(Configuration)"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;Platform">
         <Output TaskParameter="TargetOutputs" ItemName="Analyzer" />
     </MSBuild>
 </Target>

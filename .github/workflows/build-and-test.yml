@@ -30,6 +30,9 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
       # global.json pins the test runner to Microsoft.Testing.Platform (MTP v2),
       # so `dotnet test` runs the MTP executables directly. The coverage flags
       # come from Microsoft.Testing.Extensions.CodeCoverage, referenced by every
@@ -42,6 +45,7 @@ jobs:
       # different locations).
       - name: Test with coverage
         run: >
+          xvfb-run --auto-servernum
           dotnet test
           --configuration Release
           --no-build

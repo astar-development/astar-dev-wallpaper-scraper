@@ -27,5 +27,6 @@
   "newLine": "\n",
   "respectNullableAnnotations": false,
   "respectRequiredConstructorParameters": false,
+  "allowDuplicateProperties": true,
   "isReadOnly": false
 }
