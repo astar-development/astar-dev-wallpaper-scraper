@@ -1,2 +1,7 @@
-dotnet test   --collect:"XPlat Code Coverage"   -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
-reportgenerator -reports:**/TestResults/**/coverage.cobertura.xml -targetdir:CoverageReport
+dotnet test \
+  --coverage \
+  --coverage-output-format cobertura \
+  --results-directory ./TestResults
+
+dotnet tool restore
+dotnet reportgenerator -reports:TestResults/*.cobertura.xml -targetdir:CoverageReport
