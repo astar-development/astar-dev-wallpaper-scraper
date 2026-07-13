@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Logging.Extensions;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
@@ -8,7 +9,7 @@ using Microsoft.Playwright;
 namespace AStar.Dev.Wallpaper.Scraper.Services;
 
 /// <inheritdoc />
-public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<ScrapeConfiguration> scrapeConfiguration) : IPlaywrightService, IAsyncDisposable
+public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<ScrapeConfiguration> scrapeConfiguration, IFileSystem fileSystem) : IPlaywrightService, IAsyncDisposable
 {
     private readonly SemaphoreSlim configureLock = new(1, 1);
     private IPlaywright? playwright;
@@ -29,6 +30,7 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
 
             return await Try.RunAsync(async () =>
                 {
+                    fileSystem.Directory.CreateDirectory(scrapeConfiguration.Value.UserDataDirectory);
                     playwright ??= await Microsoft.Playwright.Playwright.CreateAsync();
                     context = await playwright.Chromium.LaunchPersistentContextAsync(scrapeConfiguration.Value.UserDataDirectory, new Microsoft.Playwright.BrowserTypeLaunchPersistentContextOptions
                     {

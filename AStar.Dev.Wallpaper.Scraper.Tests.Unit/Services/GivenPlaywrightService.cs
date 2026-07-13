@@ -4,12 +4,14 @@ using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Testably.Abstractions.Testing;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Services;
 
 public sealed class GivenPlaywrightService : IDisposable
 {
     private readonly string userDataDirectory = Path.Combine(Path.GetTempPath(), $"playwright-profile-{Guid.NewGuid():N}");
+    private readonly MockFileSystem fileSystem = new();
 
     [Fact]
     public async Task when_configure_playwright_async_is_called_then_it_returns_an_ipage_instance()
@@ -32,6 +34,18 @@ public sealed class GivenPlaywrightService : IDisposable
         await page.Context.CloseAsync();
         Directory.Exists(userDataDirectory).ShouldBeTrue();
         Directory.EnumerateFileSystemEntries(userDataDirectory).ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public async Task when_configure_playwright_async_is_called_then_the_user_data_directory_is_created_via_the_injected_file_system()
+    {
+        var sut = CreatePlaywrightService();
+
+        var result = await sut.ConfigurePlaywrightAsync();
+
+        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
+        await page.Context.CloseAsync();
+        fileSystem.Directory.Exists(userDataDirectory).ShouldBeTrue();
     }
 
     [Fact]
@@ -133,7 +147,7 @@ public sealed class GivenPlaywrightService : IDisposable
     public async Task when_a_failed_launch_is_followed_by_a_corrected_configuration_then_a_page_is_returned()
     {
         var configuration = new ScrapeConfiguration { UserDataDirectory = "\0invalid-user-data-directory", SearchConfiguration = new SearchConfiguration { BaseUrl = new Uri("https://localhost"), UseHeadless = true } };
-        var sut = new PlaywrightService(NullLoggerFactory.Instance.CreateLogger<PlaywrightService>(), Options.Create(configuration));
+        var sut = new PlaywrightService(NullLoggerFactory.Instance.CreateLogger<PlaywrightService>(), Options.Create(configuration), fileSystem);
 
         var firstResult = await sut.ConfigurePlaywrightAsync();
         configuration.UserDataDirectory = userDataDirectory;
@@ -177,6 +191,6 @@ public sealed class GivenPlaywrightService : IDisposable
         var logger = NullLoggerFactory.Instance.CreateLogger<PlaywrightService>();
         var scrapeConfiguration = Options.Create(new ScrapeConfiguration { UserDataDirectory = userDataDirectoryOverride ?? userDataDirectory, SearchConfiguration = new SearchConfiguration { BaseUrl = baseUrlOverride ?? new Uri("https://localhost"), UseHeadless = useHeadless } });
 
-        return new PlaywrightService(logger, scrapeConfiguration);
+        return new PlaywrightService(logger, scrapeConfiguration, fileSystem);
     }
 }
