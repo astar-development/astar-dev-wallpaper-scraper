@@ -12,6 +12,7 @@ Full test suite runs automatically at end of turn - only run new / affected test
 
 - Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests. 
 - Async methods MUST end in `Async` - exceptions: EventHandlers and tests. Neither have the suffix
+- return statements MUST be proceeded by a blank line - except when they immediately follow a control statement (`if` etc.)
 
 ## Build & Test
 
@@ -27,7 +28,8 @@ dotnet build --configuration Release                 # Release build
 ```bash
 dotnet test                                          # Run all tests
 dotnet test --project AStar.Dev.Utilities.Tests.Unit # Run single project
-dotnet test --filter "GivenClassName"                # Run by test class
+dotnet test -- --filter-class "*GivenClassName"      # Run by test class (MTP runner: VSTest --filter syntax does NOT work; xunit.v3 options go after --)
+dotnet test -- --filter-method "*when_action_then*"  # Run by test method
 ```
 
 **Coverage:**
@@ -66,7 +68,7 @@ AStar.Dev.Logging.Extensions/         Serilog + Microsoft.Extensions.Logging int
 - **Logging:** Serilog, console + Seq sinks. Configured via appsettings.json `Logging` section.
 - **Database:** EF Core 10 + SQLite. Connection string in appsettings under `scrapeConfiguration.connectionStrings.sqlite`.
 - **Updates:** Velopack. App calls `VelopackApp.Build().Run()` before Avalonia startup (Program.cs). UpdateService reads GitHub releases.
-- **Tests:** xunit.v3, MTP v2 runner (pinned in global.json). All test projects compile; test methods run only in projects suffixed `.Tests` or `.Tests.Unit`.
+- **Tests:** xunit.v3, MTP runner (pinned in global.json) via `xunit.v3.mtp-v1` — MTP v1 protocol, because C# Dev Kit Test Explorer cannot run MTP v2 tests yet ("test case did not report any output"). Keep `Microsoft.Testing.Extensions.CodeCoverage` on 17.x (18.x drags in MTP 2.x, causes TypeLoadException with mtp-v1). All test projects compile; test methods run only in projects suffixed `.Tests` or `.Tests.Unit`.
 
 ### Key Configuration
 
