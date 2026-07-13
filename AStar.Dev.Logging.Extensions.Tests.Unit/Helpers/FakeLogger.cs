@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace AStar.Dev.Logging.Extensions.Tests.Unit.Helpers;
 
 internal sealed class FakeLogger : ILogger
