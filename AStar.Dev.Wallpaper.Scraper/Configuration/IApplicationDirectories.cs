@@ -1,4 +1,4 @@
-namespace AStar.Dev.Wallpaper.Scraper.Startup;
+namespace AStar.Dev.Wallpaper.Scraper.Configuration;
 
 public interface IApplicationDirectories
 {

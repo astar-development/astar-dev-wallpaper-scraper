@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
-using System;
 using Velopack;
 
 namespace AStar.Dev.Wallpaper.Scraper;

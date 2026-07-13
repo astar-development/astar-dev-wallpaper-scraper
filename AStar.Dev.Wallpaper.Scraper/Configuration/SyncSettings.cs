@@ -12,6 +12,6 @@ public record SyncSettings
     /// Applies to both the file-sync phase and the enumeration phase.
     /// Must be at least 1.
     /// </summary>
-    [Range(1, int.MaxValue, ErrorMessage = "ProgressReportInterval must be at least 1.")]
+    [Range(1, 500, ErrorMessage = "ProgressReportInterval must be at least 1.")]
     public required int ProgressReportInterval { get; init; }
 }

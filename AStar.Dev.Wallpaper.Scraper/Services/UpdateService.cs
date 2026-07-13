@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using Avalonia;
 using Avalonia.Controls;
@@ -20,6 +17,11 @@ public sealed class UpdateService(IOptions<UpdateConfiguration> updateConfigurat
 {
     private static readonly string LogPath = Path.Combine(Path.GetTempPath(), "astar-dev-wallpaper-scraper-update.log");
 
+    /// <summary>
+    ///    Checks for updates in the background, downloads them if available, and prompts the user to restart.
+    /// </summary>
+    /// <param name="owner">The owner window for the update prompt dialog.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task CheckForUpdatesAsync(Window owner)
     {
         try
