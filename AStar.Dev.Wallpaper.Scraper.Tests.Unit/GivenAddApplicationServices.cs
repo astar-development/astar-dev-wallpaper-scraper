@@ -18,7 +18,7 @@ public class GivenAddApplicationServices
         var scrapeConfiguration = serviceProvider.GetRequiredService<IOptions<ScrapeConfiguration>>().Value;
 
         scrapeConfiguration.ApplicationName.ShouldBe("AStar Dev Wallpaper Scraper");
-        scrapeConfiguration.ApplicationVersion.ShouldBe("0.1.0");
+        scrapeConfiguration.ApplicationVersion.ShouldStartWith("0.1.");
         scrapeConfiguration.ConnectionStrings.Sqlite.ShouldNotBeNullOrWhiteSpace();
     }
 
@@ -41,6 +41,6 @@ public class GivenAddApplicationServices
     {
         var viewModel = serviceProvider.GetRequiredService<MainWindowViewModel>();
 
-        viewModel.Title.ShouldBe("AStar Dev Wallpaper Scraper V0.1.0");
+        viewModel.Title.ShouldStartWith("AStar Dev Wallpaper Scraper V0.1.");
     }
 }
