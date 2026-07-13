@@ -1,4 +1,3 @@
-using System;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -9,7 +8,6 @@ using Serilog;
 using Serilog.Events;
 using System.Globalization;
 using Testably.Abstractions;
-using AStar.Dev.Wallpaper.Scraper.Startup;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 namespace AStar.Dev.Wallpaper.Scraper;
 
@@ -42,8 +40,6 @@ public partial class App : Application, IDisposable
         {
             desktop.MainWindow = services.GetRequiredService<MainWindow>();
 
-            // Fire-and-forget: the check runs in the background and prompts via a
-            // dialog only when an update has already been downloaded.
             _ = services.GetRequiredService<UpdateService>().CheckForUpdatesAsync(desktop.MainWindow);
         }
 
@@ -54,16 +50,9 @@ public partial class App : Application, IDisposable
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
-        _ = services.AddOptions<EntraIdConfiguration>()
-                .Bind(configuration.GetSection(EntraIdConfiguration.SectionName))
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
+            
         _ = services.AddOptions<SyncSettings>()
                 .Bind(configuration.GetSection(SyncSettings.SectionName))
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
-        _ = services.AddOptions<ClientConfiguration>()
-                .Bind(configuration.GetSection(ClientConfiguration.SectionName))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
@@ -72,7 +61,7 @@ public partial class App : Application, IDisposable
 
     private static void ConfigureSerilog(RealFileSystem fileSystem, IConfigurationRoot configuration)
     {
-        _ = fileSystem.Directory.CreateDirectory(Startup.ApplicationDirectories.LogsDirectory);
+        _ = fileSystem.Directory.CreateDirectory(ApplicationDirectories.LogsDirectory);
 
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
@@ -81,7 +70,7 @@ public partial class App : Application, IDisposable
             .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
             .WriteTo.File(
                 formatter: new Serilog.Formatting.Json.JsonFormatter(),
-                path: $"{Startup.ApplicationDirectories.LogsDirectory}/log.txt",
+                path: $"{ApplicationDirectories.LogsDirectory}/log.txt",
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 shared: true,
@@ -104,7 +93,7 @@ public partial class App : Application, IDisposable
 
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method - Do NOT remove this comment.
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

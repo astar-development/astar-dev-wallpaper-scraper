@@ -1,31 +1,38 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) working in this repo.
 
 ## Project Overview
 
-AStar Dev Wallpaper Scraper is a .NET 10 desktop application built with Avalonia + ReactiveUI for the UI, Playwright for web scraping, and SQLite for local data storage. The app includes auto-update functionality via Velopack, reading release packages from GitHub.
+AStar Dev Wallpaper Scraper: .NET 10 desktop app. Avalonia + ReactiveUI for UI, Playwright for scraping, SQLite for local storage. Auto-update via Velopack, release packages from GitHub.
+
+Full test suite runs automatically at end of turn - only run new / affected tests.
+
+# Project Rules
+
+- Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests. 
+- Async methods MUST end in `Async` - exceptions: EventHandlers and tests. Neither have the suffix
 
 ## Build & Test
 
-All builds target `net10.0`. Use these commands in the project root:
+All builds target `net10.0`. Run from project root:
 
 **Build:**
 ```bash
-dotnet build                                          # Debug build
+dotnet build                                         # Debug build
 dotnet build --configuration Release                 # Release build
 ```
 
 **Test:**
 ```bash
-dotnet test                                           # Run all tests
+dotnet test                                          # Run all tests
 dotnet test --project AStar.Dev.Utilities.Tests.Unit # Run single project
-dotnet test --filter "GivenClassName"               # Run by test class
+dotnet test --filter "GivenClassName"                # Run by test class
 ```
 
 **Coverage:**
 ```bash
-bash code-coverage.sh  # Runs tests with XPlat Cobertura coverage, generates HTML report in CoverageReport/
+bash code-coverage.sh  # Runs tests with coverage, HTML report: CoverageReport/ - runs as stop hook.
 ```
 
 ## Codebase Architecture
@@ -54,33 +61,33 @@ AStar.Dev.Logging.Extensions/         Serilog + Microsoft.Extensions.Logging int
 
 ### Architecture Patterns
 
-- **Avalonia + ReactiveUI:** Desktop UI uses reactive MVVM. ViewModels inherit from ReactiveObject. UI subscribes to observable streams for state changes.
-- **Dependency Injection:** Microsoft.Extensions.DI via configuration-driven bootstrapping (appsettings.json). App.xaml.cs and Program.cs wire up services.
-- **Logging:** Serilog with console and Seq sinks. Configured via appsettings.json `Logging` section.
+- **Avalonia + ReactiveUI:** Reactive MVVM. ViewModels inherit ReactiveObject. UI subscribes to observable streams for state changes.
+- **Dependency Injection:** Microsoft.Extensions.DI, configuration-driven bootstrap (appsettings.json). App.xaml.cs and Program.cs wire services.
+- **Logging:** Serilog, console + Seq sinks. Configured via appsettings.json `Logging` section.
 - **Database:** EF Core 10 + SQLite. Connection string in appsettings under `scrapeConfiguration.connectionStrings.sqlite`.
-- **Updates:** Velopack integration. App calls `VelopackApp.Build().Run()` before Avalonia startup (Program.cs). UpdateService reads GitHub releases.
-- **Tests:** xunit.v3 with MTP v2 runner (pinned in global.json). All test projects compile but test methods only run in projects suffixed with `.Tests` or `.Tests.Unit`.
+- **Updates:** Velopack. App calls `VelopackApp.Build().Run()` before Avalonia startup (Program.cs). UpdateService reads GitHub releases.
+- **Tests:** xunit.v3, MTP v2 runner (pinned in global.json). All test projects compile; test methods run only in projects suffixed `.Tests` or `.Tests.Unit`.
 
 ### Key Configuration
 
 **Directory.Build.props:**
-- All projects: `net10.0`, nullable reference types enabled, implicit usings, latest C# language version
+- All projects: `net10.0`, nullable reference types on, implicit usings, latest C# version
 - Tests: Snake_case method names (when_[action]_then_[outcome]) + PascalCase class names (Given[Subject])
-- All warnings → errors
-- Code coverage collector injected into test projects automatically
+- All warnings become errors
+- Coverage collector injected into test projects automatically
 
 **Directory.Packages.props:**
-- Central Package Management (CPM). Every package version declared once; projects reference without versions.
-- If you add a NuGet package, add `<PackageVersion>` entry here, then reference without version in .csproj.
+- Central Package Management (CPM). Each package version declared once; projects reference without versions.
+- New NuGet package: add `<PackageVersion>` entry here, reference without version in .csproj.
 
 **appsettings.json:**
-- Logging.LogLevel, Logging.Console, Logging.Serilog configured via this file (null = use defaults)
-- updateConfiguration.repositoryUrl points to GitHub (Velopack reads releases here)
-- scrapeConfiguration holds app-specific settings (database connection, app name)
+- Logging.LogLevel, Logging.Console, Logging.Serilog configured here (null = defaults)
+- updateConfiguration.repositoryUrl points to GitHub (Velopack reads releases there)
+- scrapeConfiguration holds app settings (database connection, app name)
 
 ## Release & Deployment
 
-Push a semver tag (`git tag v0.1.1 && git push origin v0.1.1`) to trigger the release workflow:
+Push semver tag (`git tag v0.1.1 && git push origin v0.1.1`). Triggers release workflow:
 
 1. Workflow derives version from tag (strips `v` prefix)
 2. Publishes self-contained for linux-x64 and win-x64
@@ -88,7 +95,7 @@ Push a semver tag (`git tag v0.1.1 && git push origin v0.1.1`) to trigger the re
 4. Downloads previous releases (enables delta updates)
 5. Uploads to GitHub Release with `--merge` (combines both OS builds into one release)
 
-The app's UpdateService polls this release feed for in-app update checks.
+UpdateService polls this release feed for in-app update checks.
 
 ## Test Naming Convention
 
@@ -108,10 +115,10 @@ public class GivenUpdateService
 
 ## Code Analysis & Style
 
-- **Nullable reference types:** Always enabled. Fix warnings — they catch real null issues.
-- **Warnings as errors:** CI enforces this. Don't suppress unless justified; add comments explaining why.
-- **Implicit usings:** System, System.Linq, etc. are available without explicit using statements.
-- **Target framework:** Most projects use net10.0; main app uses net10.0-windows for platform APIs.
+- **Nullable reference types:** Always on. Fix warnings — they catch real null issues.
+- **Warnings as errors:** CI enforces. No suppress without reason; add comment explaining why.
+- **Implicit usings:** System, System.Linq, etc. available without explicit using statements.
+- **Target framework:** Most projects net10.0; main app net10.0-windows for platform APIs.
 
 ## CI/CD
 
@@ -121,7 +128,7 @@ public class GivenUpdateService
 
 **Release** (`.github/workflows/release.yml`):
 - Triggers on semver tag push
-- Serialized: both OS jobs attach to the same GitHub Release (no race conditions)
+- Serialized: both OS jobs attach to same GitHub Release (no race conditions)
 - Uses `vpk` CLI to pack and upload
 
 ## Common Development Patterns
