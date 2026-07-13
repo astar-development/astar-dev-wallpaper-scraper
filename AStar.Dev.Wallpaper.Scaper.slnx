@@ -8,6 +8,7 @@
   <Project Path="AStar.Dev.Source.Generators/AStar.Dev.Source.Generators.csproj" />
   <Project Path="AStar.Dev.Utilities.Tests.Unit/AStar.Dev.Utilities.Tests.Unit.csproj" />
   <Project Path="AStar.Dev.Utilities/AStar.Dev.Utilities.csproj" />
+  <Project Path="AStar.Dev.Logging.Extensions.Tests.Unit/AStar.Dev.Logging.Extensions.Tests.Unit.csproj" />
   <Project Path="AStar.Dev.Logging.Extensions/AStar.Dev.Logging.Extensions.csproj" />
   <Project Path="AStar.Dev.Wallpaper.Scraper.Tests.Unit/AStar.Dev.Wallpaper.Scraper.Tests.Unit.csproj" />
   <Project Path="AStar.Dev.Wallpaper.Scraper/AStar.Dev.Wallpaper.Scraper.csproj" />
