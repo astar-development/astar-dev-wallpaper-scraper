@@ -33,6 +33,7 @@
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     <PackageReference Include="Testably.Abstractions" />
+    <PackageReference Include="Velopack" />
   </ItemGroup>
 
   <ItemGroup>

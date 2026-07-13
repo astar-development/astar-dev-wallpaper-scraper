@@ -1,4 +1,5 @@
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -19,6 +20,20 @@ public class GivenAddApplicationServices
         scrapeConfiguration.ApplicationName.ShouldBe("AStar Dev Wallpaper Scraper");
         scrapeConfiguration.ApplicationVersion.ShouldBe("0.1.0");
         scrapeConfiguration.ConnectionStrings.Sqlite.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public void when_services_are_built_then_update_configuration_binds_from_appsettings()
+    {
+        var updateConfiguration = serviceProvider.GetRequiredService<IOptions<UpdateConfiguration>>().Value;
+
+        updateConfiguration.RepositoryUrl.ShouldBe("https://github.com/astar-development/astar-dev-wallpaper-scraper");
+    }
+
+    [Fact]
+    public void when_services_are_built_then_update_service_resolves()
+    {
+        serviceProvider.GetRequiredService<UpdateService>().ShouldNotBeNull();
     }
 
     [Fact]

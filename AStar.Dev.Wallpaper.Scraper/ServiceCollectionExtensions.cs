@@ -1,5 +1,6 @@
 using System;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +20,9 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(configuration);
         services.Configure<ScrapeConfiguration>(configuration.GetSection(nameof(ScrapeConfiguration)));
+        services.Configure<UpdateConfiguration>(configuration.GetSection(nameof(UpdateConfiguration)));
 
+        services.AddSingleton<UpdateService>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
 
