@@ -2,6 +2,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.Options;
@@ -12,8 +13,9 @@ namespace AStar.Dev.Wallpaper.Scraper.ViewModels;
 public sealed class MainWindowViewModel : ViewModelBase
 {
     private string statusText = string.Empty;
+    private readonly IPlaywrightService playwrightService;
 
-    public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration)
+    public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService)
     {
         Title = $"{scrapeConfiguration.Value.ApplicationName} V{ApplicationVersion}";
 
@@ -21,6 +23,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         ScrapeTopCommand              = CreateScrapeCommand("Scrape Top Wallpapers");
         ScrapeSubscribedCommand       = CreateScrapeCommand("Scrape Subscribed Wallpapers");
         ScrapeAllCommand              = CreateScrapeCommand("Scrape All Wallpapers");
+        this.playwrightService = playwrightService;
     }
 
     public string Title { get; }

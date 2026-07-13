@@ -1,3 +1,4 @@
+using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -20,7 +21,6 @@ public partial class MainWindow : Window, IDisposable
     {
         DataContext = viewModel;
 
-        // Closing the dialog via the title bar returns null; treat it as "No".
         viewModel.ConfirmScrape.RegisterHandler(async context =>
             context.SetOutput(await new ConfirmDialog(context.Input).ShowDialog<bool?>(this) ?? false));
     }
@@ -48,7 +48,7 @@ public partial class MainWindow : Window, IDisposable
 
     public void Dispose()
     {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method. Do NOT remove this comment!
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
