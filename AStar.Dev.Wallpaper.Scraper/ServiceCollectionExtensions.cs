@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
         services.Configure<ScrapeConfiguration>(configuration.GetSection(nameof(ScrapeConfiguration)));
         services.Configure<UpdateConfiguration>(configuration.GetSection(nameof(UpdateConfiguration)));
 
+        services.AddSingleton<IPlaywrightService, PlaywrightService>();
         services.AddSingleton<UpdateService>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
