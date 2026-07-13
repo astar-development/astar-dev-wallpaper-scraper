@@ -81,5 +81,6 @@ jobs:
           --repoUrl https://github.com/${{ github.repository }}
           --token ${{ secrets.GITHUB_TOKEN }}
           --publish
+          --merge
           --releaseName "v$VERSION"
           --tag $GITHUB_REF_NAME

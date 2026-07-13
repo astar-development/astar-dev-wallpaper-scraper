@@ -13,13 +13,12 @@ public class GivenAddApplicationServices
         .BuildServiceProvider();
 
     [Fact]
-    public void when_services_are_built_then_scrape_configuration_binds_from_appsettings()
+    public void when_services_are_built_then_scrape_configuration_binds_from_the_test_appsettings()
     {
         var scrapeConfiguration = serviceProvider.GetRequiredService<IOptions<ScrapeConfiguration>>().Value;
 
         scrapeConfiguration.ApplicationName.ShouldBe("AStar Dev Wallpaper Scraper");
-        scrapeConfiguration.ApplicationVersion.ShouldStartWith("0.1.");
-        scrapeConfiguration.ConnectionStrings.Sqlite.ShouldNotBeNullOrWhiteSpace();
+        scrapeConfiguration.ConnectionStrings.Sqlite.ShouldBe("Data Source=./tests-database.db");
     }
 
     [Fact]
@@ -37,10 +36,11 @@ public class GivenAddApplicationServices
     }
 
     [Fact]
-    public void when_main_window_view_model_is_resolved_then_title_comes_from_appsettings()
+    public void when_main_window_view_model_is_resolved_then_title_combines_appsettings_name_and_assembly_version()
     {
         var viewModel = serviceProvider.GetRequiredService<MainWindowViewModel>();
 
-        viewModel.Title.ShouldStartWith("AStar Dev Wallpaper Scraper V0.1.");
+        viewModel.Title.ShouldBe($"AStar Dev Wallpaper Scraper V{MainWindowViewModel.ApplicationVersion}");
+        MainWindowViewModel.ApplicationVersion.ShouldNotBe("0.0.0");
     }
 }
