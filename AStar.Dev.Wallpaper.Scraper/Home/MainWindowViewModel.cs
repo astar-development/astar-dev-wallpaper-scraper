@@ -50,7 +50,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName) =>
         ReactiveCommand.CreateFromTask(async () =>
         {
-            var confirmed = await ConfirmScrape.Handle($"Are you sure you want to '{actionName}'?");
+            var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
 
             StatusText += $"{actionName}: {(confirmed ? "Yes" : "No")}{Environment.NewLine}";
             var page = await playwrightService.ConfigurePlaywrightAsync();

@@ -2,11 +2,9 @@
 
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <OutputType>Exe</OutputType>
-        <RootNamespace>AStar.Dev.Logging.Extensions.Tests.Unit</RootNamespace>
-        <TargetFramework>net10.0</TargetFramework>
+        <RootNamespace>AStar.Dev.Logging.Extensions.Tests.Unit</RootNamespace>        
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     </PropertyGroup>
 
@@ -51,15 +49,5 @@
     <ItemGroup>
         <Compile Remove="ConfigurationTest.cs" />
     </ItemGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-        <NoWarn>1701;1702;IDE0058;NU1902;IDE1006;CA1707;CA1711;CA1859;</NoWarn>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-        <NoWarn>1701;1702;IDE0058;NU1902;IDE1006;CA1707;CA1711;CA1859;</NoWarn>
-    </PropertyGroup>
 
 </Project>
