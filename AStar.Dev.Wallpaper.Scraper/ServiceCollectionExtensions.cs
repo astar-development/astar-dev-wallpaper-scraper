@@ -1,9 +1,13 @@
 using System.IO.Abstractions;
+using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Home;
+using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Testably.Abstractions;
 
 namespace AStar.Dev.Wallpaper.Scraper;
@@ -21,6 +25,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<UpdateService>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
+        services.AddDbContextFactory<AppDbContext>((serviceProvider, options) =>
+            options.UseSqlite(serviceProvider.GetRequiredService<IOptions<ScrapeConfiguration>>().Value.ConnectionStrings.Sqlite));
+        services.AddSingleton<ICategoryPageExtractor, CategoryPageExtractor>();
+        services.AddSingleton<IScrapeAction, SearchCategoryScrapeAction>();
 
         return services;
     }

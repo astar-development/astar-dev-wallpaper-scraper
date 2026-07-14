@@ -1,8 +1,8 @@
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Avalonia;
@@ -20,12 +20,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private CancellationTokenSource? scrapeCancellationSource;
     private readonly IPlaywrightService playwrightService;
 
-    public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService)
+    public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService, IScrapeAction searchCategoryScrapeAction)
     {
         Title = $"{scrapeConfiguration.Value.ApplicationName} V{ApplicationVersion}";
         this.playwrightService = playwrightService;
 
-        ScrapeSearchCategoriesCommand = CreateScrapeCommand("Scrape Search Categories");
+        ScrapeSearchCategoriesCommand = CreateScrapeCommand("Scrape Search Categories", searchCategoryScrapeAction);
         ScrapeTopCommand              = CreateScrapeCommand("Scrape Top Wallpapers");
         ScrapeSubscribedCommand       = CreateScrapeCommand("Scrape Subscribed Wallpapers");
         ScrapeAllCommand              = CreateScrapeCommand("Scrape All Wallpapers");
@@ -67,7 +67,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void CancelRunningScrape() => scrapeCancellationSource?.Cancel();
 
-    private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName)
+    private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName, IScrapeAction? action = null)
     {
         var command = ReactiveCommand.CreateFromTask(async () =>
         {
@@ -84,10 +84,25 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 var page = await playwrightService.ConfigurePlaywrightAsync(cancellationSource.Token);
                 cancellationSource.Token.ThrowIfCancellationRequested();
 
-                page.Match(
-                    page => {
+                await page.MatchAsync(
+                    async page => {
                         StatusText += $"Playwright page configured successfully.{Environment.NewLine}";
-                        _ = page.GotoAsync("login");
+
+                        if (action is null)
+                        {
+                            _ = page.GotoAsync("login");
+                        }
+                        else
+                        {
+                            var result = await action.ExecuteAsync(page, cancellationSource.Token);
+                            result.Match(
+                                _ => FunctionalParadigm.Unit.Instance,
+                                error => {
+                                    StatusText += $"{actionName}: {error.Message}{Environment.NewLine}";
+
+                                    return FunctionalParadigm.Unit.Instance;
+                                });
+                        }
 
                         return FunctionalParadigm.Unit.Instance;
                     },

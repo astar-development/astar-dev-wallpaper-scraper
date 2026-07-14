@@ -1,0 +1,49 @@
+using Microsoft.EntityFrameworkCore;
+
+namespace AStar.Dev.Infrastructure.AppDb.Entities;
+
+/// <summary>Query and persistence helpers for <see cref="FileClassificationCategoryEntity"/> records.</summary>
+public static class FileClassificationCategoryQueries
+{
+    private const string _unclassifiedCategoryName = "Unclassified";
+
+    /// <summary>
+    ///     Ensures each of the given category names exists as a Level 2 child of the "Unclassified" root
+    ///     category, creating the root and any missing categories. Categories already present are left
+    ///     untouched.
+    /// </summary>
+    /// <param name="context">The database context to persist through.</param>
+    /// <param name="categoryNames">The category names observed during the scrape.</param>
+    /// <param name="token">A token used to observe cancellation.</param>
+    public static async Task EnsureCategoriesExistAsync(this AppDbContext context, IReadOnlyList<string> categoryNames, CancellationToken token = default)
+    {
+        var unclassified = await context.Set<FileClassificationCategoryEntity>()
+            .SingleOrDefaultAsync(category => category.Level == 1 && category.ParentId == null && category.Name == _unclassifiedCategoryName, token);
+
+        if (unclassified is null)
+        {
+            unclassified = new FileClassificationCategoryEntity { Name = _unclassifiedCategoryName, Level = 1 };
+            context.Set<FileClassificationCategoryEntity>().Add(unclassified);
+            await context.SaveChangesAsync(token);
+        }
+
+        var existingNames = await context.Set<FileClassificationCategoryEntity>()
+            .Where(category => category.ParentId == unclassified.Id)
+            .Select(category => category.Name)
+            .ToListAsync(token);
+
+        var existingNameSet = new HashSet<string>(existingNames, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var name in categoryNames.Where(name => !existingNameSet.Contains(name)))
+        {
+            context.Set<FileClassificationCategoryEntity>().Add(new FileClassificationCategoryEntity
+            {
+                Name = name,
+                Level = 2,
+                ParentId = unclassified.Id
+            });
+        }
+
+        await context.SaveChangesAsync(token);
+    }
+}
