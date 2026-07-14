@@ -14,7 +14,16 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="Placeholder 1" />
+                <MenuItem Header="_Configuration">
+                    <MenuItem Header="Edit Connection Strings Configuration" Command="{Binding OpenConnectionStringsCommand}" />
+                    <MenuItem Header="Edit File Classification Categories Configuration" Command="{Binding OpenFileClassificationCategoriesCommand}" />
+                    <MenuItem Header="Edit Search Configuration" Command="{Binding OpenSearchConfigurationCommand}" />
+                    <MenuItem Header="Edit Model to Ignore" Command="{Binding OpenModelToIgnoreCommand}" />
+                    <MenuItem Header="Edit Scrape Directories" Command="{Binding OpenScrapeDirectoriesCommand}" />
+                    <MenuItem Header="Edit Search Categories" Command="{Binding OpenSearchCategoriesCommand}" />
+                    <MenuItem Header="Edit Tag to Ignore" Command="{Binding OpenTagToIgnoreCommand}" />
+                    <MenuItem Header="Edit User Configuration" Command="{Binding OpenUserConfigurationCommand}" />
+                </MenuItem>
                 <MenuItem Header="Placeholder 2" />
                 <MenuItem Header="Placeholder 3" />
                 <Separator />

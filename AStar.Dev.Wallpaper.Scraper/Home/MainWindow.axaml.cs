@@ -1,4 +1,6 @@
+using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using Avalonia.Controls;
+using Unit = System.Reactive.Unit;
 
 namespace AStar.Dev.Wallpaper.Scraper.Home;
 
@@ -17,5 +19,11 @@ public partial class MainWindow : Window
 
         viewModel.ConfirmScrape.RegisterHandler(async context =>
             context.SetOutput(await new ConfirmDialog(context.Input).ShowDialog<bool?>(this) ?? false));
+
+        viewModel.OpenEditor.RegisterHandler(async context =>
+        {
+            await new EntityEditorWindow { DataContext = context.Input }.ShowDialog(this);
+            context.SetOutput(Unit.Default);
+        });
     }
 }

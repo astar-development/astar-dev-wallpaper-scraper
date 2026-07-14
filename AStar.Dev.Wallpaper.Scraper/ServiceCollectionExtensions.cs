@@ -1,6 +1,7 @@
 using System.IO.Abstractions;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Home;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
@@ -29,6 +30,10 @@ public static class ServiceCollectionExtensions
             options.UseSqlite(serviceProvider.GetRequiredService<IOptions<ScrapeConfiguration>>().Value.ConnectionStrings.Sqlite));
         services.AddSingleton<ICategoryPageExtractor, CategoryPageExtractor>();
         services.AddSingleton<IScrapeAction, SearchCategoryScrapeAction>();
+        services.AddSingleton<IEntityEditorFactory>(serviceProvider => new EntityEditorFactory(
+            serviceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>(),
+            serviceProvider.GetRequiredService<IFileSystem>(),
+            ApplicationDirectories.DocumentsExportDirectory));
 
         return services;
     }
