@@ -1,6 +1,6 @@
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Home;
 using AStar.Dev.Wallpaper.Scraper.Services;
-using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

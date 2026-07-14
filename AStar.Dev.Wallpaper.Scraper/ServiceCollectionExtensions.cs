@@ -1,7 +1,7 @@
 using System.IO.Abstractions;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Home;
 using AStar.Dev.Wallpaper.Scraper.Services;
-using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Testably.Abstractions;
