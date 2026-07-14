@@ -37,6 +37,12 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
         })
         .MapAsync(async _ => (playwright ??= await Playwright.CreateAsync().ConfigureAwait(false)))
         .MapAsync(async _ => (context ??= await playwright!.Chromium.LaunchPersistentContextAsync(scrapeConfiguration.Value.UserDataDirectory, SetContext()).ConfigureAwait(false)))
+        .MapAsync(async context =>
+        {
+            await context!.AddInitScriptAsync(HideWebdriverScript).ConfigureAwait(false);
+
+            return context;
+        })
         .TapAsync(_ =>
         {
             if (lockAcquired) LogMessage.Information(logger, "Playwright configured successfully.");
@@ -53,6 +59,8 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
         });
     }
 
+    private const string HideWebdriverScript = "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });";
+
     private BrowserTypeLaunchPersistentContextOptions SetContext()
     {
         return new BrowserTypeLaunchPersistentContextOptions
@@ -60,6 +68,7 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
             BaseURL = EnsureTrailingSlash(scrapeConfiguration.Value.SearchConfiguration.BaseUrl),
             Channel = "chrome",
             Headless = scrapeConfiguration.Value.SearchConfiguration.UseHeadless,
+            Args = ["--disable-blink-features=AutomationControlled"],
             ViewportSize = new ViewportSize { Width = 3000, Height = 1200 },
             Locale = "en-GB",
             TimezoneId = "Europe/London",
