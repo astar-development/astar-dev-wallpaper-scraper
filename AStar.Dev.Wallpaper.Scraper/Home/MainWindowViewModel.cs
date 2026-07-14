@@ -13,20 +13,23 @@ using Unit = System.Reactive.Unit;
 
 namespace AStar.Dev.Wallpaper.Scraper.Home;
 
-public sealed class MainWindowViewModel : ViewModelBase
+public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private string statusText = string.Empty;
+    private bool isBusy;
+    private CancellationTokenSource? scrapeCancellationSource;
     private readonly IPlaywrightService playwrightService;
 
     public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService)
     {
         Title = $"{scrapeConfiguration.Value.ApplicationName} V{ApplicationVersion}";
+        this.playwrightService = playwrightService;
 
         ScrapeSearchCategoriesCommand = CreateScrapeCommand("Scrape Search Categories");
         ScrapeTopCommand              = CreateScrapeCommand("Scrape Top Wallpapers");
         ScrapeSubscribedCommand       = CreateScrapeCommand("Scrape Subscribed Wallpapers");
         ScrapeAllCommand              = CreateScrapeCommand("Scrape All Wallpapers");
-        this.playwrightService = playwrightService;
+        CancelCommand                 = ReactiveCommand.Create(CancelRunningScrape, this.WhenAnyValue(vm => vm.IsBusy));
     }
 
     public string Title { get; }
@@ -41,32 +44,75 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public ReactiveCommand<Unit, Unit> ScrapeAllCommand { get; }
 
+    /// <summary>
+    ///     Gets the command that cancels whichever scrape command is currently running.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+
+    /// <summary>
+    ///     Gets a value indicating whether a scrape command is currently running. Drives whether
+    ///     <see cref="CancelCommand" /> can execute.
+    /// </summary>
+    public bool IsBusy
+    {
+        get => isBusy;
+        private set => this.RaiseAndSetIfChanged(ref isBusy, value);
+    }
+
     public string StatusText
     {
         get => statusText;
         private set => this.RaiseAndSetIfChanged(ref statusText, value);
     }
 
-    private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName) =>
-        ReactiveCommand.CreateFromTask(async () =>
+    private void CancelRunningScrape() => scrapeCancellationSource?.Cancel();
+
+    private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName)
+    {
+        var command = ReactiveCommand.CreateFromTask(async () =>
         {
-            var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
+            IsBusy = true;
+            using var cancellationSource = new CancellationTokenSource();
+            scrapeCancellationSource = cancellationSource;
 
-            StatusText += $"{actionName}: {(confirmed ? "Yes" : "No")}{Environment.NewLine}";
-            var page = await playwrightService.ConfigurePlaywrightAsync();
-            page.Match(
-                page => {
-                    StatusText += $"Playwright page configured successfully.{Environment.NewLine}";
-                    _ = page.GotoAsync("login");
+            try
+            {
+                var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
+                cancellationSource.Token.ThrowIfCancellationRequested();
 
-                    return FunctionalParadigm.Unit.Instance;
-                },
-                error => {
-                    StatusText += $"Error configuring Playwright page: {error.Message}{Environment.NewLine}";
+                StatusText += $"{actionName}: {(confirmed ? "Yes" : "No")}{Environment.NewLine}";
+                var page = await playwrightService.ConfigurePlaywrightAsync();
+                cancellationSource.Token.ThrowIfCancellationRequested();
 
-                    return FunctionalParadigm.Unit.Instance;
-                });
+                page.Match(
+                    page => {
+                        StatusText += $"Playwright page configured successfully.{Environment.NewLine}";
+                        _ = page.GotoAsync("login");
+
+                        return FunctionalParadigm.Unit.Instance;
+                    },
+                    error => {
+                        StatusText += $"Error configuring Playwright page: {error.Message}{Environment.NewLine}";
+
+                        return FunctionalParadigm.Unit.Instance;
+                    });
+            }
+            catch (OperationCanceledException)
+            {
+                StatusText += $"{actionName}: Cancelled{Environment.NewLine}";
+            }
+            finally
+            {
+                scrapeCancellationSource = null;
+                IsBusy = false;
+            }
         });
+
+        command.ThrownExceptions.Subscribe(exception =>
+            StatusText += $"{actionName}: Unexpected error - {exception.Message}{Environment.NewLine}");
+
+        return command;
+    }
 
     public ReactiveCommand<Unit, Unit> ExitCommand { get; } = ReactiveCommand.Create(static () =>
     {
@@ -83,4 +129,9 @@ public sealed class MainWindowViewModel : ViewModelBase
     public static string ApplicationVersion { get; } = typeof(MainWindowViewModel).Assembly
         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
         .InformationalVersion.Split('+')[0] ?? "0.0.0";
+
+    /// <summary>
+    ///     Cancels any in-flight scrape operation so it does not continue running after the view model is torn down.
+    /// </summary>
+    public void Dispose() => scrapeCancellationSource?.Cancel();
 }
