@@ -9,85 +9,85 @@ namespace AStar.Dev.Infrastructure.AppDb;
 
 public static class ModelBuilderExtensions
 {
-    public static void UseSqliteFriendlyConversions(this ModelBuilder mb)
+    public static void UseSqliteFriendlyConversions(this ModelBuilder modelBuilder)
     {
         Type[] targetEntities =
         [
             typeof(AccountEntity),
-    typeof(SyncConflictEntity),
-    typeof(SyncJobEntity),
-    typeof(FileAccessDetailEntity),
-    typeof(DeletionStatusEntity),
-    typeof(EventEntity),
-    typeof(TagToIgnoreEntity),
-    typeof(ModelToIgnoreEntity),
-    typeof(ScrapedTagEntity),
-    typeof(ScrapeConfigurationEntity),
-    typeof(ConnectionStringsEntity),
-    typeof(UserConfigurationEntity),
-    typeof(SearchConfigurationEntity),
-    typeof(SearchCategoryEntity),
-    typeof(ScrapeDirectoriesEntity),
+            typeof(SyncConflictEntity),
+            typeof(SyncJobEntity),
+            typeof(FileAccessDetailEntity),
+            typeof(DeletionStatusEntity),
+            typeof(EventEntity),
+            typeof(TagToIgnoreEntity),
+            typeof(ModelToIgnoreEntity),
+            typeof(ScrapedTagEntity),
+            typeof(ScrapeConfigurationEntity),
+            typeof(ConnectionStringsEntity),
+            typeof(UserConfigurationEntity),
+            typeof(SearchConfigurationEntity),
+            typeof(SearchCategoryEntity),
+            typeof(ScrapeDirectoriesEntity),
         ];
 
-        foreach(var et in mb.Model.GetEntityTypes().Where(e => targetEntities.Contains(e.ClrType)))
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(mutableEntityType => targetEntities.Contains(mutableEntityType.ClrType)))
         {
-            ApplyConversionsForEntity(mb, et);
+            ApplyConversionsForEntity(modelBuilder, entityType);
         }
     }
 
-    private static void ApplyConversionsForEntity(ModelBuilder mb, IMutableEntityType et)
+    private static void ApplyConversionsForEntity(ModelBuilder modelBuilder, IMutableEntityType entityType)
     {
-        var eb = mb.Entity(et.ClrType);
+        var entityTypeBuilder = modelBuilder.Entity(entityType.ClrType);
 
-        foreach(var propInfo in et.ClrType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        foreach (var propInfo in entityType.ClrType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
             var propertyType = propInfo.PropertyType;
 
-            if(propertyType == typeof(DateTimeOffset))
+            if (propertyType == typeof(DateTimeOffset))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.DateTimeOffsetToTicks).HasColumnType("INTEGER").HasColumnName(propInfo.Name + "_Ticks");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.DateTimeOffsetToTicks).HasColumnType("INTEGER").HasColumnName(propInfo.Name + "_Ticks");
             }
-            else if(Nullable.GetUnderlyingType(propertyType) == typeof(DateTimeOffset))
+            else if (Nullable.GetUnderlyingType(propertyType) == typeof(DateTimeOffset))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableDateTimeOffsetToTicks).HasColumnType("INTEGER").HasColumnName(propInfo.Name + "_Ticks");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableDateTimeOffsetToTicks).HasColumnType("INTEGER").HasColumnName(propInfo.Name + "_Ticks");
             }
-            else if(propertyType == typeof(TimeSpan))
+            else if (propertyType == typeof(TimeSpan))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.TimeSpanToTicks).HasColumnType("INTEGER");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.TimeSpanToTicks).HasColumnType("INTEGER");
             }
-            else if(Nullable.GetUnderlyingType(propertyType) == typeof(TimeSpan))
+            else if (Nullable.GetUnderlyingType(propertyType) == typeof(TimeSpan))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableTimeSpanToTicks).HasColumnType("INTEGER");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableTimeSpanToTicks).HasColumnType("INTEGER");
             }
-            else if(propertyType == typeof(Guid))
+            else if (propertyType == typeof(Guid))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.GuidToBytes).HasColumnType("BLOB");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.GuidToBytes).HasColumnType("BLOB");
             }
-            else if(Nullable.GetUnderlyingType(propertyType) == typeof(Guid))
+            else if (Nullable.GetUnderlyingType(propertyType) == typeof(Guid))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableGuidToBytes).HasColumnType("BLOB");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableGuidToBytes).HasColumnType("BLOB");
             }
-            else if(propertyType == typeof(decimal))
+            else if (propertyType == typeof(decimal))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.DecimalToCents).HasColumnType("INTEGER");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.DecimalToCents).HasColumnType("INTEGER");
             }
-            else if(Nullable.GetUnderlyingType(propertyType) == typeof(decimal))
+            else if (Nullable.GetUnderlyingType(propertyType) == typeof(decimal))
             {
-                _ = eb.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableDecimalToCents).HasColumnType("INTEGER");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(SqliteTypeConverters.NullableDecimalToCents).HasColumnType("INTEGER");
             }
-            else if(propertyType.IsEnum)
+            else if (propertyType.IsEnum)
             {
-                _ = eb.Property(propInfo.Name).HasConversion<int>().HasColumnType("INTEGER");
+                _ = entityTypeBuilder.Property(propInfo.Name).HasConversion<int>().HasColumnType("INTEGER");
             }
-            else if(Nullable.GetUnderlyingType(propertyType)?.IsEnum == true)
+            else if (Nullable.GetUnderlyingType(propertyType)?.IsEnum == true)
             {
                 var enumType = Nullable.GetUnderlyingType(propertyType);
-                if(enumType != null)
+                if (enumType != null)
                 {
                     var converterType = typeof(EnumToNumberConverter<,>).MakeGenericType(enumType, typeof(int));
                     var converter = (ValueConverter)Activator.CreateInstance(converterType)!;
-                    _ = eb.Property(propInfo.Name).HasConversion(converter).HasColumnType("INTEGER");
+                    _ = entityTypeBuilder.Property(propInfo.Name).HasConversion(converter).HasColumnType("INTEGER");
                 }
             }
         }

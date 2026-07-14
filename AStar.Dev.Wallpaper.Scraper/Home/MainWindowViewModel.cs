@@ -1,14 +1,17 @@
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Services;
+using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.Options;
 using ReactiveUI;
+using Unit = System.Reactive.Unit;
 
-namespace AStar.Dev.Wallpaper.Scraper.ViewModels;
+namespace AStar.Dev.Wallpaper.Scraper.Home;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {
@@ -50,6 +53,19 @@ public sealed class MainWindowViewModel : ViewModelBase
             var confirmed = await ConfirmScrape.Handle($"Are you sure you want to '{actionName}'?");
 
             StatusText += $"{actionName}: {(confirmed ? "Yes" : "No")}{Environment.NewLine}";
+            var page = await playwrightService.ConfigurePlaywrightAsync();
+            page.Match(
+                page => {
+                    StatusText += $"Playwright page configured successfully.{Environment.NewLine}";
+                    _ = page.GotoAsync("login");
+
+                    return FunctionalParadigm.Unit.Instance;
+                },
+                error => {
+                    StatusText += $"Error configuring Playwright page: {error.Message}{Environment.NewLine}";
+
+                    return FunctionalParadigm.Unit.Instance;
+                });
         });
 
     public ReactiveCommand<Unit, Unit> ExitCommand { get; } = ReactiveCommand.Create(static () =>

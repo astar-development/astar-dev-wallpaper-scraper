@@ -1,9 +1,8 @@
 using AStar.Dev.Wallpaper.Scraper.Services;
-using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
-namespace AStar.Dev.Wallpaper.Scraper;
+namespace AStar.Dev.Wallpaper.Scraper.Home;
 
 public partial class MainWindow : Window, IDisposable
 {

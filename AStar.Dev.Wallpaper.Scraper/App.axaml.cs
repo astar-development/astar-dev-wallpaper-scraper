@@ -9,6 +9,7 @@ using Serilog.Events;
 using System.Globalization;
 using Testably.Abstractions;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Home;
 namespace AStar.Dev.Wallpaper.Scraper;
 
 public partial class App : Application, IDisposable
