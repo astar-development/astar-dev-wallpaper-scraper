@@ -92,6 +92,21 @@ public sealed class GivenPlaywrightService : IDisposable
     }
 
     [Fact]
+    public async Task when_configure_playwright_async_is_called_then_navigator_webdriver_is_hidden_from_bot_detection_scripts()
+    {
+        var sut = CreatePlaywrightService();
+
+        var result = await sut.ConfigurePlaywrightAsync();
+
+        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
+        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new Microsoft.Playwright.RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
+        await page.GotoAsync("https://localhost/webdriver-check");
+        var webdriver = await page.EvaluateAsync<object?>("navigator.webdriver");
+        await page.Context.CloseAsync();
+        webdriver.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task when_the_browser_launch_fails_then_a_failure_result_is_returned_instead_of_throwing()
     {
         var sut = CreatePlaywrightService(userDataDirectoryOverride: "\0invalid-user-data-directory");
