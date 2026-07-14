@@ -12,8 +12,6 @@ public sealed class SearchConfigurationEntityConfiguration : IEntityTypeConfigur
     {
         _ = builder.ToTable("SearchConfiguration");
         _ = builder.HasKey(searchConfiguration => searchConfiguration.Id);
-        _ = builder.HasIndex(searchConfiguration => searchConfiguration.ScrapeConfigurationEntityId).IsUnique();
-        _ = builder.Property(searchConfiguration => searchConfiguration.ScrapeConfigurationEntityId).IsRequired();
 
         _ = builder.Property(searchConfiguration => searchConfiguration.BaseUrl)
                    .HasConversion(uri => uri.ToString(), value => new Uri(value))

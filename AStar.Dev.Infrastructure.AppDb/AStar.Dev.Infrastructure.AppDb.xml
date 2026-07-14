@@ -58,12 +58,6 @@
         <member name="M:AStar.Dev.Infrastructure.AppDb.Configuration.ModelToIgnoreEntityConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.AppDb.Entities.ModelToIgnoreEntity})">
             <inheritdoc />
         </member>
-        <member name="T:AStar.Dev.Infrastructure.AppDb.Configuration.ScrapeConfigurationEntityConfiguration">
-            <summary>EF Core configuration for <see cref="T:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity"/>.</summary>
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.AppDb.Configuration.ScrapeConfigurationEntityConfiguration.Configure(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity})">
-            <inheritdoc />
-        </member>
         <member name="T:AStar.Dev.Infrastructure.AppDb.Configuration.ScrapeDirectoriesEntityConfiguration">
             <summary>EF Core configuration for <see cref="T:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeDirectoriesEntity"/>.</summary>
         </member>
@@ -734,12 +728,6 @@
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ConnectionStringsEntity.Id">
             <summary>Primary key.</summary>
         </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ConnectionStringsEntity.ScrapeConfigurationEntityId">
-            <summary>Foreign key to the parent scrape configuration.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ConnectionStringsEntity.ScrapeConfigurationEntity">
-            <summary>Navigation property to the parent scrape configuration.</summary>
-        </member>
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ConnectionStringsEntity.Sqlite">
             <summary>The SQLite connection string used to store scraped data.</summary>
         </member>
@@ -1071,41 +1059,11 @@
             Indicates that the rule is an exclusion rule, meaning that files or folders matching this rule should be excluded from the synchronization process. This allows users to specify certain items that they do not want to be synchronized, effectively ignoring them during the sync operation.
             </summary>
         </member>
-        <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity">
-            <summary>The root configuration entity for the scraper, aggregating connection, user, search, and directory settings.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity.Id">
-            <summary>Primary key.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity.ConnectionStrings">
-            <summary>The connection strings required by the scraper.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity.UserConfiguration">
-            <summary>The user authentication details for the target website.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity.SearchConfiguration">
-            <summary>The search parameters for the scraper.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity.ScrapeDirectories">
-            <summary>The directories the scraper reads from and writes to.</summary>
-        </member>
-        <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationQueries">
-            <summary>Provides methods for querying the scrape configuration.</summary>
-        </member>
-        <member name="M:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationQueries.GetScrapeConfigurations(Microsoft.EntityFrameworkCore.DbSet{AStar.Dev.Infrastructure.AppDb.Entities.ScrapeConfigurationEntity})">
-            <summary>Retrieves the most recent scrape configuration, including its connection strings, user configuration, search configuration with categories, and scrape directories.</summary>
-        </member>
         <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeDirectoriesEntity">
             <summary>The directories the scraper reads from and writes scraped data to.</summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeDirectoriesEntity.Id">
             <summary>Primary key.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeDirectoriesEntity.ScrapeConfigurationEntityId">
-            <summary>Foreign key to the parent scrape configuration.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeDirectoriesEntity.ScrapeConfigurationEntity">
-            <summary>Navigation property to the parent scrape configuration.</summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.ScrapeDirectoriesEntity.RootDirectory">
             <summary>The root directory under which all scraped data is organised.</summary>
@@ -1174,12 +1132,6 @@
         </member>
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SearchConfigurationEntity.Id">
             <summary>Primary key.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SearchConfigurationEntity.ScrapeConfigurationEntityId">
-            <summary>Foreign key to the parent scrape configuration.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SearchConfigurationEntity.ScrapeConfigurationEntity">
-            <summary>Navigation property to the parent scrape configuration.</summary>
         </member>
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SearchConfigurationEntity.BaseUrl">
             <summary>The base URL of the target website.</summary>
@@ -1578,12 +1530,6 @@
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.UserConfigurationEntity.Id">
             <summary>Primary key.</summary>
         </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.UserConfigurationEntity.ScrapeConfigurationEntityId">
-            <summary>Foreign key to the parent scrape configuration.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.UserConfigurationEntity.ScrapeConfigurationEntity">
-            <summary>Navigation property to the parent scrape configuration.</summary>
-        </member>
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.UserConfigurationEntity.LoginEmailAddress">
             <summary>The login email address for the target website.</summary>
         </member>
@@ -1739,6 +1685,18 @@
             <inheritdoc />
         </member>
         <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.RepairClassificationData.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.AppDb.Migrations.RemoveScrapeConfigurationTable">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.RemoveScrapeConfigurationTable.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.RemoveScrapeConfigurationTable.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.RemoveScrapeConfigurationTable.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:System.Text.RegularExpressions.Generated.NonAlphaPattern_0">

@@ -18,7 +18,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<FileClassificationKeywordEntity> FileClassificationKeywords => Set<FileClassificationKeywordEntity>();
     public DbSet<TagToIgnoreEntity> TagsToIgnore => Set<TagToIgnoreEntity>();
     public DbSet<ModelToIgnoreEntity> ModelsToIgnore => Set<ModelToIgnoreEntity>();
-    public DbSet<ScrapeConfigurationEntity> ScrapeConfiguration => Set<ScrapeConfigurationEntity>();
     public DbSet<SearchConfigurationEntity> SearchConfigurations => Set<SearchConfigurationEntity>();
     public DbSet<ScrapedTagEntity> ScrapedTags => Set<ScrapedTagEntity>();
 

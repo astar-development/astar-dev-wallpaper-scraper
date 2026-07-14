@@ -6,12 +6,6 @@ public sealed class SearchConfigurationEntity : AuditableEntity
     /// <summary>Primary key.</summary>
     public int Id { get; set; }
 
-    /// <summary>Foreign key to the parent scrape configuration.</summary>
-    public int ScrapeConfigurationEntityId { get; set; }
-
-    /// <summary>Navigation property to the parent scrape configuration.</summary>
-    public ScrapeConfigurationEntity? ScrapeConfigurationEntity { get; set; }
-
     /// <summary>The base URL of the target website.</summary>
     public Uri BaseUrl { get; set; } = new("https://example.com");
 

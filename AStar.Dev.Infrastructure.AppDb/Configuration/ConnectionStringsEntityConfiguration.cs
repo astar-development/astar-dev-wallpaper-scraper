@@ -12,8 +12,6 @@ public sealed class ConnectionStringsEntityConfiguration : IEntityTypeConfigurat
     {
         _ = builder.ToTable("ConnectionStrings");
         _ = builder.HasKey(connectionStrings => connectionStrings.Id);
-        _ = builder.HasIndex(connectionStrings => connectionStrings.ScrapeConfigurationEntityId).IsUnique();
-        _ = builder.Property(connectionStrings => connectionStrings.ScrapeConfigurationEntityId).IsRequired();
         _ = builder.Property(connectionStrings => connectionStrings.Sqlite).HasMaxLength(256).IsRequired();
     }
 }
