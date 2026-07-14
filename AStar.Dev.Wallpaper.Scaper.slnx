@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="AStar.Dev.FunctionalParadigm.Tests.Unit/AStar.Dev.FunctionalParadigm.Tests.Unit.csproj" />
   <Project Path="AStar.Dev.FunctionalParadigm/AStar.Dev.FunctionalParadigm.csproj" />
+  <Project Path="AStar.Dev.Infrastructure.AppDb.Tests.Unit/AStar.Dev.Infrastructure.AppDb.Tests.Unit.csproj" />
   <Project Path="AStar.Dev.Infrastructure.AppDb/AStar.Dev.Infrastructure.AppDb.csproj" />
   <Project Path="AStar.Dev.Source.Generators.Attributes.Tests.Unit/AStar.Dev.Source.Generators.Attributes.Tests.Unit.csproj" />
   <Project Path="AStar.Dev.Source.Generators.Attributes/AStar.Dev.Source.Generators.Attributes.csproj" />

@@ -4,6 +4,7 @@ using System.Reactive.Threading.Tasks;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Home;
+using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
@@ -14,14 +15,44 @@ namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Home;
 public sealed class GivenMainWindowViewModel
 {
     private readonly IPlaywrightService playwrightService = Substitute.For<IPlaywrightService>();
+    private readonly IScrapeAction searchCategoryScrapeAction = Substitute.For<IScrapeAction>();
 
     static GivenMainWindowViewModel()
     {
         RxApp.MainThreadScheduler = ImmediateScheduler.Instance;
     }
 
-    public GivenMainWindowViewModel() =>
+    public GivenMainWindowViewModel()
+    {
         playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(Substitute.For<IPage>())));
+        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance)));
+    }
+
+    [Fact]
+    public async Task when_search_categories_scrape_completes_then_the_injected_action_executes_against_the_configured_page()
+    {
+        var page = Substitute.For<IPage>();
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(page)));
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeSearchCategoriesCommand.Execute();
+
+        await searchCategoryScrapeAction.Received().ExecuteAsync(page, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_the_search_categories_action_fails_then_the_status_reports_the_failure_message()
+    {
+        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Exceptional<FunctionalParadigm.Unit>>(Exceptional.Failure<FunctionalParadigm.Unit>(new InvalidOperationException("boom"))));
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeSearchCategoriesCommand.Execute();
+
+        sut.StatusText.ShouldContain("boom");
+    }
 
     [Fact]
     public void when_constructed_then_cancel_command_cannot_execute()
@@ -113,7 +144,7 @@ public sealed class GivenMainWindowViewModel
     {
         var scrapeConfiguration = Options.Create(new ScrapeConfiguration { ApplicationName = "Test App" });
 
-        return new MainWindowViewModel(scrapeConfiguration, playwrightService);
+        return new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction);
     }
 
     private static (TaskCompletionSource<bool> ConfirmationGate, Task HandlerEntered) RegisterGatedConfirmHandler(MainWindowViewModel sut)

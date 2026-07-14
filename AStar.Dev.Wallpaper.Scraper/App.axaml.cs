@@ -1,9 +1,13 @@
+using AStar.Dev.Infrastructure.AppDb;
+using AStar.Dev.Logging.Extensions;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using System.Globalization;
@@ -43,6 +47,7 @@ public partial class App : Application, IDisposable
             .AddLogging(logging => logging.AddSerilog(dispose: true))
             .BuildServiceProvider();
 
+        MigrateDatabaseAsync(services).GetAwaiter().GetResult();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -52,6 +57,22 @@ public partial class App : Application, IDisposable
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static async Task MigrateDatabaseAsync(IServiceProvider serviceProvider)
+    {
+        var logger = serviceProvider.GetRequiredService<ILogger<App>>();
+
+        try
+        {
+            var dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+            await dbContext.Database.MigrateAsync();
+        }
+        catch (Exception exception)
+        {
+            LogMessage.Error(logger, "Database migration failed", exception);
+        }
     }
     private static void RegisterOptions(IServiceCollection services, IConfiguration configuration) =>
         _ = services.AddOptions<SyncSettings>()

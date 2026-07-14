@@ -10,6 +10,15 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
+  <!--
+    SQLitePCLRaw.lib.e_sqlite3 2.1.11 carries advisory GHSA-2m69-gcr7-jv3q.
+    Upgrading to 3.x risks compatibility with Microsoft.EntityFrameworkCore.Sqlite 10.0.9.
+    Suppressed intentionally; revisit when EF Core ships with a safe SQLitePCLRaw version.
+  -->
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
@@ -20,6 +29,7 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Avalonia.ReactiveUI" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
@@ -48,6 +58,7 @@
     <ProjectReference Include="..\AStar.Dev.Logging.Extensions\AStar.Dev.Logging.Extensions.csproj" />
     <ProjectReference Include="..\AStar.Dev.Utilities\AStar.Dev.Utilities.csproj" />
     <ProjectReference Include="..\AStar.Dev.FunctionalParadigm\AStar.Dev.FunctionalParadigm.csproj" />
+    <ProjectReference Include="..\AStar.Dev.Infrastructure.AppDb\AStar.Dev.Infrastructure.AppDb.csproj" />
   </ItemGroup>
 
 </Project>

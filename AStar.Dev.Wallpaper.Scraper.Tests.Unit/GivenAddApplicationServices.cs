@@ -1,6 +1,8 @@
+using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Home;
 using AStar.Dev.Wallpaper.Scraper.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -46,6 +48,15 @@ public class GivenAddApplicationServices
     public void when_services_are_built_then_update_service_resolves()
     {
         serviceProvider.GetRequiredService<UpdateService>().ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void when_app_db_context_factory_is_resolved_then_it_uses_the_configured_sqlite_connection_string()
+    {
+        var factory = serviceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>();
+        using var context = factory.CreateDbContext();
+
+        context.Database.GetConnectionString().ShouldBe("Data Source=./tests-database.db");
     }
 
     [Fact]
