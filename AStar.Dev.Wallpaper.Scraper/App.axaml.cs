@@ -26,10 +26,17 @@ public partial class App : Application, IDisposable
     public override void OnFrameworkInitializationCompleted()
     {
         var fileSystem = new RealFileSystem();
-        var collection = new ServiceCollection()
-            .AddApplicationServices();
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddUserSecrets<App>(optional: true)
+            .AddEnvironmentVariables()
+            .Build();
 
-        var configuration = RegisterOptions(collection);
+        var collection = new ServiceCollection()
+            .AddApplicationServices(configuration);
+
+        RegisterOptions(collection, configuration);
         ConfigureSerilog(fileSystem, configuration);
 
         services = collection
@@ -46,19 +53,11 @@ public partial class App : Application, IDisposable
 
         base.OnFrameworkInitializationCompleted();
     }
-    private static IConfigurationRoot RegisterOptions(IServiceCollection services)
-    {
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-            
+    private static void RegisterOptions(IServiceCollection services, IConfiguration configuration) =>
         _ = services.AddOptions<SyncSettings>()
                 .Bind(configuration.GetSection(SyncSettings.SectionName))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
-
-        return configuration;
-    }
 
     private static void ConfigureSerilog(RealFileSystem fileSystem, IConfigurationRoot configuration)
     {

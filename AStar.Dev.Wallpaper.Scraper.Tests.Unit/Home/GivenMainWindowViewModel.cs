@@ -21,7 +21,7 @@ public sealed class GivenMainWindowViewModel
     }
 
     public GivenMainWindowViewModel() =>
-        playwrightService.ConfigurePlaywrightAsync().Returns(Task.FromResult(Exceptional.Success(Substitute.For<IPage>())));
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(Substitute.For<IPage>())));
 
     [Fact]
     public void when_constructed_then_cancel_command_cannot_execute()
@@ -62,7 +62,7 @@ public sealed class GivenMainWindowViewModel
         await execution;
 
         sut.StatusText.ShouldContain("Cancelled");
-        await playwrightService.DidNotReceive().ConfigurePlaywrightAsync();
+        await playwrightService.DidNotReceive().ConfigurePlaywrightAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]

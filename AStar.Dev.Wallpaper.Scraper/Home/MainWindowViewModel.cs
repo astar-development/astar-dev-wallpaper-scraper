@@ -81,7 +81,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 cancellationSource.Token.ThrowIfCancellationRequested();
 
                 StatusText += $"{actionName}: {(confirmed ? "Yes" : "No")}{Environment.NewLine}";
-                var page = await playwrightService.ConfigurePlaywrightAsync();
+                var page = await playwrightService.ConfigurePlaywrightAsync(cancellationSource.Token);
                 cancellationSource.Token.ThrowIfCancellationRequested();
 
                 page.Match(

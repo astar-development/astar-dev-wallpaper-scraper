@@ -17,7 +17,7 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
     private IPage? page;
 
     /// <inheritdoc />
-    public async Task<Exceptional<IPage>> ConfigurePlaywrightAsync()
+    public async Task<Exceptional<IPage>> ConfigurePlaywrightAsync(CancellationToken token)
     {
         var lockAcquired = false;
 
@@ -25,7 +25,7 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
         {
             if (page is not null) return page;
 
-            await configureLock.WaitAsync();
+            await configureLock.WaitAsync(token);
             lockAcquired = true;
             fileSystem.Directory.CreateDirectory(scrapeConfiguration.Value.UserDataDirectory);
 
@@ -49,9 +49,7 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
         })
         .MapAsync(async context =>
         {
-            page ??= await context!.NewPageAsync();
-
-            return page!;
+            return page ??= await context!.NewPageAsync()!;
         })
         .Ensure(_ =>
         {

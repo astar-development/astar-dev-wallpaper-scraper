@@ -10,15 +10,8 @@ namespace AStar.Dev.Wallpaper.Scraper;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        IConfiguration configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddUserSecrets<App>(optional: true)
-            .AddEnvironmentVariables()
-            .Build();
-
         services.AddSingleton(configuration);
         services.Configure<ScrapeConfiguration>(configuration.GetSection(nameof(ScrapeConfiguration)));
         services.Configure<UpdateConfiguration>(configuration.GetSection(nameof(UpdateConfiguration)));

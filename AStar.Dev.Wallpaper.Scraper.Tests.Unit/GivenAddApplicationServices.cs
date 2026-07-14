@@ -1,18 +1,29 @@
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Home;
 using AStar.Dev.Wallpaper.Scraper.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit;
 
 public class GivenAddApplicationServices
 {
-    private readonly ServiceProvider serviceProvider = new ServiceCollection()
-        .AddApplicationServices()
-        .AddLogging()
-        .BuildServiceProvider();
+    private readonly ServiceProvider serviceProvider;
+
+    public GivenAddApplicationServices()
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
+        var services = new ServiceCollection()
+            .AddApplicationServices(configuration)
+            .AddLogging();
+
+        serviceProvider = services.BuildServiceProvider();
+    }
 
     [Fact]
     public void when_services_are_built_then_scrape_configuration_binds_from_the_test_appsettings()
