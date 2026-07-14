@@ -12,8 +12,6 @@ public sealed class ScrapeDirectoriesEntityConfiguration : IEntityTypeConfigurat
     {
         _ = builder.ToTable("ScrapeDirectories");
         _ = builder.HasKey(scrapeDirectories => scrapeDirectories.Id);
-        _ = builder.HasIndex(scrapeDirectories => scrapeDirectories.ScrapeConfigurationEntityId).IsUnique();
-        _ = builder.Property(scrapeDirectories => scrapeDirectories.ScrapeConfigurationEntityId).IsRequired();
         _ = builder.Property(scrapeDirectories => scrapeDirectories.RootDirectory).HasMaxLength(256);
         _ = builder.Property(scrapeDirectories => scrapeDirectories.BaseSaveDirectory).HasMaxLength(256);
         _ = builder.Property(scrapeDirectories => scrapeDirectories.BaseDirectory).HasMaxLength(256);

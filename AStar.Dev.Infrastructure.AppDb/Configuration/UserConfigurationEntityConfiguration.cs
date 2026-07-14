@@ -12,8 +12,6 @@ public sealed class UserConfigurationEntityConfiguration : IEntityTypeConfigurat
     {
         _ = builder.ToTable("UserConfiguration");
         _ = builder.HasKey(userConfiguration => userConfiguration.Id);
-        _ = builder.HasIndex(userConfiguration => userConfiguration.ScrapeConfigurationEntityId).IsUnique();
-        _ = builder.Property(userConfiguration => userConfiguration.ScrapeConfigurationEntityId).IsRequired();
         _ = builder.Property(userConfiguration => userConfiguration.Username).HasMaxLength(256).IsRequired();
         _ = builder.Property(userConfiguration => userConfiguration.LoginEmailAddress).HasMaxLength(256).IsRequired();
         _ = builder.Property(userConfiguration => userConfiguration.Password).HasMaxLength(256).IsRequired();

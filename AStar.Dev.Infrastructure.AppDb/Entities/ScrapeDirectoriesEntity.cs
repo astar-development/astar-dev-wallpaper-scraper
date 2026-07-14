@@ -6,12 +6,6 @@ public sealed class ScrapeDirectoriesEntity : AuditableEntity
     /// <summary>Primary key.</summary>
     public int Id { get; set; }
 
-    /// <summary>Foreign key to the parent scrape configuration.</summary>
-    public int ScrapeConfigurationEntityId { get; set; }
-
-    /// <summary>Navigation property to the parent scrape configuration.</summary>
-    public ScrapeConfigurationEntity? ScrapeConfigurationEntity { get; set; }
-
     /// <summary>The root directory under which all scraped data is organised.</summary>
     public string RootDirectory { get; set; } = string.Empty;
 
