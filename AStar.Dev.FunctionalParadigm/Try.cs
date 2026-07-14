@@ -76,4 +76,10 @@ public static class Try
 
         return await RunAsync(operation).ConfigureAwait(false);
     }
+
+    public static Exceptional<T> Ensure<T>(this Exceptional<T> result, Action finallyAction)
+    {
+        finallyAction();
+        return result;
+    }
 }
