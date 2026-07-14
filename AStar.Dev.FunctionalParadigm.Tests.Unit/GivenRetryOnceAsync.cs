@@ -17,7 +17,7 @@ public sealed class GivenRetryOnceAsync
     {
         var attempts = 0;
 
-        await RetryExtensions.RetryOnceAsync<int, string>(
+        await RetryExtensions.RetryOnceAsync(
             () =>
             {
                 attempts++;
@@ -34,7 +34,7 @@ public sealed class GivenRetryOnceAsync
     {
         var retryInvoked = false;
 
-        await RetryExtensions.RetryOnceAsync<int, string>(
+        await RetryExtensions.RetryOnceAsync(
             () => Task.FromResult(Result.Success<int, string>(1)),
             () =>
             {
@@ -51,7 +51,7 @@ public sealed class GivenRetryOnceAsync
     {
         var attempts = 0;
 
-        var actual = await RetryExtensions.RetryOnceAsync<int, string>(
+        var actual = await RetryExtensions.RetryOnceAsync(
             () =>
             {
                 attempts++;
@@ -68,7 +68,7 @@ public sealed class GivenRetryOnceAsync
     {
         var attempts = 0;
 
-        await RetryExtensions.RetryOnceAsync<int, string>(
+        await RetryExtensions.RetryOnceAsync(
             () =>
             {
                 attempts++;
@@ -86,7 +86,7 @@ public sealed class GivenRetryOnceAsync
         var retryInvocations = 0;
         var attempts = 0;
 
-        await RetryExtensions.RetryOnceAsync<int, string>(
+        await RetryExtensions.RetryOnceAsync(
             () =>
             {
                 attempts++;
@@ -108,7 +108,7 @@ public sealed class GivenRetryOnceAsync
     {
         var attempts = 0;
 
-        var actual = await RetryExtensions.RetryOnceAsync<int, string>(
+        var actual = await RetryExtensions.RetryOnceAsync(
             () =>
             {
                 attempts++;
@@ -125,7 +125,7 @@ public sealed class GivenRetryOnceAsync
     {
         var attempts = 0;
 
-        await RetryExtensions.RetryOnceAsync<int, string>(
+        await RetryExtensions.RetryOnceAsync(
             () =>
             {
                 attempts++;
@@ -142,7 +142,7 @@ public sealed class GivenRetryOnceAsync
     {
         var retryInvocations = 0;
 
-        await RetryExtensions.RetryOnceAsync<int, string>(
+        await RetryExtensions.RetryOnceAsync(
             () => Task.FromResult(Result.Failure<int, string>("failed")),
             () =>
             {

@@ -83,6 +83,17 @@ public static class ExceptionalExtensions
     }
 
     /// <summary>
+    ///     Asynchronously transforms the value inside a Task of <see cref="Exceptional{T}" /> if it is a <see cref="Success{T}" />,
+    ///     via an asynchronous selector.
+    /// </summary>
+    public static async Task<Exceptional<TResult>> MapAsync<T, TResult>(this Task<Exceptional<T>> exceptionalTask, Func<T, Task<TResult>> selector)
+    {
+        var exceptional = await exceptionalTask.ConfigureAwait(false);
+
+        return await exceptional.MapAsync(selector).ConfigureAwait(false);
+    }
+
+    /// <summary>
     ///     Chains another <see cref="Exceptional{T}" />-producing function, short-circuiting on <see cref="Failure{T}" />.
     /// </summary>
     public static Exceptional<TResult> Bind<T, TResult>(this Exceptional<T> exceptional, Func<T, Exceptional<TResult>> binder)
@@ -219,6 +230,19 @@ public static class ExceptionalExtensions
         var exceptional = await exceptionalTask.ConfigureAwait(false);
 
         return exceptional.Tap(onSuccess, onFailure);
+    }
+
+    /// <summary>
+    ///     Asynchronously runs a finalizer against a Task of <see cref="Exceptional{T}" /> regardless of whether it
+    ///     resolves to a <see cref="Success{T}" /> or a <see cref="Failure{T}" />, and returns the original result.
+    /// </summary>
+    public static async Task<Exceptional<T>> Ensure<T>(this Task<Exceptional<T>> exceptionalTask, Action<T> finallyAction)
+    {
+        var exceptional = await exceptionalTask.ConfigureAwait(false);
+
+        finallyAction(exceptional is Success<T> success ? success.Value : default!);
+
+        return exceptional;
     }
 
     /// <summary>

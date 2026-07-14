@@ -13,45 +13,57 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
 {
     private readonly SemaphoreSlim configureLock = new(1, 1);
     private IPlaywright? playwright;
-    private Microsoft.Playwright.IBrowserContext? context;
-    private Microsoft.Playwright.IPage? page;
+    private IBrowserContext? context;
+    private IPage? page;
 
     /// <inheritdoc />
-    public async Task<Exceptional<Microsoft.Playwright.IPage>> ConfigurePlaywrightAsync()
+    public async Task<Exceptional<IPage>> ConfigurePlaywrightAsync()
     {
-        await configureLock.WaitAsync();
+        var lockAcquired = false;
 
-        try
+        return await Try.RunAsync(async () =>
         {
-            if (page is not null)
-            {
-                return Exceptional.Success(page);
-            }
+            if (page is not null) return page;
 
-            return await Try.RunAsync(async () =>
-                {
-                    fileSystem.Directory.CreateDirectory(scrapeConfiguration.Value.UserDataDirectory);
-                    playwright ??= await Microsoft.Playwright.Playwright.CreateAsync();
-                    context = await playwright.Chromium.LaunchPersistentContextAsync(scrapeConfiguration.Value.UserDataDirectory, new Microsoft.Playwright.BrowserTypeLaunchPersistentContextOptions
-                    {
-                        BaseURL = EnsureTrailingSlash(scrapeConfiguration.Value.SearchConfiguration.BaseUrl),
-                        Channel = "chrome",
-                        Headless = scrapeConfiguration.Value.SearchConfiguration.UseHeadless,
-                        ViewportSize = new ViewportSize { Width = 3000, Height = 1200 },
-                        Locale = "en-GB",
-                        TimezoneId = "Europe/London",
-                    });
-                    page = await context.NewPageAsync();
+            await configureLock.WaitAsync();
+            lockAcquired = true;
+            fileSystem.Directory.CreateDirectory(scrapeConfiguration.Value.UserDataDirectory);
 
-                    LogMessage.Information(logger, "Playwright configured successfully.");
-
-                    return page;
-                });
-        }
-        finally
+            return null;
+        })
+        .TapAsync(_ =>
         {
-            configureLock.Release();
-        }
+            if (lockAcquired) LogMessage.Information(logger, "User data directory created successfully.");
+        })
+        .MapAsync(async _ => (playwright ??= await Playwright.CreateAsync().ConfigureAwait(false)))
+        .MapAsync(async _ => (context ??= await playwright!.Chromium.LaunchPersistentContextAsync(scrapeConfiguration.Value.UserDataDirectory, SetContext()).ConfigureAwait(false)))
+        .TapAsync(_ =>
+        {
+            if (lockAcquired) LogMessage.Information(logger, "Playwright configured successfully.");
+        })
+        .MapAsync(async context =>
+        {
+            page ??= await context!.NewPageAsync();
+
+            return page!;
+        })
+        .Ensure(_ =>
+        {
+            if (lockAcquired) configureLock.Release();
+        });
+    }
+
+    private BrowserTypeLaunchPersistentContextOptions SetContext()
+    {
+        return new BrowserTypeLaunchPersistentContextOptions
+        {
+            BaseURL = EnsureTrailingSlash(scrapeConfiguration.Value.SearchConfiguration.BaseUrl),
+            Channel = "chrome",
+            Headless = scrapeConfiguration.Value.SearchConfiguration.UseHeadless,
+            ViewportSize = new ViewportSize { Width = 3000, Height = 1200 },
+            Locale = "en-GB",
+            TimezoneId = "Europe/London",
+        };
     }
 
     private static string EnsureTrailingSlash(Uri baseUrl)
