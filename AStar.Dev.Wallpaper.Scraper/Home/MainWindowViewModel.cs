@@ -2,6 +2,7 @@ using System.Reactive.Linq;
 using System.Reflection;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.ViewModels;
@@ -20,7 +21,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private CancellationTokenSource? scrapeCancellationSource;
     private readonly IPlaywrightService playwrightService;
 
-    public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService, IScrapeAction searchCategoryScrapeAction)
+    public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService, IScrapeAction searchCategoryScrapeAction,
+        IEntityEditorFactory entityEditorFactory)
     {
         Title = $"{scrapeConfiguration.Value.ApplicationName} V{ApplicationVersion}";
         this.playwrightService = playwrightService;
@@ -30,6 +32,15 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ScrapeSubscribedCommand       = CreateScrapeCommand("Scrape Subscribed Wallpapers");
         ScrapeAllCommand              = CreateScrapeCommand("Scrape All Wallpapers");
         CancelCommand                 = ReactiveCommand.Create(CancelRunningScrape, this.WhenAnyValue(vm => vm.IsBusy));
+
+        OpenConnectionStringsCommand             = CreateOpenEditorCommand(entityEditorFactory.CreateConnectionStringsEditor);
+        OpenFileClassificationCategoriesCommand  = CreateOpenEditorCommand(entityEditorFactory.CreateFileClassificationCategoriesEditor);
+        OpenSearchConfigurationCommand            = CreateOpenEditorCommand(entityEditorFactory.CreateSearchConfigurationEditor);
+        OpenModelToIgnoreCommand                  = CreateOpenEditorCommand(entityEditorFactory.CreateModelToIgnoreEditor);
+        OpenScrapeDirectoriesCommand               = CreateOpenEditorCommand(entityEditorFactory.CreateScrapeDirectoriesEditor);
+        OpenSearchCategoriesCommand                = CreateOpenEditorCommand(entityEditorFactory.CreateSearchCategoriesEditor);
+        OpenTagToIgnoreCommand                     = CreateOpenEditorCommand(entityEditorFactory.CreateTagToIgnoreEditor);
+        OpenUserConfigurationCommand               = CreateOpenEditorCommand(entityEditorFactory.CreateUserConfigurationEditor);
     }
 
     public string Title { get; }
@@ -49,6 +60,33 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     /// </summary>
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
 
+    /// <summary>Raised by an Open* command to ask the view to display an <see cref="EntityEditorViewModelBase" /> as a modal dialog.</summary>
+    public Interaction<EntityEditorViewModelBase, Unit> OpenEditor { get; } = new();
+
+    /// <summary>Opens the Connection Strings Configuration editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenConnectionStringsCommand { get; }
+
+    /// <summary>Opens the File Classification Categories Configuration editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenFileClassificationCategoriesCommand { get; }
+
+    /// <summary>Opens the Search Configuration editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenSearchConfigurationCommand { get; }
+
+    /// <summary>Opens the Model to Ignore editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenModelToIgnoreCommand { get; }
+
+    /// <summary>Opens the Scrape Directories editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenScrapeDirectoriesCommand { get; }
+
+    /// <summary>Opens the Search Categories editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenSearchCategoriesCommand { get; }
+
+    /// <summary>Opens the Tag to Ignore editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenTagToIgnoreCommand { get; }
+
+    /// <summary>Opens the User Configuration editor.</summary>
+    public ReactiveCommand<Unit, Unit> OpenUserConfigurationCommand { get; }
+
     /// <summary>
     ///     Gets a value indicating whether a scrape command is currently running. Drives whether
     ///     <see cref="CancelCommand" /> can execute.
@@ -66,6 +104,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     private void CancelRunningScrape() => scrapeCancellationSource?.Cancel();
+
+    private ReactiveCommand<Unit, Unit> CreateOpenEditorCommand(Func<EntityEditorViewModelBase> createEditor) =>
+        ReactiveCommand.CreateFromTask(async () => await OpenEditor.Handle(createEditor()));
 
     private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName, IScrapeAction? action = null)
     {

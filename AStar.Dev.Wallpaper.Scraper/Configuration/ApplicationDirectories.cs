@@ -15,6 +15,7 @@ public class ApplicationDirectories(IFileSystem fileSystem, ILogger<ApplicationD
         fileSystem.Directory.CreateDirectory(DataDirectory);
         fileSystem.Directory.CreateDirectory(LogsDirectory);
         fileSystem.Directory.CreateDirectory(CacheDirectory);
+        fileSystem.Directory.CreateDirectory(DocumentsExportDirectory);
     }
 
     public static string DataDirectory => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder, "data");
@@ -22,4 +23,7 @@ public class ApplicationDirectories(IFileSystem fileSystem, ILogger<ApplicationD
     public static string CacheDirectory => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder, "cache");
 
     public static string LogsDirectory => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder, "logs");
+
+    /// <summary>The user's documents folder where table Import/Export JSON files are read from and written to.</summary>
+    public static string DocumentsExportDirectory => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments).CombinePath(ApplicationMetadata.ApplicationFolder);
 }
