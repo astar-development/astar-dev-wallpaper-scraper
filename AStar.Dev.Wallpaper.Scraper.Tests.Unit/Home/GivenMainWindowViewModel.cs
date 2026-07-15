@@ -27,6 +27,7 @@ public sealed class GivenMainWindowViewModel
 
     public GivenMainWindowViewModel()
     {
+        SynchronizationContext.SetSynchronizationContext(new ImmediateSynchronizationContext());
         playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(Substitute.For<IPage>())));
         searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance)));
     }
@@ -292,5 +293,10 @@ public sealed class GivenMainWindowViewModel
         });
 
         return (confirmationGate, handlerEntered.Task);
+    }
+
+    private sealed class ImmediateSynchronizationContext : SynchronizationContext
+    {
+        public override void Post(SendOrPostCallback d, object? state) => d(state);
     }
 }
