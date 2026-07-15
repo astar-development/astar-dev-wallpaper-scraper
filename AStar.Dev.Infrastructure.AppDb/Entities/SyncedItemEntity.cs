@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.AppDb.Entities;
 /// <summary>
 /// Represents an item that has been synchronized between the local file system and OneDrive, including metadata such as remote and local paths, modification timestamps, and synchronization tags. This entity is used to track the state of each synchronized item within the sync client application, allowing for efficient synchronization operations and conflict resolution based on the stored information.
 /// </summary>
-public sealed class SyncedItemEntity
+public sealed class SyncedItemEntity : AuditableEntity
 {
     /// <summary>
     /// The unique identifier for the synchronized item within the local database. This is typically an auto-incrementing integer that serves as the primary key for the SyncedItemEntity table, allowing for efficient querying and management of synchronized items in relation to their corresponding OneDrive items and accounts.

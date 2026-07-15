@@ -13,4 +13,5 @@
   <Project Path="AStar.Dev.Logging.Extensions/AStar.Dev.Logging.Extensions.csproj" />
   <Project Path="AStar.Dev.Wallpaper.Scraper.Tests.Unit/AStar.Dev.Wallpaper.Scraper.Tests.Unit.csproj" />
   <Project Path="AStar.Dev.Wallpaper.Scraper/AStar.Dev.Wallpaper.Scraper.csproj" />
+  <Project Path="AStar.Dev.ScrapeCategoryImportExportTesting/AStar.Dev.ScrapeCategoryImportExportTesting.csproj" />
 </Solution>

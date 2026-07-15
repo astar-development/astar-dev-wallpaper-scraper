@@ -14,9 +14,16 @@ public static class ModelBuilderExtensions
         Type[] targetEntities =
         [
             typeof(AccountEntity),
+            typeof(DriveStateEntity),
+            typeof(FileClassificationCategoryEntity),
+            typeof(FileClassificationEntity),
             typeof(SyncConflictEntity),
             typeof(SyncJobEntity),
+            typeof(SyncConflictEntity),
+            typeof(SyncedItemEntity),
             typeof(FileAccessDetailEntity),
+            typeof(FileDetailEntity),
+            typeof(ImageDetailEntity),
             typeof(DeletionStatusEntity),
             typeof(EventEntity),
             typeof(TagToIgnoreEntity),

@@ -1,7 +1,7 @@
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>Junction row linking a file to a category in the normalised classification taxonomy, regardless of which application classified it.</summary>
-public sealed class FileClassificationEntity
+public sealed class FileClassificationEntity : AuditableEntity
 {
     /// <summary>Primary key.</summary>
     public int Id { get; set; }

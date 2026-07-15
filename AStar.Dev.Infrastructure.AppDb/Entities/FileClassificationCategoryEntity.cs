@@ -1,7 +1,7 @@
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>Persisted category node in the file classification hierarchy.</summary>
-public sealed class FileClassificationCategoryEntity
+public sealed class FileClassificationCategoryEntity : AuditableEntity
 {
     /// <summary>Primary key.</summary>
     public int Id { get; set; }

@@ -1,7 +1,7 @@
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>The dimensions of an image file.</summary>
-public sealed class ImageDetailEntity
+public sealed class ImageDetailEntity : AuditableEntity
 {
     /// <summary>Primary key.</summary>
     public ImageId Id { get; set; } = new(Guid.CreateVersion7());

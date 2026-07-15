@@ -7,7 +7,7 @@ namespace AStar.Dev.Infrastructure.AppDb.Entities;
 /// <summary>
 /// Represents a synchronization conflict for a specific file between the local system and OneDrive.
 /// </summary>
-public sealed class SyncConflictEntity
+public sealed class SyncConflictEntity : AuditableEntity
 {
     /// <summary>Unique identifier for the synchronization conflict.</summary>
     public Guid Id { get; set; }

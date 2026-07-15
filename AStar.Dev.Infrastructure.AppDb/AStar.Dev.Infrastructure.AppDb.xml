@@ -1237,6 +1237,56 @@
             Provides a predefined instance of <see cref="T:AStar.Dev.Infrastructure.AppDb.Entities.StorageQuota"/> representing an unknown storage state, where both total and used bytes are set to zero. This can be used as a default value when storage information is not yet available or cannot be retrieved, allowing the sync client application to handle such scenarios gracefully without encountering null references or uninitialized data. By having a standard "Unknown" quota, we can improve the robustness of the application when dealing with storage information that may be incomplete or unavailable.
             </summary>
         </member>
+        <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity">
+            <summary>
+            Represents a synchronization conflict for a specific file between the local system and OneDrive.
+            </summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.Id">
+            <summary>Unique identifier for the synchronization conflict.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.AccountId">
+            <summary>The identifier of the OneDrive account associated with this conflict.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.FolderId">
+            <summary>The identifier of the OneDrive folder containing the conflicting item.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RemoteItemId">
+            <summary>The identifier of the conflicting item in OneDrive.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RelativePath">
+            <summary>The relative path of the conflicting item within the OneDrive folder structure.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.LocalPath">
+            <summary>The local path of the conflicting item on the user's file system.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.LocalModified">
+            <summary>The timestamp of the last local modification.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RemoteModified">
+            <summary>The timestamp of the last remote modification.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.LocalSize">
+            <summary>The size of the item on the local file system in bytes.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RemoteSize">
+            <summary>The size of the item in OneDrive in bytes.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.State">
+            <summary>The current state of the conflict.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.Resolution">
+            <summary>The resolution policy applied to the conflict, or None if not yet resolved.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.DetectedAt">
+            <summary>The timestamp when the conflict was detected.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.ResolvedAt">
+            <summary>The timestamp when the conflict was resolved, or None if still pending.</summary>
+        </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.Account">
+            <summary>Navigation property to the associated AccountEntity.</summary>
+        </member>
         <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.SyncedItemEntity">
             <summary>
             Represents an item that has been synchronized between the local file system and OneDrive, including metadata such as remote and local paths, modification timestamps, and synchronization tags. This entity is used to track the state of each synchronized item within the sync client application, allowing for efficient synchronization operations and conflict resolution based on the stored information.
@@ -1353,56 +1403,6 @@
             <param name="remotePath">The remote path of the item in OneDrive.</param>
             <param name="fileSystem">The file system abstraction.</param>
             <returns>A new instance of <see cref="T:AStar.Dev.Infrastructure.AppDb.Entities.SyncedItemEntity"/>.</returns>
-        </member>
-        <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity">
-            <summary>
-            Represents a synchronization conflict for a specific file between the local system and OneDrive.
-            </summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.Id">
-            <summary>Unique identifier for the synchronization conflict.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.AccountId">
-            <summary>The identifier of the OneDrive account associated with this conflict.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.FolderId">
-            <summary>The identifier of the OneDrive folder containing the conflicting item.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RemoteItemId">
-            <summary>The identifier of the conflicting item in OneDrive.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RelativePath">
-            <summary>The relative path of the conflicting item within the OneDrive folder structure.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.LocalPath">
-            <summary>The local path of the conflicting item on the user's file system.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.LocalModified">
-            <summary>The timestamp of the last local modification.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RemoteModified">
-            <summary>The timestamp of the last remote modification.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.LocalSize">
-            <summary>The size of the item on the local file system in bytes.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.RemoteSize">
-            <summary>The size of the item in OneDrive in bytes.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.State">
-            <summary>The current state of the conflict.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.Resolution">
-            <summary>The resolution policy applied to the conflict, or None if not yet resolved.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.DetectedAt">
-            <summary>The timestamp when the conflict was detected.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.ResolvedAt">
-            <summary>The timestamp when the conflict was resolved, or None if still pending.</summary>
-        </member>
-        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.SyncConflictEntity.Account">
-            <summary>Navigation property to the associated AccountEntity.</summary>
         </member>
         <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.SyncJobEntity">
             <summary>
@@ -1697,6 +1697,18 @@
             <inheritdoc />
         </member>
         <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.RemoveScrapeConfigurationTable.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.AppDb.Migrations.AddAdditionalAuditFieldsToEntities">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.AddAdditionalAuditFieldsToEntities.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.AddAdditionalAuditFieldsToEntities.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.AddAdditionalAuditFieldsToEntities.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:System.Text.RegularExpressions.Generated.NonAlphaPattern_0">
