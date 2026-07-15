@@ -19,7 +19,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<TagToIgnoreEntity> TagsToIgnore => Set<TagToIgnoreEntity>();
     public DbSet<ModelToIgnoreEntity> ModelsToIgnore => Set<ModelToIgnoreEntity>();
     public DbSet<SearchConfigurationEntity> SearchConfigurations => Set<SearchConfigurationEntity>();
-    public DbSet<ScrapedTagEntity> ScrapedTags => Set<ScrapedTagEntity>();
+    public DbSet<ScrapedTagEntity> ScrapedTags => Set<ScrapedTagEntity>();    
+    public DbSet<SearchCategoryEntity> SearchCategories => Set<SearchCategoryEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,7 +1,7 @@
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>A file discovered and tracked by the scraper.</summary>
-public sealed class FileDetailEntity
+public sealed class FileDetailEntity : AuditableEntity
 {
     /// <summary>Primary key.</summary>
     public FileId Id { get; set; } = new(Guid.CreateVersion7());

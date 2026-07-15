@@ -28,19 +28,19 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         this.playwrightService = playwrightService;
 
         ScrapeSearchCategoriesCommand = CreateScrapeCommand("Scrape Search Categories", searchCategoryScrapeAction);
-        ScrapeTopCommand              = CreateScrapeCommand("Scrape Top Wallpapers");
-        ScrapeSubscribedCommand       = CreateScrapeCommand("Scrape Subscribed Wallpapers");
-        ScrapeAllCommand              = CreateScrapeCommand("Scrape All Wallpapers");
-        CancelCommand                 = ReactiveCommand.Create(CancelRunningScrape, this.WhenAnyValue(vm => vm.IsBusy));
+        ScrapeTopCommand = CreateScrapeCommand("Scrape Top Wallpapers");
+        ScrapeSubscribedCommand = CreateScrapeCommand("Scrape Subscribed Wallpapers");
+        ScrapeAllCommand = CreateScrapeCommand("Scrape All Wallpapers");
+        CancelCommand = ReactiveCommand.Create(CancelRunningScrape, this.WhenAnyValue(vm => vm.IsBusy));
 
-        OpenConnectionStringsCommand             = CreateOpenEditorCommand(entityEditorFactory.CreateConnectionStringsEditor);
-        OpenFileClassificationCategoriesCommand  = CreateOpenEditorCommand(entityEditorFactory.CreateFileClassificationCategoriesEditor);
-        OpenSearchConfigurationCommand            = CreateOpenEditorCommand(entityEditorFactory.CreateSearchConfigurationEditor);
-        OpenModelToIgnoreCommand                  = CreateOpenEditorCommand(entityEditorFactory.CreateModelToIgnoreEditor);
-        OpenScrapeDirectoriesCommand               = CreateOpenEditorCommand(entityEditorFactory.CreateScrapeDirectoriesEditor);
-        OpenSearchCategoriesCommand                = CreateOpenEditorCommand(entityEditorFactory.CreateSearchCategoriesEditor);
-        OpenTagToIgnoreCommand                     = CreateOpenEditorCommand(entityEditorFactory.CreateTagToIgnoreEditor);
-        OpenUserConfigurationCommand               = CreateOpenEditorCommand(entityEditorFactory.CreateUserConfigurationEditor);
+        OpenConnectionStringsCommand = CreateOpenEditorCommand(entityEditorFactory.CreateConnectionStringsEditor);
+        OpenFileClassificationCategoriesCommand = CreateOpenEditorCommand(entityEditorFactory.CreateFileClassificationCategoriesEditor);
+        OpenSearchConfigurationCommand = CreateOpenEditorCommand(entityEditorFactory.CreateSearchConfigurationEditor);
+        OpenModelToIgnoreCommand = CreateOpenEditorCommand(entityEditorFactory.CreateModelToIgnoreEditor);
+        OpenScrapeDirectoriesCommand = CreateOpenEditorCommand(entityEditorFactory.CreateScrapeDirectoriesEditor);
+        OpenSearchCategoriesCommand = CreateOpenEditorCommand(entityEditorFactory.CreateSearchCategoriesEditor);
+        OpenTagToIgnoreCommand = CreateOpenEditorCommand(entityEditorFactory.CreateTagToIgnoreEditor);
+        OpenUserConfigurationCommand = CreateOpenEditorCommand(entityEditorFactory.CreateUserConfigurationEditor);
     }
 
     public string Title { get; }
@@ -126,7 +126,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 cancellationSource.Token.ThrowIfCancellationRequested();
 
                 await page.MatchAsync(
-                    async page => {
+                    async page =>
+                    {
                         StatusText += $"Playwright page configured successfully.{Environment.NewLine}";
 
                         if (action is null)
@@ -138,7 +139,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                             var result = await action.ExecuteAsync(page, cancellationSource.Token);
                             result.Match(
                                 _ => FunctionalParadigm.Unit.Instance,
-                                error => {
+                                error =>
+                                {
                                     StatusText += $"{actionName}: {error.Message}{Environment.NewLine}";
 
                                     return FunctionalParadigm.Unit.Instance;
@@ -147,7 +149,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
                         return FunctionalParadigm.Unit.Instance;
                     },
-                    error => {
+                    error =>
+                    {
                         StatusText += $"Error configuring Playwright page: {error.Message}{Environment.NewLine}";
 
                         return FunctionalParadigm.Unit.Instance;

@@ -5,7 +5,7 @@ namespace AStar.Dev.Infrastructure.AppDb.Entities;
 /// <summary>
 /// Represents a OneDrive account connected to the sync client, including profile info, sync state, and configuration.
 /// </summary>
-public sealed class AccountEntity
+public sealed class AccountEntity : AuditableEntity
 {
     /// <summary>Unique identifier for the account.</summary>
     public AccountId Id { get; set; } = new("Unknown");

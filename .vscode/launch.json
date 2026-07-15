@@ -9,6 +9,12 @@
       "type": "dotnet",
       "request": "launch",
       "projectPath": "${workspaceFolder}/AStar.Dev.Wallpaper.Scraper/AStar.Dev.Wallpaper.Scraper.csproj"
+    },
+    {
+      "name": "C#: Scraper Import/Export",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/AStar.Dev.ScrapeCategoryImportExportTesting/AStar.Dev.ScrapeCategoryImportExportTesting.csproj"
     }
   ]
 }

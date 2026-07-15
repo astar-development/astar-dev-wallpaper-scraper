@@ -6,7 +6,7 @@ namespace AStar.Dev.Infrastructure.AppDb.Entities;
 /// <summary>
 /// Represents the synchronization state of a OneDrive account, including the latest delta link and last sync timestamp.
 /// </summary>
-public sealed class DriveStateEntity
+public sealed class DriveStateEntity : AuditableEntity
 {
     /// <summary>Primary key for the drive state record.</summary>
     public int Id { get; set; }
