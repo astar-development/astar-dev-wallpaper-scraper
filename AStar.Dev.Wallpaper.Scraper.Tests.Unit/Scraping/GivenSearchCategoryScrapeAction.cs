@@ -10,8 +10,8 @@ namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 public sealed class GivenSearchCategoryScrapeAction : IDisposable
 {
     private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"search-category-scrape-action-{Guid.NewGuid():N}.db");
-    private readonly ICategoryPageExtractor categoryPageExtractor = Substitute.For<ICategoryPageExtractor>();
     private readonly IDbContextFactory<AppDbContext> dbContextFactory;
+    private readonly IProgress<string> progress = Substitute.For<IProgress<string>>();
 
     public GivenSearchCategoryScrapeAction()
     {
@@ -23,34 +23,28 @@ public sealed class GivenSearchCategoryScrapeAction : IDisposable
     }
 
     [Fact]
-    public async Task when_extraction_succeeds_then_categories_are_persisted_beneath_unclassified_and_a_success_result_is_returned()
+    public async Task when_a_category_has_more_wallpapers_than_fit_on_one_page_then_progress_reports_the_page_count_and_a_success_result_is_returned()
     {
-        categoryPageExtractor.ExtractAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IReadOnlyList<string>>(["Nature"]));
-        var sut = new SearchCategoryScrapeAction(categoryPageExtractor, dbContextFactory);
+        SeedSearchConfigurationWithCategory("Nature");
+        var page = CreatePageReturningWallpaperCount(50);
+        var sut = new SearchCategoryScrapeAction(dbContextFactory);
 
-        var result = await sut.ExecuteAsync(Substitute.For<IPage>(), TestContext.Current.CancellationToken);
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
-        using var context = dbContextFactory.CreateDbContext();
-        var root = await context.Set<FileClassificationCategoryEntity>()
-            .SingleAsync(category => category.Level == 1 && category.Name == "Unclassified", TestContext.Current.CancellationToken);
-        var category = await context.Set<FileClassificationCategoryEntity>()
-            .SingleAsync(entity => entity.Name == "Nature", TestContext.Current.CancellationToken);
-        category.ParentId.ShouldBe(root.Id);
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Visiting category: Nature")));
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("need to get all 3 pages")));
     }
 
     [Fact]
-    public async Task when_extraction_throws_then_a_failure_result_is_returned_instead_of_throwing()
+    public async Task when_no_search_configuration_exists_then_a_failure_result_is_returned_instead_of_throwing()
     {
-        categoryPageExtractor.ExtractAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromException<IReadOnlyList<string>>(new InvalidOperationException("boom")));
-        var sut = new SearchCategoryScrapeAction(categoryPageExtractor, dbContextFactory);
+        var page = CreatePageReturningWallpaperCount(50);
+        var sut = new SearchCategoryScrapeAction(dbContextFactory);
 
-        var result = await sut.ExecuteAsync(Substitute.For<IPage>(), TestContext.Current.CancellationToken);
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
-        var failure = result.ShouldBeOfType<Failure<FunctionalParadigm.Unit>>();
-        failure.Exception.Message.ShouldBe("boom");
+        result.ShouldBeOfType<Failure<FunctionalParadigm.Unit>>();
     }
 
     public void Dispose()
@@ -59,6 +53,27 @@ public sealed class GivenSearchCategoryScrapeAction : IDisposable
         {
             File.Delete(databasePath);
         }
+    }
+
+    private void SeedSearchConfigurationWithCategory(string categoryName)
+    {
+        using var context = dbContextFactory.CreateDbContext();
+        var searchConfiguration = new SearchConfigurationEntity { SearchStringPrefix = "https://wallhaven.cc/search?categories=", SearchStringSuffix = "&sorting=random", };
+        context.SearchConfigurations.Add(searchConfiguration);
+        context.SaveChanges();
+
+        context.SearchCategories.Add(new SearchCategoryEntity { Id = Guid.CreateVersion7().ToString(), SearchConfigurationId = searchConfiguration.Id, Name = categoryName, });
+        context.SaveChanges();
+    }
+
+    private static IPage CreatePageReturningWallpaperCount(int wallpaperCount)
+    {
+        var page = Substitute.For<IPage>();
+        var header = Substitute.For<ILocator>();
+        header.AllTextContentsAsync().Returns(Task.FromResult<IReadOnlyList<string>>([$"{wallpaperCount} Wallpapers found for ..."]));
+        page.GetByText(Arg.Any<string>(), Arg.Any<PageGetByTextOptions>()).Returns(header);
+
+        return page;
     }
 
     private sealed class TestDbContextFactory(DbContextOptions<AppDbContext> options) : IDbContextFactory<AppDbContext>

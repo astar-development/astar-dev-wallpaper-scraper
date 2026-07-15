@@ -136,7 +136,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                         }
                         else
                         {
-                            var result = await action.ExecuteAsync(page, cancellationSource.Token);
+                            _ = page.GotoAsync("/");
+                            var progress = new Progress<string>(message => StatusText += $"{message}{Environment.NewLine}");
+                            var result = await action.ExecuteAsync(page, progress, cancellationSource.Token);
                             result.Match(
                                 _ => FunctionalParadigm.Unit.Instance,
                                 error =>

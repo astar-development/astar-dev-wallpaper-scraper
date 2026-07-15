@@ -32,6 +32,7 @@ static void ExportPlaying(AppDbContext context)
     .OrderBy(c => c.ParentId).ThenBy(c => c.Level).ThenBy(c => c.Name)
     .Select(c => new CategoryNodeRecord
     (
+        c.Id.ToString(System.Globalization.CultureInfo.InvariantCulture),
         c.Name,
         c.Level,
         c.IsFamous,
@@ -128,7 +129,7 @@ static async Task Import2Playing(AppDbContext context)
     {
         var newCategory = new SearchCategoryEntity
             {
-                Id = Guid.CreateVersion7().ToString(),
+                Id = category.Id,
                 SearchConfigurationId = context.SearchConfigurations.First().Id,
                 Name = category.Name,
                 CreatedAt = category.CreatedAt,
