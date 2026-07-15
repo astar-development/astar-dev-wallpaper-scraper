@@ -21,6 +21,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<SearchConfigurationEntity> SearchConfigurations => Set<SearchConfigurationEntity>();
     public DbSet<ScrapedTagEntity> ScrapedTags => Set<ScrapedTagEntity>();    
     public DbSet<SearchCategoryEntity> SearchCategories => Set<SearchCategoryEntity>();
+    public DbSet<ScrapeDirectoriesEntity> ScrapeDirectories => Set<ScrapeDirectoriesEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

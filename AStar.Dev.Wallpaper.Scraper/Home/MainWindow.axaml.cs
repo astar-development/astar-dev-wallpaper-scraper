@@ -1,5 +1,7 @@
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using Avalonia.Controls;
+using Avalonia.Threading;
+using ReactiveUI;
 using Unit = System.Reactive.Unit;
 
 namespace AStar.Dev.Wallpaper.Scraper.Home;
@@ -12,8 +14,7 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    public MainWindow(MainWindowViewModel viewModel)
-        : this()
+    public MainWindow(MainWindowViewModel viewModel) : this()
     {
         DataContext = viewModel;
 
@@ -25,5 +26,8 @@ public partial class MainWindow : Window
             await new EntityEditorWindow { DataContext = context.Input }.ShowDialog(this);
             context.SetOutput(Unit.Default);
         });
+
+        viewModel.WhenAnyValue(vm => vm.StatusText)
+            .Subscribe(_ => Dispatcher.UIThread.Post(StatusScroller.ScrollToEnd, DispatcherPriority.Background));
     }
 }

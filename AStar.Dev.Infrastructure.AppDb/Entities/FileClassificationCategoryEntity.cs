@@ -10,7 +10,7 @@ public sealed class FileClassificationCategoryEntity : AuditableEntity
     public string Name { get; set; } = string.Empty;
 
     /// <summary>Hierarchy level: 1 = top, 2 = sub, 3 = leaf.</summary>
-    public int Level { get; set; }
+    public int Level { get; set; } = 1;
 
     /// <summary>FK to parent category; null for root nodes.</summary>
     public int? ParentId { get; set; }
