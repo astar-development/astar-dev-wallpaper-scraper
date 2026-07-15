@@ -109,7 +109,7 @@
             </summary>
             <param name="value">The value to parse to the int</param>
             <returns>The parsed value as the matching int value</returns>
-            <exception cref="T:System.ArgumentException">Thrown when the string is not a valid int value</exception>
+            <exception cref="T:System.FormatException">Thrown when the string is not a valid int value</exception>
         </member>
         <member name="M:AStar.Dev.Utilities.IntParser.ToIntSafe(System.String)">
             <summary>
