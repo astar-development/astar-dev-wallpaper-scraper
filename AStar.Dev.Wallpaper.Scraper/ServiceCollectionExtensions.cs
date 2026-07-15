@@ -28,7 +28,16 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<MainWindow>();
         services.AddDbContextFactory<AppDbContext>((serviceProvider, options) =>
             options.UseSqlite(serviceProvider.GetRequiredService<IOptions<ScrapeConfiguration>>().Value.ConnectionStrings.Sqlite));
-        services.AddSingleton<ICategoryPageExtractor, CategoryPageExtractor>();
+        services.AddSingleton<IScrapeContextReader, ScrapeContextReader>();
+        services.AddSingleton<IWallpaperCountReader, WallpaperCountReader>();
+        services.AddSingleton<IWallpaperHrefCollector, WallpaperHrefCollector>();
+        services.AddSingleton<ITagReader, TagReader>();
+        services.AddSingleton<IWallpaperImageLocator, WallpaperImageLocator>();
+        services.AddSingleton<IWallpaperImageDownloader, WallpaperImageDownloader>();
+        services.AddSingleton<IImageDimensionsReader, SkiaImageDimensionsReader>();
+        services.AddSingleton<IWallpaperFileStore, WallpaperFileStore>();
+        services.AddSingleton<IWallpaperCategoryRegistrar, WallpaperCategoryRegistrar>();
+        services.AddSingleton<IWallpaperFileClassificationRepository, WallpaperFileClassificationRepository>();
         services.AddSingleton<IScrapeAction, SearchCategoryScrapeAction>();
         services.AddSingleton<IEntityEditorFactory>(serviceProvider => new EntityEditorFactory(
             serviceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>(),
