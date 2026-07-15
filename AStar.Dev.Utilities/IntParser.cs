@@ -10,18 +10,9 @@ public static class IntParser
     /// </summary>
     /// <param name="value">The value to parse to the int</param>
     /// <returns>The parsed value as the matching int value</returns>
-    /// <exception cref="ArgumentException">Thrown when the string is not a valid int value</exception>
-    public static int ToInt(this string value)
-    {
-        try
-        {
-            return int.Parse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture);
-        }
-        catch (FormatException exception)
-        {
-            throw new ArgumentException($"'{value}' is not a valid int value.", nameof(value), exception);
-        }
-    }
+    /// <exception cref="FormatException">Thrown when the string is not a valid int value</exception>
+    public static int ToInt(this string value) =>
+        int.Parse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>
     ///    The ToIntSafe method will parse the supplied string and return the matching int value, or 0 if the string is not a valid int value

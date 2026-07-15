@@ -7,8 +7,8 @@ public sealed class GivenIntParser
         "123".ToInt().ShouldBe(123);
         
     [Fact]
-    public void when_toint_is_called_with_an_invalid_value_then_throws_argument_exception() =>
-        Should.Throw<ArgumentException>(() => "Invalid".ToInt());
+    public void when_toint_is_called_with_an_invalid_value_then_throws_format_exception() =>
+        Should.Throw<FormatException>(() => "Invalid".ToInt());
 
     [Fact]
     public void when_tointsafe_is_called_with_an_invalid_value_then_returns_zero() =>
