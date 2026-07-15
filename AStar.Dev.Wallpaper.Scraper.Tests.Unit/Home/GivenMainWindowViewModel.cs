@@ -28,7 +28,7 @@ public sealed class GivenMainWindowViewModel
     public GivenMainWindowViewModel()
     {
         playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(Substitute.For<IPage>())));
-        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance)));
+        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance)));
     }
 
     [Fact]
@@ -41,13 +41,31 @@ public sealed class GivenMainWindowViewModel
 
         await sut.ScrapeSearchCategoriesCommand.Execute();
 
-        await searchCategoryScrapeAction.Received().ExecuteAsync(page, Arg.Any<CancellationToken>());
+        await searchCategoryScrapeAction.Received().ExecuteAsync(page, Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_the_search_categories_action_reports_progress_then_the_status_text_includes_the_message()
+    {
+        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                callInfo.ArgAt<IProgress<string>>(1).Report("Visiting category: Nature");
+
+                return Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance));
+            });
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeSearchCategoriesCommand.Execute();
+
+        sut.StatusText.ShouldContain("Visiting category: Nature");
     }
 
     [Fact]
     public async Task when_the_search_categories_action_fails_then_the_status_reports_the_failure_message()
     {
-        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>())
+        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<Exceptional<FunctionalParadigm.Unit>>(Exceptional.Failure<FunctionalParadigm.Unit>(new InvalidOperationException("boom"))));
         var sut = CreateViewModel();
         sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });

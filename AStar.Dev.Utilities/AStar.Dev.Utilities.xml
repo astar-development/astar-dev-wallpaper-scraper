@@ -98,6 +98,26 @@
             <returns>The parsed value as the matching enum value</returns>
             <exception cref="T:System.ArgumentException">Thrown when the string is not a valid enum value</exception>
         </member>
+        <member name="T:AStar.Dev.Utilities.IntParser">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:AStar.Dev.Utilities.IntParser.ToInt(System.String)">
+            <summary>
+                The ToInt method will parse the supplied string and return the matching int value
+            </summary>
+            <param name="value">The value to parse to the int</param>
+            <returns>The parsed value as the matching int value</returns>
+            <exception cref="T:System.ArgumentException">Thrown when the string is not a valid int value</exception>
+        </member>
+        <member name="M:AStar.Dev.Utilities.IntParser.ToIntSafe(System.String)">
+            <summary>
+               The ToIntSafe method will parse the supplied string and return the matching int value, or 0 if the string is not a valid int value
+            </summary>
+            <param name="value">The value to parse to the int</param>
+            <returns>The parsed value as the matching int value, or 0 if the string is not a valid int value</returns>
+        </member>
         <member name="T:AStar.Dev.Utilities.LinqExtensions">
             <summary>
             </summary>
