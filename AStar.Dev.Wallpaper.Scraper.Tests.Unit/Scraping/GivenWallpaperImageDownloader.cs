@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using Microsoft.Playwright;
 
@@ -15,8 +16,21 @@ public sealed class GivenWallpaperImageDownloader
         page.GotoAsync("https://wallhaven.cc/images/pic.jpg", Arg.Any<PageGotoOptions>()).Returns(Task.FromResult<IResponse?>(response));
         var sut = new WallpaperImageDownloader();
 
-        var bytes = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
+        var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
 
-        bytes.ShouldBe(imageBytes);
+        result.ShouldBeOfType<Success<byte[]>>();
+        result.ShouldBe(new Success<byte[]>(imageBytes));
+    }
+
+    [Fact]
+    public async Task when_navigation_returns_a_null_response_then_a_failure_result_is_returned()
+    {
+        var page = Substitute.For<IPage>();
+        page.GotoAsync("https://wallhaven.cc/images/pic.jpg", Arg.Any<PageGotoOptions>()).Returns(Task.FromResult<IResponse?>(null));
+        var sut = new WallpaperImageDownloader();
+
+        var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Failure<byte[]>>();
     }
 }

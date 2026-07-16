@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scraper.Scraping;
@@ -10,10 +11,16 @@ public sealed class WallpaperImageDownloader : IWallpaperImageDownloader
     private const int NavigationTimeoutMilliseconds = 30_000;
 
     /// <inheritdoc />
-    public async Task<byte[]> DownloadAsync(IPage page, string imageUrl, CancellationToken cancellationToken)
-    {
-        var response = await page.GotoAsync(imageUrl, new PageGotoOptions { Timeout = NavigationTimeoutMilliseconds, }).ConfigureAwait(false);
+    public async Task<Exceptional<byte[]>> DownloadAsync(IPage page, string imageUrl, CancellationToken cancellationToken) =>
+        await Try.RunAsync(async () =>
+        {
+            var response = await page.GotoAsync(imageUrl, new PageGotoOptions { Timeout = NavigationTimeoutMilliseconds, }).ConfigureAwait(false);
 
-        return await response!.BodyAsync().ConfigureAwait(false);
-    }
+            if (response is null)
+            {
+                throw new InvalidOperationException($"Navigating to '{imageUrl}' did not produce a response.");
+            }
+
+            return await response.BodyAsync().ConfigureAwait(false);
+        }, cancellationToken);
 }

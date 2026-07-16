@@ -192,7 +192,7 @@ public sealed class GivenSearchCategoryScrapeAction
         ConfigureSuccessfulWallpaperVisit();
         fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         byte[] imageBytes = [1, 2, 3];
-        imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(imageBytes);
+        imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(Exceptional.Success(imageBytes));
         var savedFile = new SavedWallpaperFile("/root/base/pic.jpg", 3);
         fileStore.SaveAsync(Arg.Any<string>(), "pic.jpg", imageBytes, Arg.Any<CancellationToken>()).Returns(savedFile);
         var dimensions = new ImageDimensions(10, 20);
@@ -204,6 +204,23 @@ public sealed class GivenSearchCategoryScrapeAction
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
         await categoryRegistrar.Received().EnsureCategoriesExistAsync(Arg.Is<IReadOnlyList<TagData>>(tags => tags != null && tags.Any(tag => tag.Tag == "Nature")), Arg.Any<CancellationToken>());
         await fileClassificationRepository.Received().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), "https://wallhaven.cc/images/pic.jpg", Arg.Any<string>(), 3, dimensions, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_the_image_download_fails_then_progress_reports_the_failure_and_nothing_is_saved_or_recorded()
+    {
+        ConfigureSuccessfulWallpaperVisit();
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        var exception = new InvalidOperationException("Navigating to 'https://wallhaven.cc/images/pic.jpg' did not produce a response.");
+        imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(Exceptional.Failure<byte[]>(exception));
+        var sut = CreateSut();
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Failed to download wallpaper image")));
+        await fileStore.DidNotReceive().SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
+        await fileClassificationRepository.DidNotReceive().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<ImageDimensions>(), Arg.Any<CancellationToken>());
     }
 
     private void ConfigureSuccessfulWallpaperVisit()

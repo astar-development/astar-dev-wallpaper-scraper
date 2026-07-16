@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using Microsoft.Playwright;
 
@@ -15,13 +16,29 @@ public sealed class GivenThumbnailPublishingWallpaperImageDownloader
     {
         byte[] imageBytes = [1, 2, 3];
         byte[] thumbnailBytes = [4, 5, 6];
-        inner.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken).Returns(Task.FromResult(imageBytes));
+        inner.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken).Returns(Exceptional.Success(imageBytes));
         thumbnailGenerator.Generate(imageBytes).Returns(thumbnailBytes);
         var sut = new ThumbnailPublishingWallpaperImageDownloader(inner, thumbnailGenerator, thumbnailPublisher);
 
         var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
 
-        result.ShouldBe(imageBytes);
+        result.ShouldBeOfType<Success<byte[]>>();
+        result.ShouldBe(new Success<byte[]>(imageBytes));
         thumbnailPublisher.Received(1).Publish(thumbnailBytes);
+    }
+
+    [Fact]
+    public async Task when_the_inner_downloader_fails_then_no_thumbnail_is_generated_and_the_failure_is_returned()
+    {
+        var exception = new InvalidOperationException("Navigating to 'https://wallhaven.cc/images/pic.jpg' did not produce a response.");
+        inner.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken).Returns(Exceptional.Failure<byte[]>(exception));
+        var sut = new ThumbnailPublishingWallpaperImageDownloader(inner, thumbnailGenerator, thumbnailPublisher);
+
+        var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Failure<byte[]>>();
+        result.ShouldBe(new Failure<byte[]>(exception));
+        thumbnailGenerator.DidNotReceive().Generate(Arg.Any<byte[]>());
+        thumbnailPublisher.DidNotReceive().Publish(Arg.Any<byte[]>());
     }
 }
