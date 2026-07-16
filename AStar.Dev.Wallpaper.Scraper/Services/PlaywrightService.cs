@@ -83,10 +83,51 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
 
     public async ValueTask DisposeAsync()
     {
-        if (context is not null) await context.CloseAsync();
+        var disposalExceptions = new List<Exception>();
 
-        playwright?.Dispose();
-        configureLock.Dispose();
+        await CloseContextAsync(disposalExceptions).ConfigureAwait(false);
+        DisposePlaywright(disposalExceptions);
+        DisposeConfigureLock(disposalExceptions);
         GC.SuppressFinalize(this);
+
+        if (disposalExceptions.Count > 0) throw new AggregateException("One or more errors occurred while disposing PlaywrightService.", disposalExceptions);
+    }
+
+    private async Task CloseContextAsync(List<Exception> disposalExceptions)
+    {
+        if (context is null) return;
+
+        try
+        {
+            await context.CloseAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            disposalExceptions.Add(exception);
+        }
+    }
+
+    private void DisposePlaywright(List<Exception> disposalExceptions)
+    {
+        try
+        {
+            playwright?.Dispose();
+        }
+        catch (Exception exception)
+        {
+            disposalExceptions.Add(exception);
+        }
+    }
+
+    private void DisposeConfigureLock(List<Exception> disposalExceptions)
+    {
+        try
+        {
+            configureLock.Dispose();
+        }
+        catch (Exception exception)
+        {
+            disposalExceptions.Add(exception);
+        }
     }
 }
