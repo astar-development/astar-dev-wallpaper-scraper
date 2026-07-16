@@ -16,10 +16,13 @@ namespace AStar.Dev.Wallpaper.Scraper.Home;
 
 public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 {
+    private const int MaxStatusLines = 1000;
+
     private string statusText = string.Empty;
     private bool isBusy;
     private CancellationTokenSource? scrapeCancellationSource;
     private readonly IPlaywrightService playwrightService;
+    private readonly Queue<string> statusLines = new();
 
     public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService, IScrapeAction searchCategoryScrapeAction,
         IEntityEditorFactory entityEditorFactory)
@@ -105,6 +108,18 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void CancelRunningScrape() => scrapeCancellationSource?.Cancel();
 
+    private void AppendStatusLine(string line)
+    {
+        statusLines.Enqueue(line);
+
+        while (statusLines.Count > MaxStatusLines)
+        {
+            statusLines.Dequeue();
+        }
+
+        StatusText = string.Join(Environment.NewLine, statusLines) + Environment.NewLine;
+    }
+
     private ReactiveCommand<Unit, Unit> CreateOpenEditorCommand(Func<EntityEditorViewModelBase> createEditor) =>
         ReactiveCommand.CreateFromTask(async () => await OpenEditor.Handle(createEditor()));
 
@@ -121,14 +136,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
                 cancellationSource.Token.ThrowIfCancellationRequested();
 
-                StatusText += $"{actionName}: {(confirmed ? "Yes" : "No")}{Environment.NewLine}";
+                AppendStatusLine($"{actionName}: {(confirmed ? "Yes" : "No")}");
                 var page = await playwrightService.ConfigurePlaywrightAsync(cancellationSource.Token);
                 cancellationSource.Token.ThrowIfCancellationRequested();
 
                 await page.MatchAsync(
                     async page =>
                     {
-                        StatusText += $"Playwright page configured successfully.{Environment.NewLine}";
+                        AppendStatusLine("Playwright page configured successfully.");
 
                         if (action is null)
                         {
@@ -137,13 +152,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                         else
                         {
                             _ = page.GotoAsync("/");
-                            var progress = new Progress<string>(message => StatusText += $"{message}{Environment.NewLine}");
+                            var progress = new Progress<string>(AppendStatusLine);
                             var result = await action.ExecuteAsync(page, progress, cancellationSource.Token);
                             result.Match(
                                 _ => FunctionalParadigm.Unit.Instance,
                                 error =>
                                 {
-                                    StatusText += $"{actionName}: {error.Message}{Environment.NewLine}";
+                                    AppendStatusLine($"{actionName}: {error.Message}");
 
                                     return FunctionalParadigm.Unit.Instance;
                                 });
@@ -153,14 +168,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                     },
                     error =>
                     {
-                        StatusText += $"Error configuring Playwright page: {error.Message}{Environment.NewLine}";
+                        AppendStatusLine($"Error configuring Playwright page: {error.Message}");
 
                         return FunctionalParadigm.Unit.Instance;
                     });
             }
             catch (OperationCanceledException)
             {
-                StatusText += $"{actionName}: Cancelled{Environment.NewLine}";
+                AppendStatusLine($"{actionName}: Cancelled");
             }
             finally
             {
@@ -170,7 +185,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         });
 
         command.ThrownExceptions.Subscribe(exception =>
-            StatusText += $"{actionName}: Unexpected error - {exception.Message}{Environment.NewLine}");
+            AppendStatusLine($"{actionName}: Unexpected error - {exception.Message}"));
 
         return command;
     }
