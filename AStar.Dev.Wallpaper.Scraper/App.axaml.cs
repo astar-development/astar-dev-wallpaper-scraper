@@ -28,6 +28,15 @@ public partial class App : Application, IDisposable
     /// <summary>Builds configuration, logging, and the dependency injection container, migrates the database, and shows the main window.</summary>
     public override void OnFrameworkInitializationCompleted()
     {
+        services = BuildServices();
+        MigrateDatabase(services);
+        ShowMainWindow(services);
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private static ServiceProvider BuildServices()
+    {
         IFileSystem fileSystem = new RealFileSystem();
         var configuration = ApplicationConfigurationFactory.Build(AppContext.BaseDirectory);
 
@@ -37,22 +46,26 @@ public partial class App : Application, IDisposable
         ApplicationOptionsRegistrar.Register(collection, configuration);
         Log.Logger = SerilogConfigurator.CreateLogger(fileSystem, configuration);
 
-        services = collection
+        return collection
             .AddLogging(logging => logging.AddSerilog(dispose: true))
             .BuildServiceProvider();
+    }
 
+    private static void MigrateDatabase(ServiceProvider serviceProvider) =>
         DatabaseMigrator.MigrateAsync(
-            services.GetRequiredService<IDbContextFactory<AppDbContext>>(),
-            services.GetRequiredService<ILogger<App>>()).GetAwaiter().GetResult();
+            serviceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>(),
+            serviceProvider.GetRequiredService<ILogger<App>>()).GetAwaiter().GetResult();
 
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+    private void ShowMainWindow(ServiceProvider serviceProvider)
+    {
+        if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = services.GetRequiredService<Home.MainWindow>();
-
-            _ = services.GetRequiredService<UpdateService>().CheckForUpdatesAsync(desktop.MainWindow);
+            return;
         }
 
-        base.OnFrameworkInitializationCompleted();
+        desktop.MainWindow = serviceProvider.GetRequiredService<Home.MainWindow>();
+
+        _ = serviceProvider.GetRequiredService<UpdateService>().CheckForUpdatesAsync(desktop.MainWindow);
     }
 
     /// <summary>Releases the resources held by the application's dependency injection container.</summary>
