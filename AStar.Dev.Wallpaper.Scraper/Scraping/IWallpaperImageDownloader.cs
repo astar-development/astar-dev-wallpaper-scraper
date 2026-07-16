@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scraper.Scraping;
@@ -12,6 +13,7 @@ public interface IWallpaperImageDownloader
     /// </summary>
     /// <param name="page">The Playwright page to navigate.</param>
     /// <param name="imageUrl">The full-size wallpaper image URL.</param>
-    /// <param name="token">A token used to observe cancellation of the download.</param>
-    Task<byte[]> DownloadAsync(IPage page, string imageUrl, CancellationToken cancellationToken);
+    /// <param name="cancellationToken">A token used to observe cancellation of the download.</param>
+    /// <returns>A <see cref="Failure{T}" /> when navigation fails to produce a response, or the download otherwise throws.</returns>
+    Task<Exceptional<byte[]>> DownloadAsync(IPage page, string imageUrl, CancellationToken cancellationToken);
 }

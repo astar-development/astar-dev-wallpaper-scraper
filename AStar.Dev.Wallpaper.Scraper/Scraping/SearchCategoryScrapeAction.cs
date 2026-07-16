@@ -117,14 +117,23 @@ public sealed class SearchCategoryScrapeAction(
 
         var fileName = Path.GetFileName(imageUrl);
 
-        var imageBytes = await imageDownloader.DownloadAsync(page, imageUrl, cancellationToken);
-        progress.Report($"Downloaded wallpaper image from URL: {imageUrl}, size: {imageBytes.Length} bytes");
-        var savedFile = await fileStore.SaveAsync(directoryPath, fileName, imageBytes, cancellationToken);
-        var dimensions = dimensionsReader.Read(imageBytes);
+        return await (await imageDownloader.DownloadAsync(page, imageUrl, cancellationToken)).MatchAsync(
+            onSuccess: async imageBytes =>
+            {
+                progress.Report($"Downloaded wallpaper image from URL: {imageUrl}, size: {imageBytes.Length} bytes");
+                var savedFile = await fileStore.SaveAsync(directoryPath, fileName, imageBytes, cancellationToken);
+                var dimensions = dimensionsReader.Read(imageBytes);
 
-        await fileClassificationRepository.RecordAsync(tags, imageUrl, directoryPath, savedFile.SizeBytes, dimensions, cancellationToken);
-        await Task.Delay(context.ImagePauseInSeconds * 1_000, cancellationToken);
+                await fileClassificationRepository.RecordAsync(tags, imageUrl, directoryPath, savedFile.SizeBytes, dimensions, cancellationToken);
+                await Task.Delay(context.ImagePauseInSeconds * 1_000, cancellationToken);
 
-        return Unit.Instance;
+                return Unit.Instance;
+            },
+            onFailure: exception =>
+            {
+                progress.Report($"Failed to download wallpaper image from URL: {imageUrl}, error: {exception.Message}");
+
+                return Unit.Instance;
+            });
     }
 }
