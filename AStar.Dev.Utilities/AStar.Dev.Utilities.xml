@@ -300,6 +300,29 @@
             <param name="removeTrailing">The character to remove from the end if it exists</param>
             <returns>The original or updated string</returns>
         </member>
+        <member name="M:AStar.Dev.Utilities.StringExtensions.EnsureTrailing(System.String,System.String)">
+            <summary>
+                The EnsureTrailing method will, as the name suggests, ensure the string ends with the specified character
+            </summary>
+            <param name="value">The raw string to potentially add the trailing character to</param>
+            <param name="ensureTrailing">The character to ensure is at the end of the string</param>
+            <returns>The original or updated string</returns>
+        </member>
+        <member name="M:AStar.Dev.Utilities.StringExtensions.EnsureTrailing(System.Uri,System.String)">
+            <summary>
+                The EnsureTrailing method will, as the name suggests, ensure the string ends with the specified character
+            </summary>
+            <param name="value">The raw string to potentially add the trailing character to</param>
+            <param name="ensureTrailing">The character to ensure is at the end of the string</param>
+            <returns>The original or updated string</returns>
+        </member>
+        <member name="M:AStar.Dev.Utilities.StringExtensions.EnsureTrailingSlash(System.Uri)">
+            <summary>
+                The EnsureTrailing method will, as the name suggests, ensure the string ends with the specified character
+            </summary>
+            <param name="value">The raw string to potentially add the trailing character to</param>
+            <returns>The original or updated string</returns>
+        </member>
         <member name="M:AStar.Dev.Utilities.StringExtensions.SanitizeFilePath(System.String)">
             <summary>
                 The SanitizeFilePath method replaces invalid or undesirable characters in a file path

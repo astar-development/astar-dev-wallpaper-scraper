@@ -15,6 +15,7 @@ Full test suite runs automatically at end of turn - only run new / affected test
 - return statements MUST be proceeded by a blank line - except when they immediately follow a control statement (`if` etc.)
 - ALL new code must use TDD to develop. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc
 - On the rare occasion that a class is not testable/offers little to no protection: mark with `[ExcludeFromCodeCoverage]` from `System.Diagnostics.CodeAnalysis`
+- All new development work must have a GitHub Issue raised before work begins. If one doesn't exist, create it with full context
 
 ## Build & Test
 

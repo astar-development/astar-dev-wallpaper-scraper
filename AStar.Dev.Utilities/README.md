@@ -20,7 +20,7 @@ Or via the NuGet Package Manager in Visual Studio / Rider.
 ## Available extensions
 
 | Class | Description | Reference |
-|-------|-------------|-----------|
+| ----- | ----------- | --------- |
 | [`Constants`](docs/Constants.md) | Shared `JsonSerializerOptions` instances | [docs](docs/Constants.md) |
 | [`EncryptionExtensions`](docs/EncryptionExtensions.md) | AES encrypt / decrypt strings | [docs](docs/EncryptionExtensions.md) |
 | [`EnumExtensions`](docs/EnumExtensions.md) | Parse a string to an enum value | [docs](docs/EnumExtensions.md) |
