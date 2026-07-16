@@ -8,7 +8,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperFileStore(IFileSystem fileSystem) : IWallpaperFileStore
 {
     /// <inheritdoc />
-    public Task<SavedWallpaperFile> SaveAsync(string directoryPath, string fileName, byte[] imageBytes, CancellationToken token)
+    public Task<SavedWallpaperFile> SaveAsync(string directoryPath, string fileName, byte[] imageBytes, CancellationToken cancellationToken)
     {
         fileSystem.Directory.CreateDirectory(directoryPath);
         var fullPath = fileSystem.Path.Combine(directoryPath, fileName);

@@ -14,23 +14,23 @@ public static class FileClassificationCategoryQueries
     /// </summary>
     /// <param name="context">The database context to persist through.</param>
     /// <param name="categoryNames">The category names observed during the scrape.</param>
-    /// <param name="token">A token used to observe cancellation.</param>
-    public static async Task EnsureCategoriesExistAsync(this AppDbContext context, IReadOnlyList<string> categoryNames, CancellationToken token = default)
+    /// <param name="cancellationToken">A token used to observe cancellation of the operation.</param>
+    public static async Task EnsureCategoriesExistAsync(this AppDbContext context, IReadOnlyList<string> categoryNames, CancellationToken cancellationToken = default)
     {
         var unclassified = await context.Set<FileClassificationCategoryEntity>()
-            .SingleOrDefaultAsync(category => category.Level == 1 && category.ParentId == null && category.Name == UnclassifiedCategoryName, token);
+            .SingleOrDefaultAsync(category => category.Level == 1 && category.ParentId == null && category.Name == UnclassifiedCategoryName, cancellationToken);
 
         if (unclassified is null)
         {
             unclassified = new FileClassificationCategoryEntity { Name = UnclassifiedCategoryName, Level = 1 };
             context.Set<FileClassificationCategoryEntity>().Add(unclassified);
-            await context.SaveChangesAsync(token);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
         var existingNames = await context.Set<FileClassificationCategoryEntity>()
             .Where(category => category.ParentId == unclassified.Id)
             .Select(category => category.Name)
-            .ToListAsync(token);
+            .ToListAsync(cancellationToken);
 
         var existingNameSet = new HashSet<string>(existingNames, StringComparer.OrdinalIgnoreCase);
 
@@ -44,6 +44,6 @@ public static class FileClassificationCategoryQueries
             });
         }
 
-        await context.SaveChangesAsync(token);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -41,6 +41,6 @@ public static class PathOperationExtensions
 
         foreach(var invalidFileChar in invalidFileChars) path = path.Replace(invalidFileChar, ' ');
 
-        return (path.Replace("\"", "'").Replace("|", string.Empty).Replace("煙", string.Empty)).Trim();
+        return path.Replace("\"", "'").Replace("|", string.Empty).Replace("煙", string.Empty).Trim();
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace AStar.Dev.Utilities;
@@ -13,7 +14,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to check for being null</param>
     /// <returns>True if the string is null, False otherwise</returns>
-    public static bool IsNull(this string? value) =>
+    public static bool IsNull([NotNullWhen(false)] this string? value) =>
         value is null;
 
     /// <summary>
@@ -21,7 +22,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to check for being not null</param>
     /// <returns>True if the string is not null, False otherwise</returns>
-    public static bool IsNotNull(this string? value) =>
+    public static bool IsNotNull([NotNullWhen(true)] this string? value) =>
         !value.IsNull();
 
     /// <summary>
@@ -30,7 +31,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to check for being null, empty or whitespace</param>
     /// <returns>True if the string is null, empty or whitespace, False otherwise</returns>
-    public static bool IsNullOrWhiteSpace(this string? value) =>
+    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? value) =>
         string.IsNullOrWhiteSpace(value);
 
     /// <summary>
@@ -38,7 +39,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to check for being not null, empty or whitespace</param>
     /// <returns>True if the string is not null, empty or whitespace, False otherwise</returns>
-    public static bool IsNotNullOrWhiteSpace(this string? value) =>
+    public static bool IsNotNullOrWhiteSpace([NotNullWhen(true)] this string? value) =>
         !value.IsNullOrWhiteSpace();
 
     /// <summary>
@@ -112,6 +113,45 @@ public static class StringExtensions
             ? value[..^removeTrailing.Length]
             : value;
     }
+
+    /// <summary>
+    ///     The EnsureTrailing method will, as the name suggests, ensure the string ends with the specified character
+    /// </summary>
+    /// <param name="value">The raw string to potentially add the trailing character to</param>
+    /// <param name="ensureTrailing">The character to ensure is at the end of the string</param>
+    /// <returns>The original or updated string</returns>
+    public static string EnsureTrailing(this string value, string ensureTrailing)
+    {
+        if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(ensureTrailing)) return value;
+
+        return value.EndsWith(ensureTrailing, StringComparison.OrdinalIgnoreCase)
+            ? value
+            : value + ensureTrailing;
+    }
+
+    /// <summary>
+    ///     The EnsureTrailing method will, as the name suggests, ensure the string ends with the specified character
+    /// </summary>
+    /// <param name="value">The raw string to potentially add the trailing character to</param>
+    /// <param name="ensureTrailing">The character to ensure is at the end of the string</param>
+    /// <returns>The original or updated string</returns>
+    public static string EnsureTrailing(this Uri value, string ensureTrailing)
+    {
+        if (value is null || string.IsNullOrEmpty(ensureTrailing)) return string.Empty;
+
+        var valueString = value.ToString();
+        return valueString.EndsWith(ensureTrailing, StringComparison.OrdinalIgnoreCase)
+            ? valueString
+            : valueString + ensureTrailing;
+    }
+
+    /// <summary>
+    ///     The EnsureTrailing method will, as the name suggests, ensure the string ends with the specified character
+    /// </summary>
+    /// <param name="value">The raw string to potentially add the trailing character to</param>
+    /// <returns>The original or updated string</returns>
+    public static string EnsureTrailingSlash(this Uri value)
+        => value.EnsureTrailing("/");
 
     /// <summary>
     ///     The SanitizeFilePath method replaces invalid or undesirable characters in a file path

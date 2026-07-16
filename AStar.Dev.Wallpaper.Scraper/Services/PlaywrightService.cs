@@ -1,6 +1,7 @@
 using System.IO.Abstractions;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Logging.Extensions;
+using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,75 +18,72 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
     private IPage? page;
 
     /// <inheritdoc />
-    public async Task<Exceptional<IPage>> ConfigurePlaywrightAsync(CancellationToken token)
+    public async Task<Exceptional<IPage>> ConfigurePlaywrightAsync(CancellationToken cancellationToken)
     {
-        var lockAcquired = false;
+        if (page is not null) return Exceptional.Success(page);
 
-        return await Try.RunAsync(async () =>
-        {
-            if (page is not null) return page;
+        using var lockScope = await AcquireConfigureLockAsync(cancellationToken).ConfigureAwait(false);
 
-            await configureLock.WaitAsync(token);
-            lockAcquired = true;
-            fileSystem.Directory.CreateDirectory(scrapeConfiguration.Value.UserDataDirectory);
+        return await Try.RunAsync(CreateUserDataDirectoryAsync)
+            .TapAsync(_ => LogMessage.Information(logger, "User data directory created successfully."))
+            .MapAsync(_ => GetOrCreatePlaywrightAsync())
+            .MapAsync(GetOrCreateContextAsync)
+            .MapAsync(HideWebdriverAsync)
+            .TapAsync(_ => LogMessage.Information(logger, "Playwright configured successfully."))
+            .MapAsync(GetOrCreatePageAsync);
+    }
 
-            return null;
-        })
-        .TapAsync(_ =>
-        {
-            if (lockAcquired) LogMessage.Information(logger, "User data directory created successfully.");
-        })
-        .MapAsync(async _ => (playwright ??= await Playwright.CreateAsync().ConfigureAwait(false)))
-        .MapAsync(async _ => (context ??= await playwright!.Chromium.LaunchPersistentContextAsync(scrapeConfiguration.Value.UserDataDirectory, SetContext()).ConfigureAwait(false)))
-        .MapAsync(async context =>
-        {
-            await context!.AddInitScriptAsync(HideWebdriverScript).ConfigureAwait(false);
+    private async Task<IDisposable> AcquireConfigureLockAsync(CancellationToken cancellationToken)
+    {
+        await configureLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-            return context;
-        })
-        .TapAsync(_ =>
-        {
-            if (lockAcquired) LogMessage.Information(logger, "Playwright configured successfully.");
-        })
-        .MapAsync(async context =>
-        {
-            return page ??= await context!.NewPageAsync()!;
-        })
-        .Ensure(_ =>
-        {
-            if (lockAcquired) configureLock.Release();
-        });
+        return new ConfigureLockScope(configureLock);
+    }
+
+    private Task<IPage?> CreateUserDataDirectoryAsync()
+    {
+        fileSystem.Directory.CreateDirectory(scrapeConfiguration.Value.UserDataDirectory);
+
+        return Task.FromResult<IPage?>(null);
+    }
+
+    private async Task<IPlaywright> GetOrCreatePlaywrightAsync()
+        => playwright ??= await Playwright.CreateAsync().ConfigureAwait(false);
+
+    private async Task<IBrowserContext> GetOrCreateContextAsync(IPlaywright _)
+        => context ??= await playwright!.Chromium.LaunchPersistentContextAsync(scrapeConfiguration.Value.UserDataDirectory, SetContext()).ConfigureAwait(false);
+
+    private async Task<IBrowserContext> HideWebdriverAsync(IBrowserContext browserContext)
+    {
+        await browserContext.AddInitScriptAsync(HideWebdriverScript).ConfigureAwait(false);
+
+        return browserContext;
+    }
+
+    private async Task<IPage> GetOrCreatePageAsync(IBrowserContext browserContext)
+        => page ??= await browserContext.NewPageAsync().ConfigureAwait(false);
+
+    private sealed class ConfigureLockScope(SemaphoreSlim semaphore) : IDisposable
+    {
+        public void Dispose() => semaphore.Release();
     }
 
     private const string HideWebdriverScript = "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });";
 
-    private BrowserTypeLaunchPersistentContextOptions SetContext()
+    private BrowserTypeLaunchPersistentContextOptions SetContext() => new()
     {
-        return new BrowserTypeLaunchPersistentContextOptions
-        {
-            BaseURL = EnsureTrailingSlash(scrapeConfiguration.Value.SearchConfiguration.BaseUrl),
-            Channel = "chrome",
-            Headless = scrapeConfiguration.Value.SearchConfiguration.UseHeadless,
-            Args = ["--disable-blink-features=AutomationControlled", "--password-store=kwallet6"],
-            ViewportSize = new ViewportSize { Width = 3000, Height = 1200 },
-            Locale = "en-GB",
-            TimezoneId = "Europe/London",
-        };
-    }
-
-    private static string EnsureTrailingSlash(Uri baseUrl)
-    {
-        var url = baseUrl.ToString();
-
-        return url.EndsWith('/') ? url : $"{url}/";
-    }
+        BaseURL = scrapeConfiguration.Value.SearchConfiguration.BaseUrl.EnsureTrailingSlash(),
+        Channel = "chrome",
+        Headless = scrapeConfiguration.Value.SearchConfiguration.UseHeadless,
+        Args = ["--disable-blink-features=AutomationControlled", "--password-store=kwallet6"],
+        ViewportSize = new ViewportSize { Width = 3000, Height = 1200 },
+        Locale = "en-GB",
+        TimezoneId = "Europe/London",
+    };
 
     public async ValueTask DisposeAsync()
     {
-        if (context is not null)
-        {
-            await context.CloseAsync();
-        }
+        if (context is not null) await context.CloseAsync();
 
         playwright?.Dispose();
         configureLock.Dispose();

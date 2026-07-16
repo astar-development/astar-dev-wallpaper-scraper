@@ -9,7 +9,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperImageLocator : IWallpaperImageLocator
 {
     /// <inheritdoc />
-    public async Task<Option<string>> LocateAsync(IPage page, CancellationToken token)
+    public async Task<Option<string>> LocateAsync(IPage page, CancellationToken cancellationToken)
     {
         var imageUrl = await page.Locator("#wallpaper").GetAttributeAsync("src").ConfigureAwait(false);
 

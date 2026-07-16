@@ -40,7 +40,7 @@
             <Button x:Name="CancelButton" Content="Cancel" Command="{Binding CancelCommand}" />
         </StackPanel>
 
-        <Border DockPanel.Dock="Right" Width="524" Margin="0,8,12,8" VerticalAlignment="Top" CornerRadius="10" ClipToBounds="True">
+        <Border DockPanel.Dock="Right" Width="750" Margin="0,8,12,8" VerticalAlignment="Top" CornerRadius="10" ClipToBounds="True">
             <Image x:Name="ThumbnailImage" Width="750" Height="750" Stretch="Uniform" />
         </Border>
 

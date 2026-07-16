@@ -3,6 +3,22 @@ namespace AStar.Dev.FunctionalParadigm.Tests.Unit;
 public sealed class GivenRetryOnceAsync
 {
     [Fact]
+    public async Task when_operation_is_null_then_throws_argument_null_exception()
+    {
+        Func<Task> retryOnceAction = () => RetryExtensions.RetryOnceAsync<int, string>(null!, () => Task.CompletedTask);
+
+        (await retryOnceAction.ShouldThrowAsync<ArgumentNullException>()).ParamName.ShouldBe("operation");
+    }
+
+    [Fact]
+    public async Task when_on_retry_is_null_then_throws_argument_null_exception()
+    {
+        Func<Task> retryOnceAction = () => RetryExtensions.RetryOnceAsync(() => Task.FromResult(Result.Success<int, string>(1)), null!);
+
+        (await retryOnceAction.ShouldThrowAsync<ArgumentNullException>()).ParamName.ShouldBe("onRetry");
+    }
+
+    [Fact]
     public async Task when_the_first_attempt_succeeds_then_the_result_is_the_first_attempts_success()
     {
         var actual = await RetryExtensions.RetryOnceAsync(

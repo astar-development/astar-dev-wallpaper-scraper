@@ -10,7 +10,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperHrefCollector(IOptions<ScrapeConfiguration> scrapeConfiguration) : IWallpaperHrefCollector
 {
     /// <inheritdoc />
-    public async Task<IReadOnlyList<string>> CollectAsync(IPage page, CancellationToken token)
+    public async Task<IReadOnlyList<string>> CollectAsync(IPage page, CancellationToken cancellationToken)
     {
         var previews = await page.GetByRole(AriaRole.Link).AllAsync().ConfigureAwait(false);
         List<string> hrefs = [];

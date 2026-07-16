@@ -884,7 +884,7 @@
             </summary>
             <param name="context">The database context to persist through.</param>
             <param name="categoryNames">The category names observed during the scrape.</param>
-            <param name="token">A token used to observe cancellation.</param>
+            <param name="cancellationToken">A token used to observe cancellation of the operation.</param>
         </member>
         <member name="T:AStar.Dev.Infrastructure.AppDb.Entities.FileClassificationEntity">
             <summary>Junction row linking a file to a category in the normalised classification taxonomy, regardless of which application classified it.</summary>

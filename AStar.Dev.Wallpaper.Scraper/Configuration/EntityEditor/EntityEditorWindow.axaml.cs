@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 
 namespace AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
@@ -6,6 +7,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 ///     Hosts an <see cref="EntityEditorViewModelBase" />, rendering its <c>Items</c> as an auto-generated,
 ///     inline-editable grid.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public partial class EntityEditorWindow : Window
 {
     /// <summary>Initialises the window and wires up the grid's column generation.</summary>

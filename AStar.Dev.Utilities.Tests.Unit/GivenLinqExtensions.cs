@@ -11,6 +11,36 @@ public class GivenLinqExtensions
     }
 
     [Fact]
+    public void when_for_each_is_called_with_a_null_enumerable_then_does_nothing()
+    {
+        IEnumerable<string>? enumerable = null;
+
+        var exception = Record.Exception(() => enumerable!.ForEach(_ => { }));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void when_for_each_is_called_with_a_null_action_then_does_nothing()
+    {
+        Action<string>? action = null;
+
+        var exception = Record.Exception(() => new List<string> { "a" }.AsEnumerable().ForEach(action!));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void when_for_each_is_called_then_the_supplied_action_runs_for_every_item()
+    {
+        List<string> visited = [];
+
+        new List<string> { "a", "b", "c" }.AsEnumerable().ForEach(item => visited.Add(item));
+
+        visited.ShouldBe(["a", "b", "c"]);
+    }
+
+    [Fact]
     public async Task when_for_each_async_is_called_on_an_ienumerable_then_the_supplied_action_runs_for_every_item_in_order()
     {
         List<string> visited = [];

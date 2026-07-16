@@ -8,9 +8,7 @@ namespace AStar.Dev.Infrastructure.AppDb.Migrations
     public partial class RepairClassificationData : Migration
     {
         /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql("""
+        protected override void Up(MigrationBuilder migrationBuilder) => migrationBuilder.Sql("""
                 CREATE TEMP TABLE _dup_categories AS
                 SELECT DupId, KeeperId FROM (
                     SELECT d."Id" AS DupId,
@@ -156,7 +154,6 @@ namespace AStar.Dev.Infrastructure.AppDb.Migrations
                 DROP TABLE _root;
                 DROP TABLE _orphan_root_dups;
                 """);
-        }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)

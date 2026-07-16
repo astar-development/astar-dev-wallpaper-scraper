@@ -10,21 +10,21 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperFileClassificationRepository(IDbContextFactory<AppDbContext> dbContextFactory) : IWallpaperFileClassificationRepository
 {
     /// <inheritdoc />
-    public async Task<bool> IsAlreadyDownloadedAsync(string directoryPath, string fileNameContains, CancellationToken token)
+    public async Task<bool> IsAlreadyDownloadedAsync(string directoryPath, string fileNameContains, CancellationToken cancellationToken)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(token);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.Files.AnyAsync(file => file.FileName.Value.Contains(fileNameContains) && file.DirectoryName.Value == directoryPath, token);
+        return await context.Files.AnyAsync(file => file.FileName.Value.Contains(fileNameContains) && file.DirectoryName.Value == directoryPath, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task RecordAsync(IReadOnlyList<TagData> tags, string imageUrl, string directoryPath, long sizeBytes, ImageDimensions dimensions, CancellationToken token)
+    public async Task RecordAsync(IReadOnlyList<TagData> tags, string imageUrl, string directoryPath, long sizeBytes, ImageDimensions dimensions, CancellationToken cancellationToken)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(token);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         foreach (var tag in tags)
         {
-            var category = await context.FileClassificationCategories.FirstAsync(c => c.Name == tag.Tag, token);
+            var category = await context.FileClassificationCategories.FirstAsync(c => c.Name == tag.Tag, cancellationToken);
 
             context.FileClassifications.Add(new FileClassificationEntity
             {
@@ -46,6 +46,6 @@ public sealed class WallpaperFileClassificationRepository(IDbContextFactory<AppD
             });
         }
 
-        await context.SaveChangesAsync(token);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
@@ -9,6 +10,7 @@ using Unit = System.Reactive.Unit;
 
 namespace AStar.Dev.Wallpaper.Scraper.Home;
 
+[ExcludeFromCodeCoverage]
 public partial class MainWindow : Window
 {
     private IDisposable? thumbnailSubscription;
