@@ -6,7 +6,7 @@ using LogMessage = AStar.Dev.Logging.Extensions.LogMessage;
 namespace AStar.Dev.Wallpaper.Scraper.Configuration;
 
 /// <summary>
-///    The <see cref="ApplicationDirectories" /> class provides access to the application's data, cache, and log directories, ensuring they exist and are accessible.
+/// The <see cref="ApplicationDirectories" /> class provides access to the application's data, cache, and log directories, ensuring they exist and are accessible.
 /// </summary>
 /// <param name="fileSystem">The file system abstraction used to interact with the file system.</param>
 /// <param name="logger">The logger used for logging directory creation and access.</param>
@@ -15,7 +15,7 @@ public class ApplicationDirectories(IFileSystem fileSystem, ILogger<ApplicationD
     private static readonly string root = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder);
     
     /// <summary>
-    ///   Initializes a new instance of the <see cref="ApplicationDirectories" /> class, ensuring that the necessary application directories exist.
+    /// Initializes a new instance of the <see cref="ApplicationDirectories" /> class, ensuring that the necessary application directories exist.
     /// </summary>
     public void CreateIfRequired()
     {
@@ -27,7 +27,7 @@ public class ApplicationDirectories(IFileSystem fileSystem, ILogger<ApplicationD
     }
 
     /// <summary>
-    ///  Gets the root directory for application data, typically located in the user's application data folder.
+    /// Gets the root directory for application data, typically located in the user's application data folder.
     /// </summary>
     public static string DataDirectory => root.CombinePath("data");
 
