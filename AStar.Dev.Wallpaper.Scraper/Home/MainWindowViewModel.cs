@@ -9,6 +9,7 @@ using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.Options;
+using Microsoft.Playwright;
 using ReactiveUI;
 using Unit = System.Reactive.Unit;
 
@@ -127,69 +128,87 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         var canExecute = this.WhenAnyValue(vm => vm.IsBusy).Select(busy => !busy);
 
-        var command = ReactiveCommand.CreateFromTask(async () =>
-        {
-            IsBusy = true;
-            using var cancellationSource = new CancellationTokenSource();
-            scrapeCancellationSource = cancellationSource;
-
-            try
-            {
-                var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
-                cancellationSource.Token.ThrowIfCancellationRequested();
-
-                AppendStatusLine($"{actionName}: {(confirmed ? "Yes" : "No")}");
-                var page = await playwrightService.ConfigurePlaywrightAsync(cancellationSource.Token);
-                cancellationSource.Token.ThrowIfCancellationRequested();
-
-                await page.MatchAsync(
-                    async page =>
-                    {
-                        AppendStatusLine("Playwright page configured successfully.");
-
-                        if (action is null)
-                        {
-                            _ = page.GotoAsync("login");
-                        }
-                        else
-                        {
-                            _ = page.GotoAsync("/");
-                            var progress = new Progress<string>(AppendStatusLine);
-                            var result = await action.ExecuteAsync(page, progress, cancellationSource.Token);
-                            result.Match(
-                                _ => FunctionalParadigm.Unit.Instance,
-                                error =>
-                                {
-                                    AppendStatusLine($"{actionName}: {error.Message}");
-
-                                    return FunctionalParadigm.Unit.Instance;
-                                });
-                        }
-
-                        return FunctionalParadigm.Unit.Instance;
-                    },
-                    error =>
-                    {
-                        AppendStatusLine($"Error configuring Playwright page: {error.Message}");
-
-                        return FunctionalParadigm.Unit.Instance;
-                    });
-            }
-            catch (OperationCanceledException)
-            {
-                AppendStatusLine($"{actionName}: Cancelled");
-            }
-            finally
-            {
-                scrapeCancellationSource = null;
-                IsBusy = false;
-            }
-        }, canExecute);
+        var command = ReactiveCommand.CreateFromTask(() => ExecuteScrapeAsync(actionName, action), canExecute);
 
         command.ThrownExceptions.Subscribe(exception =>
             AppendStatusLine($"{actionName}: Unexpected error - {exception.Message}"));
 
         return command;
+    }
+
+    private async Task ExecuteScrapeAsync(string actionName, IScrapeAction? action)
+    {
+        IsBusy = true;
+        using var cancellationSource = new CancellationTokenSource();
+        scrapeCancellationSource = cancellationSource;
+
+        try
+        {
+            await ConfirmAndRunAsync(actionName, action, cancellationSource.Token);
+        }
+        finally
+        {
+            scrapeCancellationSource = null;
+            IsBusy = false;
+        }
+    }
+
+    private async Task ConfirmAndRunAsync(string actionName, IScrapeAction? action, CancellationToken cancellationToken)
+    {
+        var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
+
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            AppendStatusLine($"{actionName}: {(confirmed ? "Yes" : "No")}");
+            await RunActionAsync(actionName, action, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            AppendStatusLine($"{actionName}: Cancelled");
+        }
+    }
+
+    private async Task RunActionAsync(string actionName, IScrapeAction? action, CancellationToken cancellationToken)
+    {
+        var page = await playwrightService.ConfigurePlaywrightAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await page.MatchAsync(
+            configuredPage => RunOnConfiguredPageAsync(actionName, action, configuredPage, cancellationToken),
+            ReportConfigurationError);
+    }
+
+    private async Task<FunctionalParadigm.Unit> RunOnConfiguredPageAsync(string actionName, IScrapeAction? action, IPage configuredPage, CancellationToken cancellationToken)
+    {
+        AppendStatusLine("Playwright page configured successfully.");
+
+        if (action is null)
+        {
+            _ = configuredPage.GotoAsync("login");
+
+            return FunctionalParadigm.Unit.Instance;
+        }
+
+        _ = configuredPage.GotoAsync("/");
+        var progress = new Progress<string>(AppendStatusLine);
+
+        return await action.ExecuteAsync(configuredPage, progress, cancellationToken)
+            .MatchAsync(_ => FunctionalParadigm.Unit.Instance, error => ReportActionError(actionName, error));
+    }
+
+    private FunctionalParadigm.Unit ReportActionError(string actionName, Exception error)
+    {
+        AppendStatusLine($"{actionName}: {error.Message}");
+
+        return FunctionalParadigm.Unit.Instance;
+    }
+
+    private FunctionalParadigm.Unit ReportConfigurationError(Exception error)
+    {
+        AppendStatusLine($"Error configuring Playwright page: {error.Message}");
+
+        return FunctionalParadigm.Unit.Instance;
     }
 
     public ReactiveCommand<Unit, Unit> ExitCommand { get; } = ReactiveCommand.Create(static () =>
