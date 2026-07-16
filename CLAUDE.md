@@ -8,24 +8,27 @@ AStar Dev Wallpaper Scraper: .NET 10 desktop app. Avalonia + ReactiveUI for UI, 
 
 Full test suite runs automatically at end of turn - only run new / affected tests.
 
-# Project Rules
+## Project Rules
 
 - Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests. 
 - Async methods MUST end in `Async` - exceptions: EventHandlers and tests. Neither have the suffix
 - return statements MUST be proceeded by a blank line - except when they immediately follow a control statement (`if` etc.)
 - ALL new code must use TDD to develop. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc
+- On the rare occasion that a class is not testable/offers little to no protection: mark with `[ExcludeFromCodeCoverage]` from `System.Diagnostics.CodeAnalysis`
 
 ## Build & Test
 
 All builds target `net10.0`. Run from project root:
 
 **Build:**
+
 ```bash
 dotnet build                                         # Debug build
 dotnet build --configuration Release                 # Release build
 ```
 
 **Test:**
+
 ```bash
 dotnet test                                          # Run all tests
 dotnet test --project AStar.Dev.Utilities.Tests.Unit # Run single project
@@ -34,6 +37,7 @@ dotnet test -- --filter-method "*when_action_then*"  # Run by test method
 ```
 
 **Coverage:**
+
 ```bash
 bash code-coverage.sh  # Runs tests with coverage, HTML report: CoverageReport/ - runs as stop hook.
 ```
@@ -42,7 +46,7 @@ bash code-coverage.sh  # Runs tests with coverage, HTML report: CoverageReport/ 
 
 ### Project Structure
 
-```
+``` Text
 AStar.Dev.Wallpaper.Scraper/          Main desktop app (Avalonia/ReactiveUI, net10.0-windows)
 AStar.Dev.Wallpaper.Scraper.Tests.Unit/
 
@@ -74,16 +78,19 @@ AStar.Dev.Logging.Extensions/         Serilog + Microsoft.Extensions.Logging int
 ### Key Configuration
 
 **Directory.Build.props:**
+
 - All projects: `net10.0`, nullable reference types on, implicit usings, latest C# version
 - Tests: Snake_case method names (when_[action]_then_[outcome]) + PascalCase class names (Given[Subject])
 - All warnings become errors
 - Coverage collector injected into test projects automatically
 
 **Directory.Packages.props:**
+
 - Central Package Management (CPM). Each package version declared once; projects reference without versions.
 - New NuGet package: add `<PackageVersion>` entry here, reference without version in .csproj.
 
 **appsettings.json:**
+
 - Logging.LogLevel, Logging.Console, Logging.Serilog configured here (null = defaults)
 - updateConfiguration.repositoryUrl points to GitHub (Velopack reads releases there)
 - scrapeConfiguration holds app settings (database connection, app name)
@@ -108,6 +115,7 @@ Enforced via CA1707/IDE1006 suppressions in Directory.Build.props:
 **Test methods:** `when_[action]_then_[outcome]`
 
 Example:
+
 ```csharp
 public class GivenUpdateService
 {
@@ -126,10 +134,12 @@ public class GivenUpdateService
 ## CI/CD
 
 **Build & Test** (`.github/workflows/build-and-test.yml`):
+
 - Runs on push/PR to main, or manual dispatch
 - Builds, tests with coverage, generates HTML report, uploads as artifact
 
 **Release** (`.github/workflows/release.yml`):
+
 - Triggers on semver tag push
 - Serialized: both OS jobs attach to same GitHub Release (no race conditions)
 - Uses `vpk` CLI to pack and upload
@@ -137,6 +147,7 @@ public class GivenUpdateService
 ## Common Development Patterns
 
 **DI & Configuration:**
+
 ```csharp
 // Services configured in ServiceCollectionExtensions
 services.AddScoped<IUpdateService, UpdateService>();
@@ -144,6 +155,7 @@ services.Configure<ScrapeConfiguration>(config.GetSection("scrapeConfiguration")
 ```
 
 **Reactive UI Updates:**
+
 ```csharp
 // ReactiveUI binding in ViewModel
 this.WhenAnyValue(vm => vm.Property)
@@ -152,6 +164,7 @@ this.WhenAnyValue(vm => vm.Property)
 ```
 
 **Database Access:**
+
 ```csharp
 // EF Core context via DI
 using var db = serviceProvider.GetRequiredService<AppDbContext>();
@@ -159,6 +172,7 @@ await db.YourEntity.ToListAsync();
 ```
 
 **Logging:**
+
 ```csharp
 using var logger = new LoggerFactory().CreateLogger<MyClass>();
 logger.LogInformation("Message with {Property}", value);

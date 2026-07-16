@@ -19,26 +19,12 @@ public static class TagCurator
         for (int i = 0; i < tags.Count; i++)
         {
             var tag = tags[i];
-            
-            if(tag.Tag.Equals("model", StringComparison.OrdinalIgnoreCase)) continue;
-            if(tag.Tag.EndsWith(" model", StringComparison.OrdinalIgnoreCase)) tag = tag with { Tag = tag.Tag[..^" model".Length] };
+
+            if (tag.Tag.Equals("model", StringComparison.OrdinalIgnoreCase)) continue;
+            if (tag.Tag.EndsWith(" model", StringComparison.OrdinalIgnoreCase)) tag = tag with { Tag = tag.Tag[..^" model".Length] };
             messages.Add($"Found tag: {tag.Tag}, category: {tag.Category}, isFamous: {tag.IsFamous}, isInternet: {tag.IsInternet}");
 
-            if (modelsToIgnore.Any(model => model.Equals(tag.Tag, StringComparison.OrdinalIgnoreCase)))
-            {
-                messages.Add($"Ignoring model: {tag.Tag} as it is in the modelsToIgnore list");
-
-                continue;
-            }
-
-            messages.Add($"Model: {tag.Tag} is not in the modelsToIgnore list, we should save it to the database");
-
-            if (tagsToIgnore.Any(ignoredTag => ignoredTag.Equals(tag.Tag, StringComparison.OrdinalIgnoreCase)))
-            {
-                messages.Add($"Ignoring tag: {tag.Tag} as it is in the tagsToIgnore list");
-
-                continue;
-            }
+            if (ModelOrTagToIgnore(modelsToIgnore, tagsToIgnore, tag)) continue;
 
             kept.Add(tag);
             messages.Add($"Tag: {tag.Tag} is not in the tagsToIgnore list, added to the list of tags to save to the database");
@@ -46,4 +32,10 @@ public static class TagCurator
 
         return new TagCuration(kept, messages);
     }
+
+    private static bool ModelOrTagToIgnore(IReadOnlyList<string> modelsToIgnore, IReadOnlyList<string> tagsToIgnore, TagData tag)
+        => modelsToIgnore.Any(model => TagCheck(tag.Tag, model)) || tagsToIgnore.Any(ignoredTag => TagCheck(tag.Tag, ignoredTag));
+
+    private static bool TagCheck(string category, string contains)
+        => category.Contains(contains, StringComparison.OrdinalIgnoreCase);
 }

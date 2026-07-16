@@ -125,6 +125,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName, IScrapeAction? action = null)
     {
+        var canExecute = this.WhenAnyValue(vm => vm.IsBusy).Select(busy => !busy);
+
         var command = ReactiveCommand.CreateFromTask(async () =>
         {
             IsBusy = true;
@@ -182,7 +184,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 scrapeCancellationSource = null;
                 IsBusy = false;
             }
-        });
+        }, canExecute);
 
         command.ThrownExceptions.Subscribe(exception =>
             AppendStatusLine($"{actionName}: Unexpected error - {exception.Message}"));

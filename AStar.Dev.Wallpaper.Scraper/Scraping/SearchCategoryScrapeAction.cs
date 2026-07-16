@@ -80,7 +80,6 @@ public sealed class SearchCategoryScrapeAction(
 
         var tags = await tagReader.ReadAsync(page, token);
         var curation = TagCurator.Curate(tags, context.ModelsToIgnore, context.TagsToIgnore);
-        curation.Messages.ForEach(progress.Report);
 
         var (isAlreadyDownloaded, directoryPath) = await CheckWhetherFileIsAlreadyDownloadedAsync(href, context, progress, curation.Kept, category, token);
         if (isAlreadyDownloaded) return;
@@ -109,7 +108,7 @@ public sealed class SearchCategoryScrapeAction(
             return (true, directoryPath);
         }
 
-        return (false, string.Empty);
+        return (false, directoryPath);
     }
 
     private async Task<Unit> DownloadWallpaperAsync(IPage page, string directoryPath, string imageUrl, IReadOnlyList<TagData> tags, DirectoryLayout directories, ScrapeContext context, IProgress<string> progress, ScrapeCategory category, CancellationToken token)

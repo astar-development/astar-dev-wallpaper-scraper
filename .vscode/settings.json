@@ -3,9 +3,16 @@
         "Avalonia",
         "Barden",
         "Colour",
+        "deserialisation",
+        "deserialise",
+        "deserialised",
         "hrefs",
+        "kwallet",
+        "LINQ",
         "normalised",
         "organised",
+        "Qube",
+        "Shouldly",
         "Testably",
         "Velopack"
     ]

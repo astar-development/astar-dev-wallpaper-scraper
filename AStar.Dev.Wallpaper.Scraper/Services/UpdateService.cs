@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Abstractions;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using Avalonia;
@@ -14,6 +15,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Services;
 ///     Checks GitHub Releases for a newer Velopack package in the background,
 ///     downloads it, then prompts the user to restart and apply it.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class UpdateService(IOptions<UpdateConfiguration> updateConfiguration, IFileSystem fileSystem)
 {
     private static readonly string LogPath = Path.Combine(Path.GetTempPath(), "astar-dev-wallpaper-scraper-update.log");

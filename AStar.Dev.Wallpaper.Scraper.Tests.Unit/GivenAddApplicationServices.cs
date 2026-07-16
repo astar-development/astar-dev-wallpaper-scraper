@@ -45,10 +45,7 @@ public class GivenAddApplicationServices
     }
 
     [Fact]
-    public void when_services_are_built_then_update_service_resolves()
-    {
-        serviceProvider.GetRequiredService<UpdateService>().ShouldNotBeNull();
-    }
+    public void when_services_are_built_then_update_service_resolves() => serviceProvider.GetRequiredService<UpdateService>().ShouldNotBeNull();
 
     [Fact]
     public void when_app_db_context_factory_is_resolved_then_it_uses_the_configured_sqlite_connection_string()

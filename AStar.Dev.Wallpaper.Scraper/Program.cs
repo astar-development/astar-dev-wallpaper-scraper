@@ -1,9 +1,11 @@
-﻿using Avalonia;
+﻿using System.Diagnostics.CodeAnalysis;
+using Avalonia;
 using Avalonia.ReactiveUI;
 using Velopack;
 
 namespace AStar.Dev.Wallpaper.Scraper;
 
+[ExcludeFromCodeCoverage]
 internal sealed class Program
 {
     // Initialization code. Don't use any Avalonia, third-party APIs or any

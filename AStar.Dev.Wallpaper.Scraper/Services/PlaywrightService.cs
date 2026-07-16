@@ -59,19 +59,16 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
 
     private const string HideWebdriverScript = "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });";
 
-    private BrowserTypeLaunchPersistentContextOptions SetContext()
+    private BrowserTypeLaunchPersistentContextOptions SetContext() => new()
     {
-        return new BrowserTypeLaunchPersistentContextOptions
-        {
-            BaseURL = EnsureTrailingSlash(scrapeConfiguration.Value.SearchConfiguration.BaseUrl),
-            Channel = "chrome",
-            Headless = scrapeConfiguration.Value.SearchConfiguration.UseHeadless,
-            Args = ["--disable-blink-features=AutomationControlled", "--password-store=kwallet6"],
-            ViewportSize = new ViewportSize { Width = 3000, Height = 1200 },
-            Locale = "en-GB",
-            TimezoneId = "Europe/London",
-        };
-    }
+        BaseURL = EnsureTrailingSlash(scrapeConfiguration.Value.SearchConfiguration.BaseUrl),
+        Channel = "chrome",
+        Headless = scrapeConfiguration.Value.SearchConfiguration.UseHeadless,
+        Args = ["--disable-blink-features=AutomationControlled", "--password-store=kwallet6"],
+        ViewportSize = new ViewportSize { Width = 3000, Height = 1200 },
+        Locale = "en-GB",
+        TimezoneId = "Europe/London",
+    };
 
     private static string EnsureTrailingSlash(Uri baseUrl)
     {
@@ -82,10 +79,7 @@ public class PlaywrightService(ILogger<PlaywrightService> logger, IOptions<Scrap
 
     public async ValueTask DisposeAsync()
     {
-        if (context is not null)
-        {
-            await context.CloseAsync();
-        }
+        if (context is not null) await context.CloseAsync();
 
         playwright?.Dispose();
         configureLock.Dispose();
