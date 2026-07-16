@@ -33,7 +33,15 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IWallpaperHrefCollector, WallpaperHrefCollector>();
         services.AddSingleton<ITagReader, TagReader>();
         services.AddSingleton<IWallpaperImageLocator, WallpaperImageLocator>();
-        services.AddSingleton<IWallpaperImageDownloader, WallpaperImageDownloader>();
+        services.AddSingleton<WallpaperImageDownloader>();
+        services.AddSingleton<IWallpaperThumbnailGenerator, WallpaperThumbnailGenerator>();
+        services.AddSingleton<WallpaperThumbnailBroadcaster>();
+        services.AddSingleton<IWallpaperThumbnailPublisher>(serviceProvider => serviceProvider.GetRequiredService<WallpaperThumbnailBroadcaster>());
+        services.AddSingleton<IWallpaperThumbnailFeed>(serviceProvider => serviceProvider.GetRequiredService<WallpaperThumbnailBroadcaster>());
+        services.AddSingleton<IWallpaperImageDownloader>(serviceProvider => new ThumbnailPublishingWallpaperImageDownloader(
+            serviceProvider.GetRequiredService<WallpaperImageDownloader>(),
+            serviceProvider.GetRequiredService<IWallpaperThumbnailGenerator>(),
+            serviceProvider.GetRequiredService<IWallpaperThumbnailPublisher>()));
         services.AddSingleton<IImageDimensionsReader, SkiaImageDimensionsReader>();
         services.AddSingleton<IWallpaperFileStore, WallpaperFileStore>();
         services.AddSingleton<IWallpaperCategoryRegistrar, WallpaperCategoryRegistrar>();
