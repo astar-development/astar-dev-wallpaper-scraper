@@ -1,3 +1,4 @@
+using System.Reflection;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Services;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
+using NSubstitute.ExceptionExtensions;
 using Testably.Abstractions.Testing;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Services;
@@ -199,6 +201,23 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
         sut.ShouldBeAssignableTo<IAsyncDisposable>();
     }
 
+    [Fact]
+    public async Task when_context_close_async_throws_during_dispose_then_playwright_and_the_configure_lock_are_still_disposed()
+    {
+        var sut = (PlaywrightService)CreatePlaywrightService();
+        var throwingContext = Substitute.For<IBrowserContext>();
+        throwingContext.CloseAsync().ThrowsAsync(new InvalidOperationException("context close failed"));
+        var substitutePlaywright = Substitute.For<IPlaywright>();
+        SetPrivateField(sut, "context", throwingContext);
+        SetPrivateField(sut, "playwright", substitutePlaywright);
+
+        await Should.ThrowAsync<AggregateException>(async () => await ((IAsyncDisposable)sut).DisposeAsync());
+
+        substitutePlaywright.Received(1).Dispose();
+        var configureLock = GetPrivateField<SemaphoreSlim>(sut, "configureLock");
+        Should.Throw<ObjectDisposedException>(() => configureLock.Wait(0));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(userDataDirectory))
@@ -214,4 +233,10 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
 
         return new PlaywrightService(logger, scrapeConfiguration, fileSystem);
     }
+
+    private static void SetPrivateField(PlaywrightService target, string fieldName, object value) =>
+        typeof(PlaywrightService).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(target, value);
+
+    private static TField GetPrivateField<TField>(PlaywrightService target, string fieldName) =>
+        (TField)typeof(PlaywrightService).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(target)!;
 }
