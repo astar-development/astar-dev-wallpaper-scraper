@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO.Abstractions;
 using System.Reactive.Linq;
 using System.Windows.Input;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Utilities;
 using Microsoft.EntityFrameworkCore;
@@ -122,81 +123,85 @@ public sealed class EntityEditorViewModel<TEntity> : EntityEditorViewModelBase, 
         SelectedItem = null;
     }
 
-    private async Task SaveAsync()
-    {
-        try
-        {
-            if (descriptor.OnBeforeAddAsync is not null)
-            {
-                var addedEntities = context.ChangeTracker.Entries<TEntity>()
-                    .Where(entry => entry.State == EntityState.Added)
-                    .Select(entry => entry.Entity)
-                    .ToList();
-
-                foreach (var entity in addedEntities)
-                {
-                    await descriptor.OnBeforeAddAsync(context, entity, CancellationToken.None);
-                }
-            }
-
-            await context.SaveChangesAsync();
-            StatusMessage = $"Saved {items.Count} row(s).";
-        }
-        catch (Exception exception)
-        {
-            StatusMessage = $"Save failed: {exception.Message}";
-        }
-    }
+    private async Task SaveAsync() =>
+        await Try.RunAsync(PersistPendingChangesAsync)
+            .TapAsync(savedRowCount => StatusMessage = $"Saved {savedRowCount} row(s).", exception => StatusMessage = $"Save failed: {exception.Message}");
 
     private Task ExportAsync()
     {
-        try
-        {
-            fileSystem.Directory.CreateDirectory(exportDirectory);
-            fileSystem.File.WriteAllText(exportFilePath, items.ToList().ToJson());
-            StatusMessage = $"Exported {items.Count} row(s) to {exportFilePath}.";
-        }
-        catch (Exception exception)
-        {
-            StatusMessage = $"Export failed: {exception.Message}";
-        }
+        Try.Run(WriteItemsToExportFile)
+            .Tap(exportedRowCount => StatusMessage = $"Exported {exportedRowCount} row(s) to {exportFilePath}.", exception => StatusMessage = $"Export failed: {exception.Message}");
 
         return Task.CompletedTask;
     }
 
     private Task ImportAsync()
     {
-        try
+        if (!fileSystem.File.Exists(exportFilePath))
         {
-            if (!fileSystem.File.Exists(exportFilePath))
-            {
-                StatusMessage = $"Import failed: {exportFilePath} was not found.";
+            StatusMessage = $"Import failed: {exportFilePath} was not found.";
 
-                return Task.CompletedTask;
-            }
-
-            var imported = fileSystem.File.ReadAllText(exportFilePath).FromJson<List<TEntity>>(Constants.WebDeserialisationSettings);
-
-            foreach (var existing in context.Set<TEntity>().Local.ToList())
-            {
-                context.Remove(existing);
-            }
-
-            context.AddRange(imported);
-            items.Clear();
-
-            foreach (var entity in imported)
-            {
-                items.Add(entity);
-            }
-
-            StatusMessage = $"Imported {imported.Count} row(s) from {exportFilePath}. Click Save to persist.";
+            return Task.CompletedTask;
         }
-        catch (Exception exception)
-        {
-            StatusMessage = $"Import failed: {exception.Message}";
-        }
+
+        Try.Run(ReplaceItemsFromExportFile)
+            .Tap(importedRowCount => StatusMessage = $"Imported {importedRowCount} row(s) from {exportFilePath}. Click Save to persist.", exception => StatusMessage = $"Import failed: {exception.Message}");
 
         return Task.CompletedTask;
+    }
+
+    private async Task<int> PersistPendingChangesAsync()
+    {
+        await RunOnBeforeAddHooksAsync();
+        await context.SaveChangesAsync();
+
+        return items.Count;
+    }
+
+    private async Task RunOnBeforeAddHooksAsync()
+    {
+        if (descriptor.OnBeforeAddAsync is null)
+        {
+            return;
+        }
+
+        foreach (var entity in GetAddedEntities())
+        {
+            await descriptor.OnBeforeAddAsync(context, entity, CancellationToken.None);
+        }
+    }
+
+    private List<TEntity> GetAddedEntities() =>
+        context.ChangeTracker.Entries<TEntity>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+
+    private int WriteItemsToExportFile()
+    {
+        fileSystem.Directory.CreateDirectory(exportDirectory);
+        fileSystem.File.WriteAllText(exportFilePath, items.ToList().ToJson());
+
+        return items.Count;
+    }
+
+    private int ReplaceItemsFromExportFile()
+    {
+        var imported = fileSystem.File.ReadAllText(exportFilePath).FromJson<List<TEntity>>(Constants.WebDeserialisationSettings);
+
+        foreach (var existing in context.Set<TEntity>().Local.ToList())
+        {
+            context.Remove(existing);
+        }
+
+        context.AddRange(imported);
+        items.Clear();
+
+        foreach (var entity in imported)
+        {
+            items.Add(entity);
+        }
+
+        return imported.Count;
     }
 }
