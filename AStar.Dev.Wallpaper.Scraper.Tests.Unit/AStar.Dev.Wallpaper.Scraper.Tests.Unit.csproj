@@ -6,6 +6,10 @@
     <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
 
+  <ItemGroup>
+      <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage"/>
+  </ItemGroup>
+
   <!--
     SQLitePCLRaw.lib.e_sqlite3 2.1.11 carries advisory GHSA-2m69-gcr7-jv3q.
     Upgrading to 3.x risks compatibility with Microsoft.EntityFrameworkCore.Sqlite 10.0.9.
