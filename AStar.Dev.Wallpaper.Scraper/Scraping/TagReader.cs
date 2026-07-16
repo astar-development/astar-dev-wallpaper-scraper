@@ -21,6 +21,6 @@ public sealed class TagReader : ITagReader
         var text = await tag.InnerTextAsync().ConfigureAwait(false);
         var category = await tag.GetAttributeAsync("original-title").ConfigureAwait(false);
 
-        return new TagData(text, category);
+        return TagDataFactory.Create(text, category);
     }
 }

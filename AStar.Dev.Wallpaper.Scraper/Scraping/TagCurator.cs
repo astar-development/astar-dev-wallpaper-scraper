@@ -13,24 +13,34 @@ public static class TagCurator
     /// <param name="tagsToIgnore">Tag names that should be dropped from a wallpaper's tag list.</param>
     public static TagCuration Curate(IReadOnlyList<TagData> tags, IReadOnlyList<string> modelsToIgnore, IReadOnlyList<string> tagsToIgnore)
     {
-        List<TagData> kept = [];
-        List<string>  messages = [];
+        var outcomes = tags
+            .Select(NormalizeModelSuffix)
+            .OfType<TagData>()
+            .Select(tag => Evaluate(tag, modelsToIgnore, tagsToIgnore))
+            .ToList();
 
-        for (int i = 0; i < tags.Count; i++)
-        {
-            var tag = tags[i];
-
-            if (tag.Tag.Equals("model", StringComparison.OrdinalIgnoreCase)) continue;
-            if (tag.Tag.EndsWith(" model", StringComparison.OrdinalIgnoreCase)) tag = tag with { Tag = tag.Tag[..^" model".Length] };
-            messages.Add($"Found tag: {tag.Tag}, category: {tag.Category}, isFamous: {tag.IsFamous}, isInternet: {tag.IsInternet}");
-
-            if (ModelOrTagToIgnore(modelsToIgnore, tagsToIgnore, tag)) continue;
-
-            kept.Add(tag);
-            messages.Add($"Tag: {tag.Tag} is not in the tagsToIgnore list, added to the list of tags to save to the database");
-        }
+        var kept = outcomes.Where(outcome => outcome.Kept).Select(outcome => outcome.Tag).ToList();
+        var messages = outcomes.SelectMany(outcome => outcome.Messages).ToList();
 
         return new TagCuration(kept, messages);
+    }
+
+    private static TagData? NormalizeModelSuffix(TagData tag)
+    {
+        if (tag.Tag.Equals("model", StringComparison.OrdinalIgnoreCase)) return null;
+
+        if (tag.Tag.EndsWith(" model", StringComparison.OrdinalIgnoreCase)) return tag with { Tag = tag.Tag[..^" model".Length] };
+
+        return tag;
+    }
+
+    private static TagCurationOutcome Evaluate(TagData tag, IReadOnlyList<string> modelsToIgnore, IReadOnlyList<string> tagsToIgnore)
+    {
+        var foundMessage = $"Found tag: {tag.Tag}, category: {tag.Category}, isFamous: {tag.IsFamous}, isInternet: {tag.IsInternet}";
+
+        if (ModelOrTagToIgnore(modelsToIgnore, tagsToIgnore, tag)) return new TagCurationOutcome(false, tag, [foundMessage]);
+
+        return new TagCurationOutcome(true, tag, [foundMessage, $"Tag: {tag.Tag} is not in the tagsToIgnore list, added to the list of tags to save to the database"]);
     }
 
     private static bool ModelOrTagToIgnore(IReadOnlyList<string> modelsToIgnore, IReadOnlyList<string> tagsToIgnore, TagData tag)
@@ -38,4 +48,6 @@ public static class TagCurator
 
     private static bool TagCheck(string category, string contains)
         => category.Contains(contains, StringComparison.OrdinalIgnoreCase);
+
+    private sealed record TagCurationOutcome(bool Kept, TagData Tag, IReadOnlyList<string> Messages);
 }

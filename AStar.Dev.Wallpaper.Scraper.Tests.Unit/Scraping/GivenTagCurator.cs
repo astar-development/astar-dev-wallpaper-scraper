@@ -45,4 +45,41 @@ public sealed class GivenTagCurator
 
         curation.Kept.ShouldBe([new TagData("Super Model", "people > model")]);
     }
+
+    [Fact]
+    public void when_a_tag_matches_the_ignore_list_then_only_the_found_message_is_recorded_and_the_kept_message_is_omitted()
+    {
+        List<TagData> tags = [new("Ignored", null)];
+
+        var curation = TagCurator.Curate(tags, [], ["ignored"]);
+
+        curation.Kept.ShouldBeEmpty();
+        curation.Messages.ShouldBe(["Found tag: Ignored, category: , isFamous: False, isInternet: False"]);
+    }
+
+    [Fact]
+    public void when_multiple_tags_are_curated_then_their_messages_are_folded_in_original_tag_order()
+    {
+        List<TagData> tags = [new("Nature", null), new("Ignored", null), new("City", null)];
+
+        var curation = TagCurator.Curate(tags, ["ignored"], []);
+
+        curation.Messages.ShouldBe(
+        [
+            "Found tag: Nature, category: , isFamous: False, isInternet: False",
+            "Tag: Nature is not in the tagsToIgnore list, added to the list of tags to save to the database",
+            "Found tag: Ignored, category: , isFamous: False, isInternet: False",
+            "Found tag: City, category: , isFamous: False, isInternet: False",
+            "Tag: City is not in the tagsToIgnore list, added to the list of tags to save to the database"
+        ]);
+    }
+
+    [Fact]
+    public void when_there_are_no_tags_then_an_empty_curation_is_returned()
+    {
+        var curation = TagCurator.Curate([], [], []);
+
+        curation.Kept.ShouldBeEmpty();
+        curation.Messages.ShouldBeEmpty();
+    }
 }
