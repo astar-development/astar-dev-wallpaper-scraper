@@ -1,5 +1,8 @@
+using System.Reactive.Linq;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
+using AStar.Dev.Wallpaper.Scraper.Scraping;
 using Avalonia.Controls;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using ReactiveUI;
 using Unit = System.Reactive.Unit;
@@ -8,13 +11,15 @@ namespace AStar.Dev.Wallpaper.Scraper.Home;
 
 public partial class MainWindow : Window
 {
+    private IDisposable? thumbnailSubscription;
+
     // Parameterless constructor is required by the XAML previewer only; the app resolves the DI constructor.
     public MainWindow()
     {
         InitializeComponent();
     }
 
-    public MainWindow(MainWindowViewModel viewModel) : this()
+    public MainWindow(MainWindowViewModel viewModel, IWallpaperThumbnailFeed thumbnailFeed) : this()
     {
         DataContext = viewModel;
 
@@ -29,5 +34,11 @@ public partial class MainWindow : Window
 
         viewModel.WhenAnyValue(vm => vm.StatusText)
             .Subscribe(_ => Dispatcher.UIThread.Post(StatusScroller.ScrollToEnd, DispatcherPriority.Background));
+
+        thumbnailSubscription = thumbnailFeed.Thumbnails
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(thumbnailBytes => ThumbnailImage.Source = new Bitmap(new MemoryStream(thumbnailBytes)));
+
+        Closed += (_, _) => thumbnailSubscription?.Dispose();
     }
 }
