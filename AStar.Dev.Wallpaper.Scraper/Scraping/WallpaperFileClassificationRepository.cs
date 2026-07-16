@@ -22,30 +22,39 @@ public sealed class WallpaperFileClassificationRepository(IDbContextFactory<AppD
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        foreach (var tag in tags)
-        {
-            var category = await context.FileClassificationCategories.FirstAsync(c => c.Name == tag.Tag, cancellationToken);
+        var tagNames = tags.Select(tag => tag.Tag).ToList();
 
-            context.FileClassifications.Add(new FileClassificationEntity
-            {
-                FileDetailId = new FileId(Guid.CreateVersion7()),
-                CategoryId = category.Id,
-                FileDetail = new FileDetailEntity
-                {
-                    FileName = new FileName(Path.GetFileName(imageUrl)),
-                    DirectoryName = new DirectoryName(directoryPath),
-                    FileHandle = new FileHandle(Guid.NewGuid().ToString()),
-                    FileSize = sizeBytes,
-                    IsImage = true,
-                    ImageDetail = new ImageDetailEntity
-                    {
-                        Width = dimensions.Width,
-                        Height = dimensions.Height,
-                    },
-                },
-            });
+        foreach (var tagName in tagNames)
+        {
+            var categoryId = await FindCategoryIdAsync(context, tagName, cancellationToken);
+
+            context.FileClassifications.Add(CreateClassification(categoryId, imageUrl, directoryPath, sizeBytes, dimensions));
         }
 
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private static Task<int> FindCategoryIdAsync(AppDbContext context, string tagName, CancellationToken cancellationToken) =>
+        context.FileClassificationCategories.Where(category => category.Name == tagName).Select(category => category.Id).FirstAsync(cancellationToken);
+
+    private static FileClassificationEntity CreateClassification(int categoryId, string imageUrl, string directoryPath, long sizeBytes, ImageDimensions dimensions) => new()
+    {
+        FileDetailId = new FileId(Guid.CreateVersion7()),
+        CategoryId = categoryId,
+        FileDetail = CreateFileDetail(imageUrl, directoryPath, sizeBytes, dimensions),
+    };
+
+    private static FileDetailEntity CreateFileDetail(string imageUrl, string directoryPath, long sizeBytes, ImageDimensions dimensions) => new()
+    {
+        FileName = new FileName(Path.GetFileName(imageUrl)),
+        DirectoryName = new DirectoryName(directoryPath),
+        FileHandle = new FileHandle(Guid.NewGuid().ToString()),
+        FileSize = sizeBytes,
+        IsImage = true,
+        ImageDetail = new ImageDetailEntity
+        {
+            Width = dimensions.Width,
+            Height = dimensions.Height,
+        },
+    };
 }

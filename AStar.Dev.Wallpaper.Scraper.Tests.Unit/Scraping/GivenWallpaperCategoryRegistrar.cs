@@ -62,6 +62,38 @@ public sealed class GivenWallpaperCategoryRegistrar : IDisposable
         context.FileClassificationCategories.Any(c => c.Name == "Untagged").ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task when_a_tag_has_a_whitespace_name_then_it_is_not_registered()
+    {
+        var sut = new WallpaperCategoryRegistrar(dbContextFactory);
+
+        await sut.EnsureCategoriesExistAsync([new TagData("   ", "outdoors")], TestContext.Current.CancellationToken);
+
+        using var context = dbContextFactory.CreateDbContext();
+        context.FileClassificationCategories.Any(c => c.Name == "   ").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task when_categories_are_registered_then_the_user_managed_search_categories_are_never_written()
+    {
+        using (var context = dbContextFactory.CreateDbContext())
+        {
+            var searchConfiguration = new SearchConfigurationEntity();
+            searchConfiguration.SearchCategories.Add(new SearchCategoryEntity { Id = "landscapes-id", Name = "Landscapes", });
+            context.SearchConfigurations.Add(searchConfiguration);
+            context.SaveChanges();
+        }
+
+        var sut = new WallpaperCategoryRegistrar(dbContextFactory);
+        await sut.EnsureCategoriesExistAsync([TagDataFactory.Create("Nature", "outdoors"), TagDataFactory.Create("Sunset", "outdoors")], TestContext.Current.CancellationToken);
+
+        using var verifyContext = dbContextFactory.CreateDbContext();
+        verifyContext.FileClassificationCategories.Count(c => c.Name == "Nature" || c.Name == "Sunset").ShouldBe(2);
+        var searchCategory = verifyContext.SearchCategories.Single();
+        searchCategory.Id.ShouldBe("landscapes-id");
+        searchCategory.Name.ShouldBe("Landscapes");
+    }
+
     public void Dispose() =>
         connection.Dispose();
 
