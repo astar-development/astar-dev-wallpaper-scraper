@@ -1,33 +1,36 @@
 using AStar.Dev.FunctionalParadigm;
-using AStar.Dev.Infrastructure.AppDb;
-using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
-public sealed class GivenSearchCategoryScrapeAction : IDisposable
+public sealed class GivenSearchCategoryScrapeAction
 {
-    private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"search-category-scrape-action-{Guid.NewGuid():N}.db");
-    private readonly IDbContextFactory<AppDbContext> dbContextFactory;
+    private readonly IScrapeContextReader contextReader = Substitute.For<IScrapeContextReader>();
+    private readonly IWallpaperCountReader countReader = Substitute.For<IWallpaperCountReader>();
+    private readonly IWallpaperHrefCollector hrefCollector = Substitute.For<IWallpaperHrefCollector>();
+    private readonly ITagReader tagReader = Substitute.For<ITagReader>();
+    private readonly IWallpaperImageLocator imageLocator = Substitute.For<IWallpaperImageLocator>();
+    private readonly IWallpaperImageDownloader imageDownloader = Substitute.For<IWallpaperImageDownloader>();
+    private readonly IImageDimensionsReader dimensionsReader = Substitute.For<IImageDimensionsReader>();
+    private readonly IWallpaperFileStore fileStore = Substitute.For<IWallpaperFileStore>();
+    private readonly IWallpaperCategoryRegistrar categoryRegistrar = Substitute.For<IWallpaperCategoryRegistrar>();
+    private readonly IWallpaperFileClassificationRepository fileClassificationRepository = Substitute.For<IWallpaperFileClassificationRepository>();
     private readonly IProgress<string> progress = Substitute.For<IProgress<string>>();
+    private readonly IPage page = Substitute.For<IPage>();
 
-    public GivenSearchCategoryScrapeAction()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite($"Data Source={databasePath}").Options;
-        dbContextFactory = new TestDbContextFactory(options);
-
-        using var context = dbContextFactory.CreateDbContext();
-        context.Database.Migrate();
-    }
+    private static readonly ScrapeContext _singleCategoryContext = new(
+        [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1")],
+        [],
+        [],
+        new DirectoryLayout("/root", "/base", "/famous"));
 
     [Fact]
     public async Task when_a_category_has_more_wallpapers_than_fit_on_one_page_then_progress_reports_the_page_count_and_a_success_result_is_returned()
     {
-        SeedSearchConfigurationWithCategory("Nature");
-        var page = CreatePageReturningWallpaperCount(50);
-        var sut = new SearchCategoryScrapeAction(dbContextFactory);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(50);
+        var sut = CreateSut();
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -37,50 +40,102 @@ public sealed class GivenSearchCategoryScrapeAction : IDisposable
     }
 
     [Fact]
-    public async Task when_no_search_configuration_exists_then_a_failure_result_is_returned_instead_of_throwing()
+    public async Task when_reading_the_scrape_context_fails_then_a_failure_result_is_returned_instead_of_throwing()
     {
-        var page = CreatePageReturningWallpaperCount(50);
-        var sut = new SearchCategoryScrapeAction(dbContextFactory);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns<ScrapeContext>(_ => throw new InvalidOperationException("Sequence contains no elements"));
+        var sut = CreateSut();
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
         result.ShouldBeOfType<Failure<FunctionalParadigm.Unit>>();
     }
 
-    public void Dispose()
+    [Fact]
+    public async Task when_the_wallpaper_page_fails_to_load_then_progress_reports_the_failure_and_no_tags_are_read()
     {
-        if (File.Exists(databasePath))
-        {
-            File.Delete(databasePath);
-        }
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        var failedResponse = Substitute.For<IResponse>();
+        failedResponse.Ok.Returns(false);
+        failedResponse.Status.Returns(404);
+        page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(failedResponse);
+        var sut = CreateSut();
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Failed to load wallpaper page")));
+        await tagReader.DidNotReceive().ReadAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>());
     }
 
-    private void SeedSearchConfigurationWithCategory(string categoryName)
+    [Fact]
+    public async Task when_the_wallpaper_has_no_image_url_then_progress_reports_the_failure_and_nothing_is_downloaded()
     {
-        using var context = dbContextFactory.CreateDbContext();
-        var searchConfiguration = new SearchConfigurationEntity { SearchStringPrefix = "https://wallhaven.cc/search?categories=", SearchStringSuffix = "&sorting=random", };
-        context.SearchConfigurations.Add(searchConfiguration);
-        context.SaveChanges();
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        var okResponse = Substitute.For<IResponse>();
+        okResponse.Ok.Returns(true);
+        page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(okResponse);
+        tagReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<TagData>)[new TagData("Nature", "outdoors")]);
+        imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(Option<string>.None.Instance);
+        var sut = CreateSut();
 
-        context.SearchCategories.Add(new SearchCategoryEntity { Id = Guid.CreateVersion7().ToString(), SearchConfigurationId = searchConfiguration.Id, Name = categoryName, });
-        context.SaveChanges();
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Failed to get wallpaper image URL")));
+        await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
-    private static IPage CreatePageReturningWallpaperCount(int wallpaperCount)
+    [Fact]
+    public async Task when_the_wallpaper_was_already_downloaded_then_it_is_not_downloaded_again()
     {
-        var page = Substitute.For<IPage>();
-        var header = Substitute.For<ILocator>();
-        header.AllTextContentsAsync().Returns(Task.FromResult<IReadOnlyList<string>>([$"{wallpaperCount} Wallpapers found for ..."]));
-        page.GetByText(Arg.Any<string>(), Arg.Any<PageGetByTextOptions>()).Returns(header);
+        ConfigureSuccessfulWallpaperVisit();
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
+        var sut = CreateSut();
 
-        return page;
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await fileStore.DidNotReceive().SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
+        await fileClassificationRepository.DidNotReceive().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<ImageDimensions>(), Arg.Any<CancellationToken>());
     }
 
-    private sealed class TestDbContextFactory(DbContextOptions<AppDbContext> options) : IDbContextFactory<AppDbContext>
+    [Fact]
+    public async Task when_a_new_wallpaper_is_visited_then_its_categories_are_registered_and_it_is_downloaded_saved_and_recorded()
     {
-        public AppDbContext CreateDbContext() => new(options);
+        ConfigureSuccessfulWallpaperVisit();
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        byte[] imageBytes = [1, 2, 3];
+        imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(imageBytes);
+        var savedFile = new SavedWallpaperFile("/root/base/pic.jpg", 3);
+        fileStore.SaveAsync(Arg.Any<string>(), "pic.jpg", imageBytes, Arg.Any<CancellationToken>()).Returns(savedFile);
+        var dimensions = new ImageDimensions(10, 20);
+        dimensionsReader.Read(imageBytes).Returns(dimensions);
+        var sut = CreateSut();
 
-        public Task<AppDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(new AppDbContext(options));
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        await categoryRegistrar.Received().EnsureCategoriesExistAsync(Arg.Is<IReadOnlyList<TagData>>(tags => tags != null && tags.Any(tag => tag.Tag == "Nature")), Arg.Any<CancellationToken>());
+        await fileClassificationRepository.Received().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), "https://wallhaven.cc/images/pic.jpg", Arg.Any<string>(), 3, dimensions, Arg.Any<CancellationToken>());
     }
+
+    private void ConfigureSuccessfulWallpaperVisit()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        var okResponse = Substitute.For<IResponse>();
+        okResponse.Ok.Returns(true);
+        page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(okResponse);
+        tagReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<TagData>)[new TagData("Nature", "outdoors")]);
+        imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(new Option<string>.Some("https://wallhaven.cc/images/pic.jpg"));
+    }
+
+    private SearchCategoryScrapeAction CreateSut() =>
+        new(contextReader, countReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository);
 }

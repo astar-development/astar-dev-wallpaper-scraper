@@ -129,6 +129,15 @@
             <param name="action"></param>
             <typeparam name="T"></typeparam>
         </member>
+        <member name="M:AStar.Dev.Utilities.LinqExtensions.ForEachAsync``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.Threading.Tasks.Task})">
+            <summary>
+                Awaits the supplied asynchronous action once per item, strictly sequentially, so no two invocations
+                ever run concurrently.
+            </summary>
+            <param name="enumerable"></param>
+            <param name="action"></param>
+            <typeparam name="T"></typeparam>
+        </member>
         <member name="T:AStar.Dev.Utilities.ObjectExtensions">
             <summary>
                 The <see cref="T:AStar.Dev.Utilities.ObjectExtensions" /> class contains some useful methods to enable various tasks

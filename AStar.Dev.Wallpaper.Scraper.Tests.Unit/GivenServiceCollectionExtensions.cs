@@ -40,14 +40,4 @@ public class GivenServiceCollectionExtensions
         descriptor.ImplementationType.ShouldBe(typeof(SearchCategoryScrapeAction));
     }
 
-    [Fact]
-    public void when_application_services_are_added_then_the_category_page_extractor_is_registered_as_a_singleton()
-    {
-        IConfiguration configuration = new ConfigurationBuilder().Build();
-        var services = new ServiceCollection().AddApplicationServices(configuration);
-
-        var descriptor = services.Single(service => service.ServiceType == typeof(ICategoryPageExtractor));
-        descriptor.Lifetime.ShouldBe(ServiceLifetime.Singleton);
-        descriptor.ImplementationType.ShouldBe(typeof(CategoryPageExtractor));
-    }
 }
