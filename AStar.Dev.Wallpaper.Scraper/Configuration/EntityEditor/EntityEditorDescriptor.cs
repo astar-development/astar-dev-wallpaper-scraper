@@ -22,7 +22,7 @@ public sealed record EntityEditorDescriptor<TEntity>(
     string TableName,
     Func<TEntity> CreateNew,
     bool AllowAddRemove,
-    IReadOnlyCollection<string> ExcludedColumns,
-    IReadOnlyCollection<string> ReadOnlyColumns,
+    IReadOnlyList<string> ExcludedColumns,
+    IReadOnlyList<string> ReadOnlyColumns,
     Func<AppDbContext, TEntity, CancellationToken, Task>? OnBeforeAddAsync = null)
     where TEntity : class;
