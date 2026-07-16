@@ -188,6 +188,107 @@ public sealed class GivenMainWindowViewModel
     }
 
     [Fact]
+    public async Task when_the_confirmation_is_accepted_then_the_status_records_yes()
+    {
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeTopCommand.Execute();
+
+        sut.StatusText.ShouldContain("Scrape Top Wallpapers: Yes");
+    }
+
+    [Fact]
+    public async Task when_the_confirmation_is_declined_then_the_status_records_no_and_the_scrape_still_proceeds()
+    {
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(false); return Task.CompletedTask; });
+
+        await sut.ScrapeTopCommand.Execute();
+
+        sut.StatusText.ShouldContain("Scrape Top Wallpapers: No");
+        await playwrightService.Received().ConfigurePlaywrightAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_playwright_configuration_fails_then_the_status_reports_the_configuration_error_and_the_action_does_not_execute()
+    {
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Failure<IPage>(new InvalidOperationException("kaboom"))));
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeSearchCategoriesCommand.Execute();
+
+        sut.StatusText.ShouldContain("Error configuring Playwright page: kaboom");
+        await searchCategoryScrapeAction.DidNotReceive().ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>());
+        sut.IsBusy.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task when_a_scrape_command_has_no_action_then_the_configured_page_navigates_to_the_login_page()
+    {
+        var page = Substitute.For<IPage>();
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(page)));
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeTopCommand.Execute();
+
+        _ = page.Received().GotoAsync("login");
+    }
+
+    [Fact]
+    public async Task when_a_scrape_command_has_an_action_then_the_configured_page_navigates_to_the_root_page()
+    {
+        var page = Substitute.For<IPage>();
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(page)));
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeSearchCategoriesCommand.Execute();
+
+        _ = page.Received().GotoAsync("/");
+    }
+
+    [Fact]
+    public async Task when_cancel_command_is_invoked_while_playwright_is_configuring_then_the_action_does_not_execute()
+    {
+        var configureGate = new TaskCompletionSource<Exceptional<IPage>>();
+        var configureEntered = new TaskCompletionSource();
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            configureEntered.TrySetResult();
+
+            return configureGate.Task;
+        });
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        var execution = sut.ScrapeSearchCategoriesCommand.Execute().ToTask();
+        await configureEntered.Task;
+        await sut.CancelCommand.Execute();
+        configureGate.SetResult(Exceptional.Success(Substitute.For<IPage>()));
+        await execution;
+
+        sut.StatusText.ShouldContain("Cancelled");
+        await searchCategoryScrapeAction.DidNotReceive().ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>());
+        sut.IsBusy.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task when_the_scrape_body_throws_unexpectedly_then_the_status_reports_the_error_and_the_command_is_no_longer_busy()
+    {
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns<Task<Exceptional<IPage>>>(_ => throw new InvalidOperationException("kaboom"));
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await Should.ThrowAsync<InvalidOperationException>(sut.ScrapeTopCommand.Execute().ToTask());
+
+        sut.StatusText.ShouldContain("Scrape Top Wallpapers: Unexpected error - kaboom");
+        sut.IsBusy.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task when_open_connection_strings_command_executes_then_the_factory_supplied_editor_is_shown()
     {
         var editor = Substitute.For<EntityEditorViewModelBase>();
