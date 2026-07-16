@@ -12,6 +12,6 @@ public sealed class SkiaImageDimensionsReader : IImageDimensionsReader
     {
         using var image = SKImage.FromEncodedData(imageBytes);
 
-        return new ImageDimensions(image.Width, image.Height);
+        return ImageDimensionsFactory.Create(image.Width, image.Height);
     }
 }
