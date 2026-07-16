@@ -119,6 +119,29 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
         classifications.Select(c => c.Category!.Name).ShouldBe(["Nature", "Outdoors"], ignoreOrder: true);
     }
 
+    [Fact]
+    public async Task when_a_wallpaper_is_recorded_then_the_user_managed_search_categories_are_never_written()
+    {
+        using (var context = dbContextFactory.CreateDbContext())
+        {
+            var searchConfiguration = new SearchConfigurationEntity();
+            searchConfiguration.SearchCategories.Add(new SearchCategoryEntity { Id = "landscapes-id", Name = "Landscapes", });
+            context.SearchConfigurations.Add(searchConfiguration);
+            context.FileClassificationCategories.Add(new FileClassificationCategoryEntity { Name = "Nature", });
+            context.SaveChanges();
+        }
+
+        var sut = new WallpaperFileClassificationRepository(dbContextFactory);
+
+        await sut.RecordAsync([TagDataFactory.Create("Nature", "outdoors")], "https://wallhaven.cc/images/pic.jpg", "/wallpapers/nature", 1234, new ImageDimensions(100, 200), TestContext.Current.CancellationToken);
+
+        using var verifyContext = dbContextFactory.CreateDbContext();
+        verifyContext.FileClassifications.Count().ShouldBe(1);
+        var searchCategory = verifyContext.SearchCategories.Single();
+        searchCategory.Id.ShouldBe("landscapes-id");
+        searchCategory.Name.ShouldBe("Landscapes");
+    }
+
     public void Dispose() =>
         connection.Dispose();
 

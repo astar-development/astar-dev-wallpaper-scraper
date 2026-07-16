@@ -9,6 +9,6 @@ public interface IWallpaperCategoryRegistrar
     ///     Adds a classification category for each tag not already present, keyed by tag name.
     /// </summary>
     /// <param name="tags">The wallpaper's curated tags.</param>
-    /// <param name="token">A token used to observe cancellation of the write.</param>
+    /// <param name="cancellationToken">A token used to observe cancellation of the write.</param>
     Task EnsureCategoriesExistAsync(IReadOnlyList<TagData> tags, CancellationToken cancellationToken);
 }

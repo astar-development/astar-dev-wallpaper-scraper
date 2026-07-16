@@ -14,20 +14,29 @@ public sealed class WallpaperCategoryRegistrar(IDbContextFactory<AppDbContext> d
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        foreach (var tag in tags.Where(tag => !string.IsNullOrWhiteSpace(tag.Category) && !string.IsNullOrWhiteSpace(tag.Tag)))
+        var categorisedTags = tags.Where(HasCategoryAndTag).ToList();
+
+        foreach (var tag in categorisedTags)
         {
-            if (await context.FileClassificationCategories.AnyAsync(category => category.Name == tag.Tag, cancellationToken))
+            if (await CategoryExistsAsync(context, tag, cancellationToken))
                 continue;
 
-            context.FileClassificationCategories.Add(new FileClassificationCategoryEntity
-            {
-                Name = tag.Tag,
-                IsFamous = tag.IsFamous,
-                IsInternet = tag.IsInternet,
-                IncludeInSearch = true,
-            });
+            context.FileClassificationCategories.Add(CreateCategory(tag));
         }
 
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private static bool HasCategoryAndTag(TagData tag) => !string.IsNullOrWhiteSpace(tag.Category) && !string.IsNullOrWhiteSpace(tag.Tag);
+
+    private static Task<bool> CategoryExistsAsync(AppDbContext context, TagData tag, CancellationToken cancellationToken) =>
+        context.FileClassificationCategories.AnyAsync(category => category.Name == tag.Tag, cancellationToken);
+
+    private static FileClassificationCategoryEntity CreateCategory(TagData tag) => new()
+    {
+        Name = tag.Tag,
+        IsFamous = tag.IsFamous,
+        IsInternet = tag.IsInternet,
+        IncludeInSearch = true,
+    };
 }
