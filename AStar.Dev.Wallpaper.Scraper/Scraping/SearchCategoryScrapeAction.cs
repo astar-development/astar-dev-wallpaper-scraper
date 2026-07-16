@@ -60,12 +60,12 @@ public sealed class SearchCategoryScrapeAction(
         var hrefs = await hrefCollector.CollectAsync(page, token);
         hrefs.ForEach(href => progress.Report($"Found wallpaper href: {href}"));
 
-        await hrefs.ForEachAsync(href => VisitWallpaperAsync(page, href, context, progress, token));
+        await hrefs.ForEachAsync(href => VisitWallpaperAsync(page, href, context, category, progress, token));
 
         await Task.Delay(context.ImagePauseInSeconds * 1_000, token);
     }
 
-    private async Task VisitWallpaperAsync(IPage page, string href, ScrapeContext context, IProgress<string> progress, CancellationToken token)
+    private async Task VisitWallpaperAsync(IPage page, string href, ScrapeContext context, ScrapeCategory category, IProgress<string> progress, CancellationToken token)
     {
         progress.Report($"Visiting wallpaper page: {href}");
         var response = await page.GotoAsync(href, new PageGotoOptions { Timeout = WallpaperPageTimeoutMilliseconds, });
@@ -82,12 +82,13 @@ public sealed class SearchCategoryScrapeAction(
         var curation = TagCurator.Curate(tags, context.ModelsToIgnore, context.TagsToIgnore);
         curation.Messages.ForEach(progress.Report);
 
-        if (await CheckWhetherFileIsAlreadyDownloadedAsync(href, context, progress, curation.Kept, token)) return;
+        var (isAlreadyDownloaded, directoryPath) = await CheckWhetherFileIsAlreadyDownloadedAsync(href, context, progress, curation.Kept, category, token);
+        if (isAlreadyDownloaded) return;
 
         var imageUrlOption = await imageLocator.LocateAsync(page, token);
 
         await imageUrlOption.MatchAsync(
-            onSomeAsync: imageUrl => DownloadWallpaperAsync(page, imageUrl, curation.Kept, context.Directories, context, token),
+            onSomeAsync: imageUrl => DownloadWallpaperAsync(page, directoryPath, imageUrl, curation.Kept, context.Directories, context, progress, category, token),
             onNone: () =>
             {
                 progress.Report($"Failed to get wallpaper image URL for page: {href}");
@@ -96,29 +97,29 @@ public sealed class SearchCategoryScrapeAction(
             });
     }
 
-    private async Task<bool> CheckWhetherFileIsAlreadyDownloadedAsync(string href, ScrapeContext context, IProgress<string> progress, IReadOnlyList<TagData> tags, CancellationToken token)
+    private async Task<(bool, string)> CheckWhetherFileIsAlreadyDownloadedAsync(string href, ScrapeContext context, IProgress<string> progress, IReadOnlyList<TagData> tags, ScrapeCategory category, CancellationToken token)
     {
-        var directoryPath = WallpaperDirectoryResolver.Resolve(context.Directories, tags);
+        var directoryPath = WallpaperDirectoryResolver.Resolve(context.Directories, tags, category);
         var wallpaperId = Path.GetFileName(href);
 
         if (await fileClassificationRepository.IsAlreadyDownloadedAsync(directoryPath, wallpaperId, token))
         {
             progress.Report($"Skipping wallpaper page: {href} as we already have it downloaded in directory: {directoryPath}");
             await Task.Delay(context.ImagePauseInSeconds * 1_000, token);
-            return true;
+            return (true, directoryPath);
         }
 
-        return false;
+        return (false, string.Empty);
     }
 
-    private async Task<Unit> DownloadWallpaperAsync(IPage page, string imageUrl, IReadOnlyList<TagData> tags, DirectoryLayout directories, ScrapeContext context, CancellationToken token)
+    private async Task<Unit> DownloadWallpaperAsync(IPage page, string directoryPath, string imageUrl, IReadOnlyList<TagData> tags, DirectoryLayout directories, ScrapeContext context, IProgress<string> progress, ScrapeCategory category, CancellationToken token)
     {
         await categoryRegistrar.EnsureCategoriesExistAsync(tags, token);
 
-        var directoryPath = WallpaperDirectoryResolver.Resolve(directories, tags);
         var fileName = Path.GetFileName(imageUrl);
 
         var imageBytes = await imageDownloader.DownloadAsync(page, imageUrl, token);
+        progress.Report($"Downloaded wallpaper image from URL: {imageUrl}, size: {imageBytes.Length} bytes");
         var savedFile = await fileStore.SaveAsync(directoryPath, fileName, imageBytes, token);
         var dimensions = dimensionsReader.Read(imageBytes);
 

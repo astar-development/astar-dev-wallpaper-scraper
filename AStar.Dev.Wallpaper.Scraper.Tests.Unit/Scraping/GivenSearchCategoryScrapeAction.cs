@@ -182,8 +182,8 @@ public sealed class GivenSearchCategoryScrapeAction
 
         await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
-        await fileClassificationRepository.Received().IsAlreadyDownloadedAsync("/root/base/Nature", Arg.Any<string>(), Arg.Any<CancellationToken>());
-        await fileClassificationRepository.DidNotReceive().IsAlreadyDownloadedAsync("/root/base/Nature/Ignored", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await fileClassificationRepository.Received().IsAlreadyDownloadedAsync("/root/base/N/Nature", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await fileClassificationRepository.DidNotReceive().IsAlreadyDownloadedAsync("/root/base/N/Nature/Ignored", Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

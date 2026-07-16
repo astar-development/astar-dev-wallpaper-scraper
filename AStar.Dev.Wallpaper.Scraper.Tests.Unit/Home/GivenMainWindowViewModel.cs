@@ -77,6 +77,31 @@ public sealed class GivenMainWindowViewModel
     }
 
     [Fact]
+    public async Task when_the_status_text_exceeds_one_thousand_lines_then_the_oldest_lines_are_dropped()
+    {
+        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo =>
+            {
+                var progress = callInfo.ArgAt<IProgress<string>>(1);
+
+                for (var i = 0; i < 1005; i++)
+                {
+                    progress.Report($"Message {i}");
+                }
+
+                return Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance));
+            });
+        var sut = CreateViewModel();
+        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+
+        await sut.ScrapeSearchCategoriesCommand.Execute();
+
+        sut.StatusText.ShouldNotContain("Message 0" + Environment.NewLine);
+        sut.StatusText.ShouldContain("Message 1004");
+        sut.StatusText.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length.ShouldBeLessThanOrEqualTo(1000);
+    }
+
+    [Fact]
     public void when_constructed_then_cancel_command_cannot_execute()
     {
         var sut = CreateViewModel();
