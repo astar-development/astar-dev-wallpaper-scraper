@@ -1,4 +1,5 @@
 using AStar.Dev.Infrastructure.AppDb;
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scraper.Scraping;
@@ -13,17 +14,35 @@ public sealed class ScrapeContextReader(IDbContextFactory<AppDbContext> dbContex
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var searchConfiguration = await context.SearchConfigurations.OrderByDescending(configuration => configuration.UpdatedAt).FirstAsync(cancellationToken);
+        var searchConfiguration = await ReadSearchConfigurationAsync(context, cancellationToken);
+        var categories = await ReadCategoriesAsync(context, searchConfiguration, cancellationToken);
+        var modelsToIgnore = await ReadModelsToIgnoreAsync(context, cancellationToken);
+        var tagsToIgnore = await ReadTagsToIgnoreAsync(context, cancellationToken);
+        var directoryLayout = await ReadDirectoryLayoutAsync(context, cancellationToken);
+
+        return new ScrapeContext(categories, modelsToIgnore, tagsToIgnore, directoryLayout, searchConfiguration.ImagePauseInSeconds);
+    }
+
+    private static Task<SearchConfigurationEntity> ReadSearchConfigurationAsync(AppDbContext context, CancellationToken cancellationToken) =>
+        context.SearchConfigurations.OrderByDescending(configuration => configuration.UpdatedAt).FirstAsync(cancellationToken);
+
+    private static async Task<IReadOnlyList<ScrapeCategory>> ReadCategoriesAsync(AppDbContext context, SearchConfigurationEntity searchConfiguration, CancellationToken cancellationToken)
+    {
         var categories = await context.SearchCategories.OrderBy(category => category.Name).ToListAsync(cancellationToken);
-        var modelsToIgnore = await context.ModelsToIgnore.Select(model => model.Value).ToListAsync(cancellationToken);
-        var tagsToIgnore = await context.TagsToIgnore.Select(tag => tag.Value).ToListAsync(cancellationToken);
+
+        return [.. categories.Select(category => new ScrapeCategory(category.Name, $"{searchConfiguration.SearchStringPrefix}{category.Id}{searchConfiguration.SearchStringSuffix}"))];
+    }
+
+    private static async Task<IReadOnlyList<string>> ReadModelsToIgnoreAsync(AppDbContext context, CancellationToken cancellationToken) =>
+        await context.ModelsToIgnore.Select(model => model.Value).ToListAsync(cancellationToken);
+
+    private static async Task<IReadOnlyList<string>> ReadTagsToIgnoreAsync(AppDbContext context, CancellationToken cancellationToken) =>
+        await context.TagsToIgnore.Select(tag => tag.Value).ToListAsync(cancellationToken);
+
+    private static async Task<DirectoryLayout> ReadDirectoryLayoutAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
         var directories = await context.ScrapeDirectories.OrderByDescending(directory => directory.CreatedAt).FirstOrDefaultAsync(cancellationToken);
 
-        return new ScrapeContext(
-            [.. categories.Select(category => new ScrapeCategory(category.Name, $"{searchConfiguration.SearchStringPrefix}{category.Id}{searchConfiguration.SearchStringSuffix}"))],
-            modelsToIgnore,
-            tagsToIgnore,
-            new DirectoryLayout(directories?.RootDirectory ?? string.Empty, directories?.BaseDirectory ?? string.Empty, directories?.BaseDirectoryFamous ?? string.Empty),
-            searchConfiguration.ImagePauseInSeconds);
+        return new DirectoryLayout(directories?.RootDirectory ?? string.Empty, directories?.BaseDirectory ?? string.Empty, directories?.BaseDirectoryFamous ?? string.Empty);
     }
 }
