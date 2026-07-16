@@ -5,13 +5,14 @@ namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 public sealed class GivenWallpaperDirectoryResolver
 {
     private static readonly DirectoryLayout _layout = new("/root", "/regular", "/famous");
+    private static readonly ScrapeCategory _category = new("Landscapes", "https://example.com/landscapes");
 
     [Fact]
     public void when_no_tags_are_famous_then_the_regular_base_directory_is_used()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Nature", "outdoors")]);
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Nature", "outdoors")], _category);
 
-        directory.ShouldBe(Path.Combine("/root/regular", "Nature"));
+        directory.ShouldBe(Path.Combine("/root/regular", "L", _category.Name, "Nature"));
     }
 
     [Fact]
@@ -19,25 +20,41 @@ public sealed class GivenWallpaperDirectoryResolver
     {
         List<TagData> tags = [new("Emma Stone", "people > actress")];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags);
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category);
 
-        directory.ShouldStartWith("/root/famous");
+        directory.ShouldStartWith(Path.Combine("/root/famous/L", _category.Name));
     }
 
     [Fact]
-    public void when_there_are_no_tags_then_only_the_root_and_base_directory_are_returned()
+    public void when_there_are_no_tags_then_only_the_root_base_and_category_directories_are_returned()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, []);
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, [], _category);
 
-        directory.ShouldBe("/root/regular");
+        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
     }
 
     [Fact]
     public void when_a_tag_has_no_category_then_it_contributes_no_path_segment()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Untagged", null)]);
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Untagged", null)], _category);
 
-        directory.ShouldBe("/root/regular");
+        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
+    }
+
+    [Fact]
+    public void when_a_tag_matches_the_category_name_then_it_contributes_no_path_segment()
+    {
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData(_category.Name, "outdoors")], _category);
+
+        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
+    }
+
+    [Fact]
+    public void when_a_tag_matches_the_category_name_with_different_casing_then_it_contributes_no_path_segment()
+    {
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData(_category.Name.ToUpperInvariant(), "outdoors")], _category);
+
+        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
     }
 
     [Fact]
@@ -48,9 +65,9 @@ public sealed class GivenWallpaperDirectoryResolver
         TagData internetModel = new("SomeModel", "people > model");
         List<TagData> tags = [ordinary, famous, internetModel];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags);
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category);
 
-        var expected = Path.Combine(Path.Combine(Path.Combine("/root/famous", famous.Tag), internetModel.Tag), ordinary.Tag);
+        var expected = Path.Combine("/root/famous/L", _category.Name, famous.Tag, internetModel.Tag, ordinary.Tag);
         directory.ShouldBe(expected);
     }
 
@@ -59,9 +76,9 @@ public sealed class GivenWallpaperDirectoryResolver
     {
         List<TagData> tags = [new("Zebra", "animals"), new("Apple", "food"), new("Mango", "food")];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags);
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category);
 
-        var expected = Path.Combine(Path.Combine(Path.Combine("/root/regular", "Apple"), "Mango"), "Zebra");
+        var expected = Path.Combine("/root/regular/L", _category.Name, "Apple", "Mango", "Zebra");
         directory.ShouldBe(expected);
     }
 
@@ -73,9 +90,30 @@ public sealed class GivenWallpaperDirectoryResolver
         TagData famous = new("Emma Stone", "people > actress");
         List<TagData> tags = [zebra, famous, apple];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags);
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category);
 
-        var expected = Path.Combine(Path.Combine(Path.Combine("/root/famous", famous.Tag), apple.Tag), zebra.Tag);
+        var expected = Path.Combine("/root/famous/L", _category.Name, famous.Tag, apple.Tag, zebra.Tag);
+        directory.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void when_more_than_six_eligible_tags_are_present_then_only_the_first_six_contribute_path_segments()
+    {
+        List<TagData> tags =
+        [
+            new("Emma Stone", "people > actress"),
+            new("SomeModel", "people > model"),
+            new("Apple", "food"),
+            new("Banana", "food"),
+            new("Cherry", "food"),
+            new("Damson", "food"),
+            new("Elderberry", "food"),
+            new("Fig", "food")
+        ];
+
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category);
+
+        var expected = Path.Combine("/root/famous/L", _category.Name, "Emma Stone", "SomeModel", "Apple", "Banana", "Cherry", "Damson");
         directory.ShouldBe(expected);
     }
 }

@@ -8,4 +8,4 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// <param name="ModelsToIgnore">Model names whose wallpapers should not be saved.</param>
 /// <param name="TagsToIgnore">Tag names that should be dropped from a wallpaper's tag list.</param>
 /// <param name="Directories">The directory naming conventions to use when saving wallpapers.</param>
-public sealed record ScrapeContext(IReadOnlyList<ScrapeCategory> Categories, IReadOnlyList<string> ModelsToIgnore, IReadOnlyList<string> TagsToIgnore, DirectoryLayout Directories, int ImagePauseInSeconds = 0);
+public sealed record ScrapeContext(IReadOnlyList<ScrapeCategory> Categories, IReadOnlyList<string> ModelsToIgnore, IReadOnlyList<string> TagsToIgnore, DirectoryLayout Directories, int ImagePauseInSeconds = 1);
