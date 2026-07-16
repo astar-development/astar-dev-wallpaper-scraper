@@ -13,5 +13,5 @@ public interface IWallpaperHrefCollector
     /// </summary>
     /// <param name="page">The Playwright page, already navigated to the search results.</param>
     /// <param name="token">A token used to observe cancellation of the read.</param>
-    Task<IReadOnlyList<string>> CollectAsync(IPage page, CancellationToken token);
+    Task<IReadOnlyList<string>> CollectAsync(IPage page, CancellationToken cancellationToken);
 }

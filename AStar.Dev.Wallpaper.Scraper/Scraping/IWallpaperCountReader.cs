@@ -12,5 +12,5 @@ public interface IWallpaperCountReader
     /// </summary>
     /// <param name="page">The Playwright page, already navigated to the search results.</param>
     /// <param name="token">A token used to observe cancellation of the read.</param>
-    Task<int> ReadAsync(IPage page, CancellationToken token);
+    Task<int> ReadAsync(IPage page, CancellationToken cancellationToken);
 }

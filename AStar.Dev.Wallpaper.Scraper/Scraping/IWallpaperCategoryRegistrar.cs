@@ -10,5 +10,5 @@ public interface IWallpaperCategoryRegistrar
     /// </summary>
     /// <param name="tags">The wallpaper's curated tags.</param>
     /// <param name="token">A token used to observe cancellation of the write.</param>
-    Task EnsureCategoriesExistAsync(IReadOnlyList<TagData> tags, CancellationToken token);
+    Task EnsureCategoriesExistAsync(IReadOnlyList<TagData> tags, CancellationToken cancellationToken);
 }

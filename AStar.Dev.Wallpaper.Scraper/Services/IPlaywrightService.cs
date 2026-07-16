@@ -13,5 +13,5 @@ public interface IPlaywrightService
     /// <returns>
     ///     A task that represents the asynchronous operation. The task result contains the configured Playwright <see cref="Microsoft.Playwright.IPage"/> instance.
     /// </returns>
-    Task<Exceptional<Microsoft.Playwright.IPage>> ConfigurePlaywrightAsync(CancellationToken token);
+    Task<Exceptional<Microsoft.Playwright.IPage>> ConfigurePlaywrightAsync(CancellationToken cancellationToken);
 }

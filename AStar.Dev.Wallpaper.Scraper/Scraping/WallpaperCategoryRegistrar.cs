@@ -10,13 +10,13 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperCategoryRegistrar(IDbContextFactory<AppDbContext> dbContextFactory) : IWallpaperCategoryRegistrar
 {
     /// <inheritdoc />
-    public async Task EnsureCategoriesExistAsync(IReadOnlyList<TagData> tags, CancellationToken token)
+    public async Task EnsureCategoriesExistAsync(IReadOnlyList<TagData> tags, CancellationToken cancellationToken)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(token);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         foreach (var tag in tags.Where(tag => !string.IsNullOrWhiteSpace(tag.Category) && !string.IsNullOrWhiteSpace(tag.Tag)))
         {
-            if (await context.FileClassificationCategories.AnyAsync(category => category.Name == tag.Tag, token))
+            if (await context.FileClassificationCategories.AnyAsync(category => category.Name == tag.Tag, cancellationToken))
                 continue;
 
             context.FileClassificationCategories.Add(new FileClassificationCategoryEntity
@@ -28,6 +28,6 @@ public sealed class WallpaperCategoryRegistrar(IDbContextFactory<AppDbContext> d
             });
         }
 
-        await context.SaveChangesAsync(token);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

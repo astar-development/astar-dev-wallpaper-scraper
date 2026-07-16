@@ -9,7 +9,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperCountReader : IWallpaperCountReader
 {
     /// <inheritdoc />
-    public async Task<int> ReadAsync(IPage page, CancellationToken token)
+    public async Task<int> ReadAsync(IPage page, CancellationToken cancellationToken)
     {
         var header = page.GetByText("Wallpapers found for", new PageGetByTextOptions { Exact = false, });
         var headerText = await header.AllTextContentsAsync();

@@ -8,7 +8,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class TagReader : ITagReader
 {
     /// <inheritdoc />
-    public async Task<IReadOnlyList<TagData>> ReadAsync(IPage page, CancellationToken token)
+    public async Task<IReadOnlyList<TagData>> ReadAsync(IPage page, CancellationToken cancellationToken)
     {
         var tagLocators = await page.Locator(".tagname").AllAsync().ConfigureAwait(false);
         var tags = await Task.WhenAll(tagLocators.Select(ReadTagAsync)).ConfigureAwait(false);

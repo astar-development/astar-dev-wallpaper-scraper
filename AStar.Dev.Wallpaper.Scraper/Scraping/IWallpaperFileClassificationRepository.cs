@@ -11,7 +11,7 @@ public interface IWallpaperFileClassificationRepository
     /// <param name="directoryPath">The directory the file would be saved under.</param>
     /// <param name="fileNameContains">Text the file name must contain, e.g. an identifier known before the final file name.</param>
     /// <param name="token">A token used to observe cancellation of the read.</param>
-    Task<bool> IsAlreadyDownloadedAsync(string directoryPath, string fileNameContains, CancellationToken token);
+    Task<bool> IsAlreadyDownloadedAsync(string directoryPath, string fileNameContains, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Records a file classification for every tag, linking the wallpaper to its classification category.
@@ -22,5 +22,5 @@ public interface IWallpaperFileClassificationRepository
     /// <param name="sizeBytes">The saved file's size, in bytes.</param>
     /// <param name="dimensions">The saved image's pixel dimensions.</param>
     /// <param name="token">A token used to observe cancellation of the write.</param>
-    Task RecordAsync(IReadOnlyList<TagData> tags, string imageUrl, string directoryPath, long sizeBytes, ImageDimensions dimensions, CancellationToken token);
+    Task RecordAsync(IReadOnlyList<TagData> tags, string imageUrl, string directoryPath, long sizeBytes, ImageDimensions dimensions, CancellationToken cancellationToken);
 }

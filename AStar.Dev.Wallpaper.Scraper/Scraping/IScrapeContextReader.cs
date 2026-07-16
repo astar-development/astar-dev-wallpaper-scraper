@@ -9,5 +9,5 @@ public interface IScrapeContextReader
     ///     Reads the current search categories, ignore lists, and directory layout from the database.
     /// </summary>
     /// <param name="token">A token used to observe cancellation of the read.</param>
-    Task<ScrapeContext> ReadAsync(CancellationToken token);
+    Task<ScrapeContext> ReadAsync(CancellationToken cancellationToken);
 }

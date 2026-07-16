@@ -13,5 +13,5 @@ public interface IWallpaperImageDownloader
     /// <param name="page">The Playwright page to navigate.</param>
     /// <param name="imageUrl">The full-size wallpaper image URL.</param>
     /// <param name="token">A token used to observe cancellation of the download.</param>
-    Task<byte[]> DownloadAsync(IPage page, string imageUrl, CancellationToken token);
+    Task<byte[]> DownloadAsync(IPage page, string imageUrl, CancellationToken cancellationToken);
 }

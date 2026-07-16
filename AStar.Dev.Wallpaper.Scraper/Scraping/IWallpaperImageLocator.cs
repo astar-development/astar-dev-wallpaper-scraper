@@ -14,5 +14,5 @@ public interface IWallpaperImageLocator
     /// <param name="page">The Playwright page, already navigated to the wallpaper detail page.</param>
     /// <param name="token">A token used to observe cancellation of the read.</param>
     /// <returns><see cref="Option{T}.None" /> when no usable source URL is present.</returns>
-    Task<Option<string>> LocateAsync(IPage page, CancellationToken token);
+    Task<Option<string>> LocateAsync(IPage page, CancellationToken cancellationToken);
 }
