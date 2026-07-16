@@ -2,6 +2,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Configuration;
 
 /// <summary>
 ///     The search parameters guiding the scraper's navigation of the target website.
+///     Mutable to support direct <see cref="IConfiguration" /> binding; not a candidate for the Records rule.
 /// </summary>
 public class SearchConfiguration
 {

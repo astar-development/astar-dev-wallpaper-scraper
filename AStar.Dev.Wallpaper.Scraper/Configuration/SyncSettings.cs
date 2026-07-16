@@ -2,8 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AStar.Dev.Wallpaper.Scraper.Configuration;
 
-/// <summary>Runtime-configurable settings for the sync pipeline.</summary>
-public record SyncSettings
+/// <summary>
+///     Runtime-configurable settings for the sync pipeline.
+///     Mutable to support direct <see cref="IConfiguration" /> binding; not a candidate for the Records rule.
+/// </summary>
+public class SyncSettings
 {
     internal static string SectionName => "Sync";
 
@@ -13,5 +16,5 @@ public record SyncSettings
     /// Must be at least 1.
     /// </summary>
     [Range(1, 500, ErrorMessage = "ProgressReportInterval must be at least 1.")]
-    public required int ProgressReportInterval { get; init; }
+    public int ProgressReportInterval { get; set; }
 }
