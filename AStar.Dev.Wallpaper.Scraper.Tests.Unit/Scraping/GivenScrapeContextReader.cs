@@ -1,18 +1,20 @@
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
 public sealed class GivenScrapeContextReader : IDisposable
 {
-    private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"scrape-context-reader-{Guid.NewGuid():N}.db");
+    private readonly SqliteConnection connection = new("Data Source=:memory:");
     private readonly IDbContextFactory<AppDbContext> dbContextFactory;
 
     public GivenScrapeContextReader()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite($"Data Source={databasePath}").Options;
+        connection.Open();
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
         dbContextFactory = new TestDbContextFactory(options);
 
         using var context = dbContextFactory.CreateDbContext();
@@ -73,13 +75,8 @@ public sealed class GivenScrapeContextReader : IDisposable
         result.Directories.ShouldBe(new DirectoryLayout(string.Empty, string.Empty, string.Empty));
     }
 
-    public void Dispose()
-    {
-        if (File.Exists(databasePath))
-        {
-            File.Delete(databasePath);
-        }
-    }
+    public void Dispose() =>
+        connection.Dispose();
 
     private sealed class TestDbContextFactory(DbContextOptions<AppDbContext> options) : IDbContextFactory<AppDbContext>
     {

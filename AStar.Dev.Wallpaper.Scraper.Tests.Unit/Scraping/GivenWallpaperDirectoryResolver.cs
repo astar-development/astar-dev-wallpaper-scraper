@@ -53,4 +53,29 @@ public sealed class GivenWallpaperDirectoryResolver
         var expected = Path.Combine(Path.Combine(Path.Combine("/root/famous", famous.Tag), internetModel.Tag), ordinary.Tag);
         directory.ShouldBe(expected);
     }
+
+    [Fact]
+    public void when_multiple_ordinary_tags_have_categories_then_they_are_ordered_alphabetically_regardless_of_list_order()
+    {
+        List<TagData> tags = [new("Zebra", "animals"), new("Apple", "food"), new("Mango", "food")];
+
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags);
+
+        var expected = Path.Combine(Path.Combine(Path.Combine("/root/regular", "Apple"), "Mango"), "Zebra");
+        directory.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void when_famous_and_ordinary_tags_are_mixed_then_famous_tags_keep_list_order_ahead_of_the_alphabetically_ordered_ordinary_tags()
+    {
+        TagData zebra = new("Zebra", "animals");
+        TagData apple = new("Apple", "food");
+        TagData famous = new("Emma Stone", "people > actress");
+        List<TagData> tags = [zebra, famous, apple];
+
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags);
+
+        var expected = Path.Combine(Path.Combine(Path.Combine("/root/famous", famous.Tag), apple.Tag), zebra.Tag);
+        directory.ShouldBe(expected);
+    }
 }

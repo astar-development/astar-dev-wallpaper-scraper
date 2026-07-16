@@ -21,7 +21,6 @@ public sealed class SearchCategoryScrapeAction(
     IWallpaperFileClassificationRepository fileClassificationRepository) : IScrapeAction
 {
     private const int ImagesPerPage = 24;
-    private const int PageDelayMilliseconds = 2_000;
     private const int WallpaperPageTimeoutMilliseconds = 30_000;
 
     /// <inheritdoc />
@@ -63,7 +62,7 @@ public sealed class SearchCategoryScrapeAction(
 
         await hrefs.ForEachAsync(href => VisitWallpaperAsync(page, href, context, progress, token));
 
-        await Task.Delay(PageDelayMilliseconds, token);
+        await Task.Delay(context.ImagePauseInSeconds * 1_000, token);
     }
 
     private async Task VisitWallpaperAsync(IPage page, string href, ScrapeContext context, IProgress<string> progress, CancellationToken token)
@@ -74,6 +73,7 @@ public sealed class SearchCategoryScrapeAction(
         if (response is not { Ok: true })
         {
             progress.Report($"Failed to load wallpaper page: {href}, status: {response?.Status}");
+            await Task.Delay(context.ImagePauseInSeconds * 1_000, token);
 
             return;
         }
@@ -82,10 +82,12 @@ public sealed class SearchCategoryScrapeAction(
         var curation = TagCurator.Curate(tags, context.ModelsToIgnore, context.TagsToIgnore);
         curation.Messages.ForEach(progress.Report);
 
+        if (await CheckWhetherFileIsAlreadyDownloadedAsync(href, context, progress, curation.Kept, token)) return;
+
         var imageUrlOption = await imageLocator.LocateAsync(page, token);
 
         await imageUrlOption.MatchAsync(
-            onSomeAsync: imageUrl => DownloadWallpaperAsync(page, imageUrl, curation.Kept, context.Directories, token),
+            onSomeAsync: imageUrl => DownloadWallpaperAsync(page, imageUrl, curation.Kept, context.Directories, context, token),
             onNone: () =>
             {
                 progress.Report($"Failed to get wallpaper image URL for page: {href}");
@@ -94,22 +96,34 @@ public sealed class SearchCategoryScrapeAction(
             });
     }
 
-    private async Task<Unit> DownloadWallpaperAsync(IPage page, string imageUrl, IReadOnlyList<TagData> tags, DirectoryLayout directories, CancellationToken token)
+    private async Task<bool> CheckWhetherFileIsAlreadyDownloadedAsync(string href, ScrapeContext context, IProgress<string> progress, IReadOnlyList<TagData> tags, CancellationToken token)
+    {
+        var directoryPath = WallpaperDirectoryResolver.Resolve(context.Directories, tags);
+        var wallpaperId = Path.GetFileName(href);
+
+        if (await fileClassificationRepository.IsAlreadyDownloadedAsync(directoryPath, wallpaperId, token))
+        {
+            progress.Report($"Skipping wallpaper page: {href} as we already have it downloaded in directory: {directoryPath}");
+            await Task.Delay(context.ImagePauseInSeconds * 1_000, token);
+            return true;
+        }
+
+        return false;
+    }
+
+    private async Task<Unit> DownloadWallpaperAsync(IPage page, string imageUrl, IReadOnlyList<TagData> tags, DirectoryLayout directories, ScrapeContext context, CancellationToken token)
     {
         await categoryRegistrar.EnsureCategoriesExistAsync(tags, token);
 
         var directoryPath = WallpaperDirectoryResolver.Resolve(directories, tags);
         var fileName = Path.GetFileName(imageUrl);
 
-        if (await fileClassificationRepository.IsAlreadyDownloadedAsync(directoryPath, fileName, token))
-            return Unit.Instance;
-
         var imageBytes = await imageDownloader.DownloadAsync(page, imageUrl, token);
         var savedFile = await fileStore.SaveAsync(directoryPath, fileName, imageBytes, token);
         var dimensions = dimensionsReader.Read(imageBytes);
 
         await fileClassificationRepository.RecordAsync(tags, imageUrl, directoryPath, savedFile.SizeBytes, dimensions, token);
-        await Task.Delay(PageDelayMilliseconds, token);
+        await Task.Delay(context.ImagePauseInSeconds * 1_000, token);
 
         return Unit.Instance;
     }

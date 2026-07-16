@@ -23,6 +23,7 @@ public sealed class ScrapeContextReader(IDbContextFactory<AppDbContext> dbContex
             [.. categories.Select(category => new ScrapeCategory(category.Name, $"{searchConfiguration.SearchStringPrefix}{category.Id}{searchConfiguration.SearchStringSuffix}"))],
             modelsToIgnore,
             tagsToIgnore,
-            new DirectoryLayout(directories?.RootDirectory ?? string.Empty, directories?.BaseDirectory ?? string.Empty, directories?.BaseDirectoryFamous ?? string.Empty));
+            new DirectoryLayout(directories?.RootDirectory ?? string.Empty, directories?.BaseDirectory ?? string.Empty, directories?.BaseDirectoryFamous ?? string.Empty),
+            searchConfiguration.ImagePauseInSeconds);
     }
 }

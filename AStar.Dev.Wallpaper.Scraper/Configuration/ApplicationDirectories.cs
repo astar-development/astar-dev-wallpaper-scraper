@@ -7,10 +7,10 @@ namespace AStar.Dev.Wallpaper.Scraper.Configuration;
 
 public class ApplicationDirectories(IFileSystem fileSystem, ILogger<ApplicationDirectories> logger) : IApplicationDirectories
 {
+    private static readonly string root = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder);
+    
     public void CreateIfRequired()
     {
-        string root = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder);
-
         LogMessage.Debug(logger, "Ensuring application directories exist at {Root}", root);
         fileSystem.Directory.CreateDirectory(DataDirectory);
         fileSystem.Directory.CreateDirectory(LogsDirectory);
@@ -18,11 +18,11 @@ public class ApplicationDirectories(IFileSystem fileSystem, ILogger<ApplicationD
         fileSystem.Directory.CreateDirectory(DocumentsExportDirectory);
     }
 
-    public static string DataDirectory => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder, "data");
+    public static string DataDirectory => root.CombinePath("data");
 
-    public static string CacheDirectory => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder, "cache");
+    public static string CacheDirectory => root.CombinePath("cache");
 
-    public static string LogsDirectory => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).CombinePath(ApplicationMetadata.ApplicationFolder, "logs");
+    public static string LogsDirectory => root.CombinePath("logs");
 
     /// <summary>The user's documents folder where table Import/Export JSON files are read from and written to.</summary>
     public static string DocumentsExportDirectory => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments).CombinePath(ApplicationMetadata.ApplicationFolder);

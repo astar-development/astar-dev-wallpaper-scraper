@@ -6,12 +6,12 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public interface IWallpaperFileClassificationRepository
 {
     /// <summary>
-    ///     Determines whether a file already exists at the given directory and name.
+    ///     Determines whether a file already exists at the given directory, whose name contains the given text.
     /// </summary>
     /// <param name="directoryPath">The directory the file would be saved under.</param>
-    /// <param name="fileName">The file name.</param>
+    /// <param name="fileNameContains">Text the file name must contain, e.g. an identifier known before the final file name.</param>
     /// <param name="token">A token used to observe cancellation of the read.</param>
-    Task<bool> IsAlreadyDownloadedAsync(string directoryPath, string fileName, CancellationToken token);
+    Task<bool> IsAlreadyDownloadedAsync(string directoryPath, string fileNameContains, CancellationToken token);
 
     /// <summary>
     ///     Records a file classification for every tag, linking the wallpaper to its classification category.

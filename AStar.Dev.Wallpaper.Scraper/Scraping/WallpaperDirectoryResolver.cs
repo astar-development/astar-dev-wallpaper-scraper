@@ -17,7 +17,7 @@ public static class WallpaperDirectoryResolver
 
         return tags
             .Where(tag => tag.IsFamous || tag.IsInternet)
-            .Concat(tags.Where(tag => !tag.IsFamous && !tag.IsInternet))
+            .Concat(tags.OrderBy(tag => tag.Tag).Where(tag => !tag.IsFamous && !tag.IsInternet))
             .Where(tag => tag.Category is not null)
             .Aggregate(baseDirectory, (directory, tag) => Path.Combine(directory, tag.Tag));
     }

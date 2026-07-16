@@ -4,78 +4,87 @@ using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Playwright;
 using Testably.Abstractions.Testing;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Services;
 
-public sealed class GivenPlaywrightService : IDisposable
+public sealed class PlaywrightServiceFixture : IAsyncLifetime, IAsyncDisposable
+{
+    public string UserDataDirectory { get; } = Path.Combine(Path.GetTempPath(), $"playwright-profile-{Guid.NewGuid():N}");
+
+    public MockFileSystem FileSystem { get; } = new();
+
+    public IPlaywrightService Service { get; private set; } = null!;
+
+    public IPage Page { get; private set; } = null!;
+
+    public async ValueTask InitializeAsync()
+    {
+        var logger = NullLoggerFactory.Instance.CreateLogger<PlaywrightService>();
+        var scrapeConfiguration = Options.Create(new ScrapeConfiguration
+        {
+            UserDataDirectory = UserDataDirectory,
+            SearchConfiguration = new SearchConfiguration { BaseUrl = new Uri("https://localhost"), UseHeadless = true },
+        });
+        Service = new PlaywrightService(logger, scrapeConfiguration, FileSystem);
+
+        var result = await Service.ConfigurePlaywrightAsync(CancellationToken.None);
+        Page = ((Success<IPage>)result).Value;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await ((IAsyncDisposable)Service).DisposeAsync();
+
+        if (Directory.Exists(UserDataDirectory))
+        {
+            Directory.Delete(UserDataDirectory, true);
+        }
+    }
+}
+
+public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : IClassFixture<PlaywrightServiceFixture>, IDisposable
 {
     private readonly string userDataDirectory = Path.Combine(Path.GetTempPath(), $"playwright-profile-{Guid.NewGuid():N}");
     private readonly MockFileSystem fileSystem = new();
 
     [Fact]
-    public async Task when_configure_playwright_async_is_called_then_it_returns_an_ipage_instance()
+    public void when_configure_playwright_async_is_called_then_it_returns_an_ipage_instance() =>
+        fixture.Page.ShouldBeAssignableTo<IPage>();
+
+    [Fact]
+    public void when_configure_playwright_async_is_called_then_the_browser_profile_is_persisted_to_the_configured_user_data_directory()
     {
-        var sut = CreatePlaywrightService();
-
-        var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
-
-        result.ShouldBeAssignableTo<Exceptional<Microsoft.Playwright.IPage>>();
+        Directory.Exists(fixture.UserDataDirectory).ShouldBeTrue();
+        Directory.EnumerateFileSystemEntries(fixture.UserDataDirectory).ShouldNotBeEmpty();
     }
 
     [Fact]
-    public async Task when_configure_playwright_async_is_called_then_the_browser_profile_is_persisted_to_the_configured_user_data_directory()
-    {
-        var sut = CreatePlaywrightService();
-
-        var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
-
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        await page.Context.CloseAsync();
-        Directory.Exists(userDataDirectory).ShouldBeTrue();
-        Directory.EnumerateFileSystemEntries(userDataDirectory).ShouldNotBeEmpty();
-    }
-
-    [Fact]
-    public async Task when_configure_playwright_async_is_called_then_the_user_data_directory_is_created_via_the_injected_file_system()
-    {
-        var sut = CreatePlaywrightService();
-
-        var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
-
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        await page.Context.CloseAsync();
-        fileSystem.Directory.Exists(userDataDirectory).ShouldBeTrue();
-    }
+    public void when_configure_playwright_async_is_called_then_the_user_data_directory_is_created_via_the_injected_file_system() =>
+        fixture.FileSystem.Directory.Exists(fixture.UserDataDirectory).ShouldBeTrue();
 
     [Fact]
     public async Task when_configure_playwright_async_is_called_then_the_browser_is_launched_using_the_chrome_channel()
     {
-        var sut = CreatePlaywrightService();
+        var page = fixture.Page;
+        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
 
-        var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
-
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new Microsoft.Playwright.RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
         await page.GotoAsync("https://localhost/browser-brand-check");
         var brands = await page.EvaluateAsync<string>("JSON.stringify((navigator.userAgentData?.brands ?? []).map(b => b.brand))");
-        await page.Context.CloseAsync();
+
         brands.ShouldContain("Google Chrome");
     }
 
     [Fact]
     public async Task when_configure_playwright_async_is_called_then_the_context_uses_the_configured_base_url()
     {
-        var sut = CreatePlaywrightService();
+        var page = fixture.Page;
+        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
 
-        var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
-
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new Microsoft.Playwright.RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
         await page.GotoAsync("/base-url-check");
-        var url = page.Url;
-        await page.Context.CloseAsync();
-        url.ShouldBe("https://localhost/base-url-check");
+
+        page.Url.ShouldBe("https://localhost/base-url-check");
     }
 
     [Fact]
@@ -85,7 +94,7 @@ public sealed class GivenPlaywrightService : IDisposable
 
         var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
 
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
+        var page = result.ShouldBeOfType<Success<IPage>>().Value;
         var userAgent = await page.EvaluateAsync<string>("navigator.userAgent");
         await page.Context.CloseAsync();
         userAgent.ShouldNotContain("HeadlessChrome");
@@ -94,15 +103,12 @@ public sealed class GivenPlaywrightService : IDisposable
     [Fact]
     public async Task when_configure_playwright_async_is_called_then_navigator_webdriver_is_hidden_from_bot_detection_scripts()
     {
-        var sut = CreatePlaywrightService();
+        var page = fixture.Page;
+        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
 
-        var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
-
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new Microsoft.Playwright.RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
         await page.GotoAsync("https://localhost/webdriver-check");
         var webdriver = await page.EvaluateAsync<object?>("navigator.webdriver");
-        await page.Context.CloseAsync();
+
         webdriver.ShouldBeNull();
     }
 
@@ -113,7 +119,7 @@ public sealed class GivenPlaywrightService : IDisposable
 
         var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
 
-        result.ShouldBeOfType<Failure<Microsoft.Playwright.IPage>>();
+        result.ShouldBeOfType<Failure<IPage>>();
     }
 
     [Fact]
@@ -123,8 +129,8 @@ public sealed class GivenPlaywrightService : IDisposable
 
         var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
 
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new Microsoft.Playwright.RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
+        var page = result.ShouldBeOfType<Success<IPage>>().Value;
+        await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
         await page.GotoAsync("page2");
         var url = page.Url;
         await page.Context.CloseAsync();
@@ -139,8 +145,8 @@ public sealed class GivenPlaywrightService : IDisposable
         var firstResult = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
         var secondResult = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
 
-        var firstPage = firstResult.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        var secondPage = secondResult.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
+        var firstPage = firstResult.ShouldBeOfType<Success<IPage>>().Value;
+        var secondPage = secondResult.ShouldBeOfType<Success<IPage>>().Value;
         await firstPage.Context.CloseAsync();
         secondPage.ShouldBeSameAs(firstPage);
     }
@@ -152,8 +158,8 @@ public sealed class GivenPlaywrightService : IDisposable
 
         var results = await Task.WhenAll(sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken), sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken));
 
-        var firstPage = results[0].ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
-        var secondPage = results[1].ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
+        var firstPage = results[0].ShouldBeOfType<Success<IPage>>().Value;
+        var secondPage = results[1].ShouldBeOfType<Success<IPage>>().Value;
         await firstPage.Context.CloseAsync();
         secondPage.ShouldBeSameAs(firstPage);
     }
@@ -168,8 +174,8 @@ public sealed class GivenPlaywrightService : IDisposable
         configuration.UserDataDirectory = userDataDirectory;
         var secondResult = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
 
-        firstResult.ShouldBeOfType<Failure<Microsoft.Playwright.IPage>>();
-        var page = secondResult.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
+        firstResult.ShouldBeOfType<Failure<IPage>>();
+        var page = secondResult.ShouldBeOfType<Success<IPage>>().Value;
         await page.Context.CloseAsync();
     }
 
@@ -178,7 +184,7 @@ public sealed class GivenPlaywrightService : IDisposable
     {
         var sut = CreatePlaywrightService();
         var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
-        var page = result.ShouldBeOfType<Success<Microsoft.Playwright.IPage>>().Value;
+        var page = result.ShouldBeOfType<Success<IPage>>().Value;
 
         await ((IAsyncDisposable)sut).DisposeAsync();
 
@@ -186,7 +192,7 @@ public sealed class GivenPlaywrightService : IDisposable
     }
 
     [Fact]
-    public async Task when_created_then_it_implements_iasyncdisposable()
+    public void when_created_then_it_implements_iasyncdisposable()
     {
         var sut = CreatePlaywrightService();
 
