@@ -189,7 +189,81 @@ public sealed class GivenEntityEditorViewModel : IDisposable
 
         await Command(sut.ImportCommand).Execute();
 
-        sut.StatusMessage.ShouldContain("/exports/TagToIgnore.json");
+        sut.StatusMessage.ShouldBe("Import failed: /exports/TagToIgnore.json was not found.");
+    }
+
+    [Fact]
+    public async Task when_the_save_command_succeeds_then_the_status_message_reports_the_saved_row_count()
+    {
+        var sut = CreateSut();
+
+        await Command(sut.AddCommand).Execute();
+        await Command(sut.SaveCommand).Execute();
+
+        sut.StatusMessage.ShouldBe("Saved 1 row(s).");
+    }
+
+    [Fact]
+    public async Task when_the_save_command_fails_then_the_status_message_reports_the_failure()
+    {
+        var descriptor = new EntityEditorDescriptor<TagToIgnoreEntity>(
+            DisplayName: "Tag to Ignore",
+            TableName: "TagToIgnore",
+            CreateNew: () => new TagToIgnoreEntity(),
+            AllowAddRemove: true,
+            ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
+            ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)],
+            OnBeforeAddAsync: (_, _, _) => throw new InvalidOperationException("The before-add hook failed."));
+        var sut = new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
+
+        await Command(sut.AddCommand).Execute();
+        await Command(sut.SaveCommand).Execute();
+
+        sut.StatusMessage.ShouldBe("Save failed: The before-add hook failed.");
+    }
+
+    [Fact]
+    public async Task when_the_export_command_succeeds_then_the_status_message_reports_the_exported_row_count_and_path()
+    {
+        SeedTag("exported-tag");
+        var sut = CreateSut();
+
+        await Command(sut.ExportCommand).Execute();
+
+        sut.StatusMessage.ShouldBe("Exported 1 row(s) to /exports/TagToIgnore.json.");
+    }
+
+    [Fact]
+    public async Task when_the_export_command_fails_then_the_status_message_reports_the_failure()
+    {
+        fileSystem.Directory.CreateDirectory("/exports/TagToIgnore.json");
+        var sut = CreateSut();
+
+        await Command(sut.ExportCommand).Execute();
+
+        sut.StatusMessage.ShouldStartWith("Export failed: ");
+    }
+
+    [Fact]
+    public async Task when_the_import_command_succeeds_then_the_status_message_reports_the_imported_row_count_and_path()
+    {
+        var sut = CreateSut();
+        fileSystem.File.WriteAllText("/exports/TagToIgnore.json", new List<TagToIgnoreEntity> { new() { Value = "imported-tag" } }.ToJson());
+
+        await Command(sut.ImportCommand).Execute();
+
+        sut.StatusMessage.ShouldBe("Imported 1 row(s) from /exports/TagToIgnore.json. Click Save to persist.");
+    }
+
+    [Fact]
+    public async Task when_the_import_command_reads_invalid_json_then_the_status_message_reports_the_failure()
+    {
+        var sut = CreateSut();
+        fileSystem.File.WriteAllText("/exports/TagToIgnore.json", "this is not valid json");
+
+        await Command(sut.ImportCommand).Execute();
+
+        sut.StatusMessage.ShouldStartWith("Import failed: ");
     }
 
     [Fact]
