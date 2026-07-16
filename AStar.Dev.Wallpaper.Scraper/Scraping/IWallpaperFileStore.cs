@@ -11,6 +11,6 @@ public interface IWallpaperFileStore
     /// <param name="directoryPath">The directory to save the image under.</param>
     /// <param name="fileName">The file name to save the image as.</param>
     /// <param name="imageBytes">The image bytes to write.</param>
-    /// <param name="token">A token used to observe cancellation of the save.</param>
+    /// <param name="cancellationToken">A token used to observe cancellation of the save.</param>
     Task<SavedWallpaperFile> SaveAsync(string directoryPath, string fileName, byte[] imageBytes, CancellationToken cancellationToken);
 }
