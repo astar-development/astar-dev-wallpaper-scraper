@@ -4,6 +4,7 @@ using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using ReactiveUI;
 using Testably.Abstractions.Testing;
@@ -13,15 +14,16 @@ namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Configuration.EntityEditor;
 
 public sealed class GivenEntityEditorViewModel : IDisposable
 {
-    private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"entity-editor-view-model-{Guid.NewGuid():N}.db");
+    private readonly SqliteConnection connection = new("Data Source=:memory:");
     private readonly IDbContextFactory<AppDbContext> dbContextFactory;
     private readonly MockFileSystem fileSystem = new();
     private readonly DbContextOptions<AppDbContext> options;
 
     public GivenEntityEditorViewModel()
     {
+        connection.Open();
         options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite($"Data Source={databasePath}")
+            .UseSqlite(connection)
             .Options;
 
         using (var migrationContext = new AppDbContext(options))
@@ -216,13 +218,8 @@ public sealed class GivenEntityEditorViewModel : IDisposable
         row.Value.ShouldBe("stamped-by-hook");
     }
 
-    public void Dispose()
-    {
-        if (File.Exists(databasePath))
-        {
-            File.Delete(databasePath);
-        }
-    }
+    public void Dispose() =>
+        connection.Dispose();
 
     private void SeedTag(string value)
     {

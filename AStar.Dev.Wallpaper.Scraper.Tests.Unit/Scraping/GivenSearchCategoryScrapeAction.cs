@@ -25,6 +25,21 @@ public sealed class GivenSearchCategoryScrapeAction
         [],
         new DirectoryLayout("/root", "/base", "/famous"));
 
+    private static readonly ScrapeContext _twoCategoryContext = new(
+        [
+            new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1"),
+            new ScrapeCategory("Space", "https://wallhaven.cc/search?categories=2"),
+        ],
+        [],
+        [],
+        new DirectoryLayout("/root", "/base", "/famous"));
+
+    private static readonly ScrapeContext _ignoredTagContext = new(
+        [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1")],
+        [],
+        ["Ignored"],
+        new DirectoryLayout("/root", "/base", "/famous"));
+
     [Fact]
     public async Task when_a_category_has_more_wallpapers_than_fit_on_one_page_then_progress_reports_the_page_count_and_a_success_result_is_returned()
     {
@@ -37,6 +52,40 @@ public sealed class GivenSearchCategoryScrapeAction
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
         progress.Received().Report(Arg.Is<string>(message => message!.Contains("Visiting category: Nature")));
         progress.Received().Report(Arg.Is<string>(message => message!.Contains("need to get all 3 pages")));
+    }
+
+    [Fact]
+    public async Task when_multiple_categories_are_configured_then_each_category_is_visited_on_its_own_search_url()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_twoCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)[]);
+        var sut = CreateSut();
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Visiting category: Nature")));
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Visiting category: Space")));
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=1&page=1");
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=2&page=1");
+        await hrefCollector.Received(2).CollectAsync(page, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_a_category_spans_multiple_pages_then_each_page_is_visited_and_hrefs_are_collected_per_page()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(30);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)[]);
+        var sut = CreateSut();
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=1&page=1");
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=1&page=2");
+        await hrefCollector.Received(2).CollectAsync(page, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -102,6 +151,39 @@ public sealed class GivenSearchCategoryScrapeAction
         await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await fileStore.DidNotReceive().SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
         await fileClassificationRepository.DidNotReceive().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<ImageDimensions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_checking_whether_a_wallpaper_is_already_downloaded_then_the_check_is_a_contains_match_on_the_wallpaper_id()
+    {
+        ConfigureSuccessfulWallpaperVisit();
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(Option<string>.None.Instance);
+        var sut = CreateSut();
+
+        await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        await fileClassificationRepository.Received().IsAlreadyDownloadedAsync(Arg.Any<string>(), "abc123", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_a_wallpaper_has_a_tag_on_the_ignore_list_then_the_already_downloaded_check_uses_the_curated_directory_path()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_ignoredTagContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        var okResponse = Substitute.For<IResponse>();
+        okResponse.Ok.Returns(true);
+        page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(okResponse);
+        tagReader.ReadAsync(page, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlyList<TagData>)[new TagData("Nature", "outdoors"), new TagData("Ignored", "outdoors")]);
+        imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(Option<string>.None.Instance);
+        var sut = CreateSut();
+
+        await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        await fileClassificationRepository.Received().IsAlreadyDownloadedAsync("/root/base/Nature", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await fileClassificationRepository.DidNotReceive().IsAlreadyDownloadedAsync("/root/base/Nature/Ignored", Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

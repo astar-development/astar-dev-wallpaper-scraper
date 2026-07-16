@@ -2,6 +2,7 @@ using System.Reactive.Linq;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using ReactiveUI;
 using Testably.Abstractions.Testing;
@@ -11,14 +12,15 @@ namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Configuration.EntityEditor;
 
 public sealed class GivenEntityEditorFactory : IDisposable
 {
-    private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"entity-editor-factory-{Guid.NewGuid():N}.db");
+    private readonly SqliteConnection connection = new("Data Source=:memory:");
     private readonly DbContextOptions<AppDbContext> options;
     private readonly EntityEditorFactory sut;
 
     public GivenEntityEditorFactory()
     {
+        connection.Open();
         options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite($"Data Source={databasePath}")
+            .UseSqlite(connection)
             .Options;
 
         using (var migrationContext = new AppDbContext(options))
@@ -128,13 +130,8 @@ public sealed class GivenEntityEditorFactory : IDisposable
         row.SearchConfigurationId.ShouldBe(searchConfigurationId);
     }
 
-    public void Dispose()
-    {
-        if (File.Exists(databasePath))
-        {
-            File.Delete(databasePath);
-        }
-    }
+    public void Dispose() =>
+        connection.Dispose();
 
     private sealed class TestDbContextFactory(DbContextOptions<AppDbContext> options) : IDbContextFactory<AppDbContext>
     {

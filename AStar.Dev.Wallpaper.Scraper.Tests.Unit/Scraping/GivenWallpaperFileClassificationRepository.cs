@@ -1,18 +1,20 @@
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
 public sealed class GivenWallpaperFileClassificationRepository : IDisposable
 {
-    private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"wallpaper-file-classification-repository-{Guid.NewGuid():N}.db");
+    private readonly SqliteConnection connection = new("Data Source=:memory:");
     private readonly IDbContextFactory<AppDbContext> dbContextFactory;
 
     public GivenWallpaperFileClassificationRepository()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite($"Data Source={databasePath}").Options;
+        connection.Open();
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
         dbContextFactory = new TestDbContextFactory(options);
 
         using var context = dbContextFactory.CreateDbContext();
@@ -51,6 +53,48 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
     }
 
     [Fact]
+    public async Task when_a_file_exists_whose_name_contains_the_given_text_then_is_already_downloaded_is_true()
+    {
+        using (var context = dbContextFactory.CreateDbContext())
+        {
+            context.Files.Add(new FileDetailEntity
+            {
+                FileName = new FileName("wallhaven-abc123.jpg"),
+                DirectoryName = new DirectoryName("/wallpapers/nature"),
+                FileHandle = new FileHandle(Guid.NewGuid().ToString()),
+            });
+            context.SaveChanges();
+        }
+
+        var sut = new WallpaperFileClassificationRepository(dbContextFactory);
+
+        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("/wallpapers/nature", "abc123", TestContext.Current.CancellationToken);
+
+        alreadyDownloaded.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task when_no_file_name_contains_the_given_text_then_is_already_downloaded_is_false()
+    {
+        using (var context = dbContextFactory.CreateDbContext())
+        {
+            context.Files.Add(new FileDetailEntity
+            {
+                FileName = new FileName("wallhaven-abc123.jpg"),
+                DirectoryName = new DirectoryName("/wallpapers/nature"),
+                FileHandle = new FileHandle(Guid.NewGuid().ToString()),
+            });
+            context.SaveChanges();
+        }
+
+        var sut = new WallpaperFileClassificationRepository(dbContextFactory);
+
+        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("/wallpapers/nature", "def456", TestContext.Current.CancellationToken);
+
+        alreadyDownloaded.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task when_a_wallpaper_with_multiple_tags_is_recorded_then_a_file_classification_is_created_per_tag()
     {
         using (var context = dbContextFactory.CreateDbContext())
@@ -75,13 +119,8 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
         classifications.Select(c => c.Category!.Name).ShouldBe(["Nature", "Outdoors"], ignoreOrder: true);
     }
 
-    public void Dispose()
-    {
-        if (File.Exists(databasePath))
-        {
-            File.Delete(databasePath);
-        }
-    }
+    public void Dispose() =>
+        connection.Dispose();
 
     private sealed class TestDbContextFactory(DbContextOptions<AppDbContext> options) : IDbContextFactory<AppDbContext>
     {

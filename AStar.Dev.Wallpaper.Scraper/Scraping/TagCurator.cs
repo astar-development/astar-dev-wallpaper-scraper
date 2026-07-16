@@ -16,8 +16,12 @@ public static class TagCurator
         List<TagData> kept = [];
         List<string>  messages = [];
 
-        foreach (var tag in tags)
+        for (int i = 0; i < tags.Count; i++)
         {
+            var tag = tags[i];
+            
+            if(tag.Tag.Equals("model", StringComparison.OrdinalIgnoreCase)) continue;
+            if(tag.Tag.EndsWith(" model", StringComparison.OrdinalIgnoreCase)) tag = tag with { Tag = tag.Tag[..^" model".Length] };
             messages.Add($"Found tag: {tag.Tag}, category: {tag.Category}, isFamous: {tag.IsFamous}, isInternet: {tag.IsInternet}");
 
             if (modelsToIgnore.Any(model => model.Equals(tag.Tag, StringComparison.OrdinalIgnoreCase)))

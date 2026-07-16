@@ -5,7 +5,7 @@ namespace AStar.Dev.Infrastructure.AppDb.Entities;
 /// <summary>Query and persistence helpers for <see cref="FileClassificationCategoryEntity"/> records.</summary>
 public static class FileClassificationCategoryQueries
 {
-    private const string _unclassifiedCategoryName = "Unclassified";
+    private const string UnclassifiedCategoryName = "Unclassified";
 
     /// <summary>
     ///     Ensures each of the given category names exists as a Level 2 child of the "Unclassified" root
@@ -18,11 +18,11 @@ public static class FileClassificationCategoryQueries
     public static async Task EnsureCategoriesExistAsync(this AppDbContext context, IReadOnlyList<string> categoryNames, CancellationToken token = default)
     {
         var unclassified = await context.Set<FileClassificationCategoryEntity>()
-            .SingleOrDefaultAsync(category => category.Level == 1 && category.ParentId == null && category.Name == _unclassifiedCategoryName, token);
+            .SingleOrDefaultAsync(category => category.Level == 1 && category.ParentId == null && category.Name == UnclassifiedCategoryName, token);
 
         if (unclassified is null)
         {
-            unclassified = new FileClassificationCategoryEntity { Name = _unclassifiedCategoryName, Level = 1 };
+            unclassified = new FileClassificationCategoryEntity { Name = UnclassifiedCategoryName, Level = 1 };
             context.Set<FileClassificationCategoryEntity>().Add(unclassified);
             await context.SaveChangesAsync(token);
         }
