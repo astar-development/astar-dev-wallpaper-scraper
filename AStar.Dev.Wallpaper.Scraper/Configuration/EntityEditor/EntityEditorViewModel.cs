@@ -44,7 +44,7 @@ public sealed class EntityEditorViewModel<TEntity> : EntityEditorViewModelBase, 
         this.exportDirectory = exportDirectory;
         exportFilePath = fileSystem.Path.Combine(exportDirectory, $"{descriptor.TableName}.json");
         context = dbContextFactory.CreateDbContext();
-        items = new ObservableCollection<TEntity>(context.Set<TEntity>().ToList());
+        items = new ObservableCollection<TEntity>(ApplySortOrder(context.Set<TEntity>().ToList()));
 
         var canAdd = descriptor.AllowAddRemove
             ? Observable.Return(true)
@@ -208,11 +208,14 @@ public sealed class EntityEditorViewModel<TEntity> : EntityEditorViewModelBase, 
         context.AddRange(imported);
         items.Clear();
 
-        foreach (var entity in imported)
+        foreach (var entity in ApplySortOrder(imported))
         {
             items.Add(entity);
         }
 
         return imported.Count;
     }
+
+    private IReadOnlyList<TEntity> ApplySortOrder(IReadOnlyList<TEntity> entities) =>
+        descriptor.OrderItemsBy is null ? entities : [.. entities.OrderBy(descriptor.OrderItemsBy, StringComparer.OrdinalIgnoreCase)];
 }

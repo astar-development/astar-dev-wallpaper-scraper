@@ -22,6 +22,10 @@ namespace AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 ///     Optional editor-specific action run against the editor's tracked <see cref="AppDbContext" />. The action is
 ///     responsible for persisting its own changes and returns the status message to display on success.
 /// </param>
+/// <param name="OrderItemsBy">
+///     Optional sort key applied (case-insensitively) whenever rows are loaded or imported, so the grid displays
+///     them in a stable order.
+/// </param>
 public sealed record EntityEditorDescriptor<TEntity>(
     string DisplayName,
     string TableName,
@@ -31,5 +35,6 @@ public sealed record EntityEditorDescriptor<TEntity>(
     IReadOnlyList<string> ReadOnlyColumns,
     Func<AppDbContext, TEntity, CancellationToken, Task>? OnBeforeAddAsync = null,
     string? CustomActionLabel = null,
-    Func<AppDbContext, CancellationToken, Task<string>>? CustomActionAsync = null)
+    Func<AppDbContext, CancellationToken, Task<string>>? CustomActionAsync = null,
+    Func<TEntity, string>? OrderItemsBy = null)
     where TEntity : class;

@@ -267,6 +267,32 @@ public sealed class GivenEntityEditorViewModel : IDisposable
     }
 
     [Fact]
+    public void when_the_descriptor_has_a_sort_key_then_items_are_loaded_in_case_insensitive_alphabetical_order()
+    {
+        SeedTag("zebra");
+        SeedTag("Apple");
+        SeedTag("mango");
+
+        var sut = CreateSortedSut();
+
+        ((TagToIgnoreEntity)sut.Items[0]!).Value.ShouldBe("Apple");
+        ((TagToIgnoreEntity)sut.Items[1]!).Value.ShouldBe("mango");
+        ((TagToIgnoreEntity)sut.Items[2]!).Value.ShouldBe("zebra");
+    }
+
+    [Fact]
+    public async Task when_the_descriptor_has_a_sort_key_then_imported_items_are_sorted()
+    {
+        var sut = CreateSortedSut();
+        fileSystem.File.WriteAllText("/exports/TagToIgnore.json", new List<TagToIgnoreEntity> { new() { Value = "zebra" }, new() { Value = "Apple" } }.ToJson());
+
+        await Command(sut.ImportCommand).Execute();
+
+        ((TagToIgnoreEntity)sut.Items[0]!).Value.ShouldBe("Apple");
+        ((TagToIgnoreEntity)sut.Items[1]!).Value.ShouldBe("zebra");
+    }
+
+    [Fact]
     public void when_the_descriptor_has_no_custom_action_then_no_custom_action_is_exposed()
     {
         var sut = CreateSut();
@@ -360,6 +386,20 @@ public sealed class GivenEntityEditorViewModel : IDisposable
             AllowAddRemove: true,
             ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
             ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)]);
+
+        return new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
+    }
+
+    private EntityEditorViewModel<TagToIgnoreEntity> CreateSortedSut()
+    {
+        var descriptor = new EntityEditorDescriptor<TagToIgnoreEntity>(
+            DisplayName: "Tag to Ignore",
+            TableName: "TagToIgnore",
+            CreateNew: () => new TagToIgnoreEntity(),
+            AllowAddRemove: true,
+            ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
+            ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)],
+            OrderItemsBy: tag => tag.Value);
 
         return new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
     }

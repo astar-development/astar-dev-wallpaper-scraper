@@ -133,6 +133,20 @@ public sealed class GivenEntityEditorFactory : IDisposable
     }
 
     [Fact]
+    public void when_creating_the_file_classification_categories_editor_then_categories_are_listed_alphabetically_by_name()
+    {
+        SeedClassification("Zebra", includeInSearch: true);
+        SeedClassification("apple", includeInSearch: true);
+        SeedClassification("Mango", includeInSearch: true);
+
+        var editor = sut.CreateFileClassificationCategoriesEditor();
+
+        ((FileClassificationCategoryEntity)editor.Items[0]!).Name.ShouldBe("apple");
+        ((FileClassificationCategoryEntity)editor.Items[1]!).Name.ShouldBe("Mango");
+        ((FileClassificationCategoryEntity)editor.Items[2]!).Name.ShouldBe("Zebra");
+    }
+
+    [Fact]
     public void when_creating_the_file_classification_categories_editor_then_the_sync_tags_to_ignore_action_is_exposed()
     {
         var editor = sut.CreateFileClassificationCategoriesEditor();

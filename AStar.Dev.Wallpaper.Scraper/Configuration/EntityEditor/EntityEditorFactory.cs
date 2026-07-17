@@ -40,7 +40,8 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ExcludedColumns: [nameof(FileClassificationCategoryEntity.Parent)],
                 ReadOnlyColumns: [nameof(FileClassificationCategoryEntity.Id)],
                 CustomActionLabel: "Sync Tags to Ignore",
-                CustomActionAsync: SyncTagsToIgnoreAsync),
+                CustomActionAsync: SyncTagsToIgnoreAsync,
+                OrderItemsBy: classification => classification.Name),
             fileSystem,
             exportDirectory);
 
