@@ -22,34 +22,13 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
     }
 
     [Fact]
-    public async Task when_no_file_exists_at_the_directory_and_name_then_is_already_downloaded_is_false()
+    public async Task when_no_file_exists_with_the_given_name_then_is_already_downloaded_is_false()
     {
         var sut = new WallpaperFileClassificationRepository(dbContextFactory);
 
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("/wallpapers/nature", "pic.jpg", TestContext.Current.CancellationToken);
+        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("pic.jpg", TestContext.Current.CancellationToken);
 
         alreadyDownloaded.ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task when_a_file_already_exists_at_the_directory_and_name_then_is_already_downloaded_is_true()
-    {
-        using (var context = dbContextFactory.CreateDbContext())
-        {
-            context.Files.Add(new FileDetailEntity
-            {
-                FileName = new FileName("pic.jpg"),
-                DirectoryName = new DirectoryName("/wallpapers/nature"),
-                FileHandle = new FileHandle(Guid.NewGuid().ToString()),
-            });
-            context.SaveChanges();
-        }
-
-        var sut = new WallpaperFileClassificationRepository(dbContextFactory);
-
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("/wallpapers/nature", "pic.jpg", TestContext.Current.CancellationToken);
-
-        alreadyDownloaded.ShouldBeTrue();
     }
 
     [Fact]
@@ -68,7 +47,28 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
 
         var sut = new WallpaperFileClassificationRepository(dbContextFactory);
 
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("/wallpapers/nature", "abc123", TestContext.Current.CancellationToken);
+        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("abc123", TestContext.Current.CancellationToken);
+
+        alreadyDownloaded.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task when_a_file_with_a_matching_name_exists_in_any_directory_then_is_already_downloaded_is_true()
+    {
+        using (var context = dbContextFactory.CreateDbContext())
+        {
+            context.Files.Add(new FileDetailEntity
+            {
+                FileName = new FileName("wallhaven-abc123.jpg"),
+                DirectoryName = new DirectoryName("/wallpapers/some/other/directory"),
+                FileHandle = new FileHandle(Guid.NewGuid().ToString()),
+            });
+            context.SaveChanges();
+        }
+
+        var sut = new WallpaperFileClassificationRepository(dbContextFactory);
+
+        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("abc123", TestContext.Current.CancellationToken);
 
         alreadyDownloaded.ShouldBeTrue();
     }
@@ -89,7 +89,7 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
 
         var sut = new WallpaperFileClassificationRepository(dbContextFactory);
 
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("/wallpapers/nature", "def456", TestContext.Current.CancellationToken);
+        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("def456", TestContext.Current.CancellationToken);
 
         alreadyDownloaded.ShouldBeFalse();
     }

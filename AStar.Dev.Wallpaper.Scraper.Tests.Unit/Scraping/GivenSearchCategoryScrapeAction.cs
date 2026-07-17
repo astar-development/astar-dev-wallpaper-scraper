@@ -139,15 +139,17 @@ public sealed class GivenSearchCategoryScrapeAction
     }
 
     [Fact]
-    public async Task when_the_wallpaper_was_already_downloaded_then_it_is_not_downloaded_again()
+    public async Task when_the_wallpaper_was_already_downloaded_then_its_page_is_never_visited_and_it_is_not_downloaded_again()
     {
         ConfigureSuccessfulWallpaperVisit();
-        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
         var sut = CreateSut();
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        await page.DidNotReceive().GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>());
+        await tagReader.DidNotReceive().ReadAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>());
         await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await fileStore.DidNotReceive().SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
         await fileClassificationRepository.DidNotReceive().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<ImageDimensions>(), Arg.Any<CancellationToken>());
@@ -157,17 +159,17 @@ public sealed class GivenSearchCategoryScrapeAction
     public async Task when_checking_whether_a_wallpaper_is_already_downloaded_then_the_check_is_a_contains_match_on_the_wallpaper_id()
     {
         ConfigureSuccessfulWallpaperVisit();
-        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(Option<string>.None.Instance);
         var sut = CreateSut();
 
         await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
-        await fileClassificationRepository.Received().IsAlreadyDownloadedAsync(Arg.Any<string>(), "abc123", Arg.Any<CancellationToken>());
+        await fileClassificationRepository.Received().IsAlreadyDownloadedAsync("abc123", Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task when_a_wallpaper_has_a_tag_on_the_ignore_list_then_the_already_downloaded_check_uses_the_curated_directory_path()
+    public async Task when_a_wallpaper_has_a_tag_on_the_ignore_list_then_it_is_saved_under_the_curated_directory_path()
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_ignoredTagContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
@@ -177,20 +179,23 @@ public sealed class GivenSearchCategoryScrapeAction
         page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(okResponse);
         tagReader.ReadAsync(page, Arg.Any<CancellationToken>())
             .Returns((IReadOnlyList<TagData>)[new TagData("Nature", "outdoors"), new TagData("Ignored", "outdoors")]);
-        imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(Option<string>.None.Instance);
+        imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(new Option<string>.Some("https://wallhaven.cc/images/pic.jpg"));
+        byte[] imageBytes = [1, 2, 3];
+        imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(Exceptional.Success(imageBytes));
+        fileStore.SaveAsync(Arg.Any<string>(), "pic.jpg", imageBytes, Arg.Any<CancellationToken>()).Returns(new SavedWallpaperFile("/root/base/N/Nature/pic.jpg", 3));
         var sut = CreateSut();
 
         await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
-        await fileClassificationRepository.Received().IsAlreadyDownloadedAsync("/root/base/N/Nature", Arg.Any<string>(), Arg.Any<CancellationToken>());
-        await fileClassificationRepository.DidNotReceive().IsAlreadyDownloadedAsync("/root/base/N/Nature/Ignored", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await fileStore.Received().SaveAsync("/root/base/N/Nature", "pic.jpg", imageBytes, Arg.Any<CancellationToken>());
+        await fileStore.DidNotReceive().SaveAsync("/root/base/N/Nature/Ignored", Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task when_a_new_wallpaper_is_visited_then_its_categories_are_registered_and_it_is_downloaded_saved_and_recorded()
     {
         ConfigureSuccessfulWallpaperVisit();
-        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         byte[] imageBytes = [1, 2, 3];
         imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(Exceptional.Success(imageBytes));
         var savedFile = new SavedWallpaperFile("/root/base/pic.jpg", 3);
@@ -210,7 +215,7 @@ public sealed class GivenSearchCategoryScrapeAction
     public async Task when_the_image_download_fails_then_progress_reports_the_failure_and_nothing_is_saved_or_recorded()
     {
         ConfigureSuccessfulWallpaperVisit();
-        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
+        fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(false);
         var exception = new InvalidOperationException("Navigating to 'https://wallhaven.cc/images/pic.jpg' did not produce a response.");
         imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(Exceptional.Failure<byte[]>(exception));
         var sut = CreateSut();

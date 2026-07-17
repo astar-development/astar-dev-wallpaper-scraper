@@ -10,11 +10,11 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperFileClassificationRepository(IDbContextFactory<AppDbContext> dbContextFactory) : IWallpaperFileClassificationRepository
 {
     /// <inheritdoc />
-    public async Task<bool> IsAlreadyDownloadedAsync(string directoryPath, string fileNameContains, CancellationToken cancellationToken)
+    public async Task<bool> IsAlreadyDownloadedAsync(string fileNameContains, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.Files.AnyAsync(file => file.FileName.Value.Contains(fileNameContains) && file.DirectoryName.Value == directoryPath, cancellationToken);
+        return await context.Files.AnyAsync(file => file.FileName.Value.Contains(fileNameContains), cancellationToken);
     }
 
     /// <inheritdoc />
