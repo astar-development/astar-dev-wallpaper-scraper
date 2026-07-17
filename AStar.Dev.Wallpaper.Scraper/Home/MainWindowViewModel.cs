@@ -157,10 +157,17 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
 
+        if (!confirmed)
+        {
+            AppendStatusLine($"{actionName}: No");
+
+            return;
+        }
+
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            AppendStatusLine($"{actionName}: {(confirmed ? "Yes" : "No")}");
+            AppendStatusLine($"{actionName}: Yes");
             await RunActionAsync(actionName, action, cancellationToken);
         }
         catch (OperationCanceledException)
