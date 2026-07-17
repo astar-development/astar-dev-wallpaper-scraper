@@ -52,6 +52,50 @@ public sealed class GivenScrapeContextReader : IDisposable
     }
 
     [Fact]
+    public async Task when_a_category_is_marked_as_excluded_from_search_then_it_is_not_included_in_the_context()
+    {
+        using (var context = dbContextFactory.CreateDbContext())
+        {
+            var searchConfiguration = new SearchConfigurationEntity { SearchStringPrefix = "https://wallhaven.cc/search?categories=", SearchStringSuffix = "&sorting=random", };
+            context.SearchConfigurations.Add(searchConfiguration);
+            context.SaveChanges();
+
+            context.SearchCategories.Add(new SearchCategoryEntity { Id = "1", SearchConfigurationId = searchConfiguration.Id, Name = "Included", IncludeInSearch = true, });
+            context.SearchCategories.Add(new SearchCategoryEntity { Id = "2", SearchConfigurationId = searchConfiguration.Id, Name = "Excluded", IncludeInSearch = false, });
+            context.SaveChanges();
+        }
+
+        var sut = new ScrapeContextReader(dbContextFactory);
+
+        var result = await sut.ReadAsync(TestContext.Current.CancellationToken);
+
+        result.Categories.ShouldBe([new ScrapeCategory("Included", "https://wallhaven.cc/search?categories=1&sorting=random")]);
+    }
+
+    [Fact]
+    public async Task when_categories_have_famous_and_internet_flags_then_famous_come_first_then_internet_then_the_rest_alphabetically()
+    {
+        using (var context = dbContextFactory.CreateDbContext())
+        {
+            var searchConfiguration = new SearchConfigurationEntity { SearchStringPrefix = "https://wallhaven.cc/search?categories=", SearchStringSuffix = "&sorting=random", };
+            context.SearchConfigurations.Add(searchConfiguration);
+            context.SaveChanges();
+
+            context.SearchCategories.Add(new SearchCategoryEntity { Id = "1", SearchConfigurationId = searchConfiguration.Id, Name = "Zebra", });
+            context.SearchCategories.Add(new SearchCategoryEntity { Id = "2", SearchConfigurationId = searchConfiguration.Id, Name = "Anteater", });
+            context.SearchCategories.Add(new SearchCategoryEntity { Id = "3", SearchConfigurationId = searchConfiguration.Id, Name = "Internet Model", IsInternet = true, });
+            context.SearchCategories.Add(new SearchCategoryEntity { Id = "4", SearchConfigurationId = searchConfiguration.Id, Name = "Famous Person", IsFamous = true, });
+            context.SaveChanges();
+        }
+
+        var sut = new ScrapeContextReader(dbContextFactory);
+
+        var result = await sut.ReadAsync(TestContext.Current.CancellationToken);
+
+        result.Categories.Select(category => category.Name).ShouldBe(["Famous Person", "Internet Model", "Anteater", "Zebra"]);
+    }
+
+    [Fact]
     public async Task when_no_search_configuration_exists_then_reading_throws()
     {
         var sut = new ScrapeContextReader(dbContextFactory);

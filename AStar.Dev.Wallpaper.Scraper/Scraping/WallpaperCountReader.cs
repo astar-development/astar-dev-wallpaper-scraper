@@ -14,6 +14,6 @@ public sealed class WallpaperCountReader : IWallpaperCountReader
         var header = page.GetByText("Wallpapers found for", new PageGetByTextOptions { Exact = false, });
         var headerText = await header.AllTextContentsAsync();
 
-        return headerText[0]?.Split(" ").FirstOrDefault()?.ToIntSafe() ?? 0;
+        return headerText[0]?.Replace(",", string.Empty).Split(" ").FirstOrDefault()?.ToIntSafe() ?? 0;
     }
 }

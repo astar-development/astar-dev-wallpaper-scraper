@@ -28,7 +28,7 @@ public sealed class ScrapeContextReader(IDbContextFactory<AppDbContext> dbContex
 
     private static async Task<IReadOnlyList<ScrapeCategory>> ReadCategoriesAsync(AppDbContext context, SearchConfigurationEntity searchConfiguration, CancellationToken cancellationToken)
     {
-        var categories = await context.SearchCategories.OrderBy(category => category.Name).ToListAsync(cancellationToken);
+        var categories = await context.SearchCategories.Where(category => category.IncludeInSearch).OrderByDescending(category => category.IsFamous).ThenByDescending(category => category.IsInternet).ThenBy(category => category.Name).ToListAsync(cancellationToken);
 
         return [.. categories.Select(category => new ScrapeCategory(category.Name, $"{searchConfiguration.SearchStringPrefix}{category.Id}{searchConfiguration.SearchStringSuffix}"))];
     }
