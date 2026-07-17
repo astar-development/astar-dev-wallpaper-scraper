@@ -14,11 +14,11 @@ public sealed class WallpaperCategoryRegistrar(IDbContextFactory<AppDbContext> d
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var categorisedTags = tags.Where(HasCategoryAndTag).ToList();
+        var registeredNames = await ReadRegisteredNamesAsync(context, cancellationToken);
 
-        foreach (var tag in categorisedTags)
+        foreach (var tag in tags.Where(HasCategoryAndTag).Select(TrimTagName))
         {
-            if (await CategoryExistsAsync(context, tag, cancellationToken))
+            if (!registeredNames.Add(tag.Tag))
                 continue;
 
             context.FileClassificationCategories.Add(CreateCategory(tag));
@@ -29,8 +29,14 @@ public sealed class WallpaperCategoryRegistrar(IDbContextFactory<AppDbContext> d
 
     private static bool HasCategoryAndTag(TagData tag) => !string.IsNullOrWhiteSpace(tag.Category) && !string.IsNullOrWhiteSpace(tag.Tag);
 
-    private static Task<bool> CategoryExistsAsync(AppDbContext context, TagData tag, CancellationToken cancellationToken) =>
-        context.FileClassificationCategories.AnyAsync(category => category.Name == tag.Tag, cancellationToken);
+    private static TagData TrimTagName(TagData tag) => tag with { Tag = tag.Tag.Trim() };
+
+    private static async Task<HashSet<string>> ReadRegisteredNamesAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
+        var names = await context.FileClassificationCategories.Select(category => category.Name).ToListAsync(cancellationToken);
+
+        return new HashSet<string>(names.Select(name => name.Trim()), StringComparer.OrdinalIgnoreCase);
+    }
 
     private static FileClassificationCategoryEntity CreateCategory(TagData tag) => new()
     {

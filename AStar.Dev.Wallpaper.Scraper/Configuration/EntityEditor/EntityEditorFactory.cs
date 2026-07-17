@@ -38,7 +38,10 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 CreateNew: () => new FileClassificationCategoryEntity(),
                 AllowAddRemove: true,
                 ExcludedColumns: [nameof(FileClassificationCategoryEntity.Parent)],
-                ReadOnlyColumns: [nameof(FileClassificationCategoryEntity.Id)]),
+                ReadOnlyColumns: [nameof(FileClassificationCategoryEntity.Id)],
+                CustomActionLabel: "Sync Tags to Ignore",
+                CustomActionAsync: SyncTagsToIgnoreAsync,
+                OrderItemsBy: classification => classification.Name),
             fileSystem,
             exportDirectory);
 
@@ -134,4 +137,47 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ReadOnlyColumns: [nameof(UserConfigurationEntity.Id)]),
             fileSystem,
             exportDirectory);
+
+    private static async Task<string> SyncTagsToIgnoreAsync(AppDbContext context, CancellationToken cancellationToken)
+    {
+        await context.Set<FileClassificationCategoryEntity>().LoadAsync(cancellationToken);
+        await context.Set<TagToIgnoreEntity>().LoadAsync(cancellationToken);
+
+        var classifications = context.Set<FileClassificationCategoryEntity>().Local.Where(classification => !string.IsNullOrWhiteSpace(classification.Name)).ToList();
+        var tagsToIgnore = context.Set<TagToIgnoreEntity>().Local.ToList();
+        var addedCount = 0;
+        var removedCount = 0;
+
+        foreach (var classification in classifications)
+        {
+            var matchingTags = tagsToIgnore.Where(tag => tag.Value.Equals(classification.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (classification.IncludeInSearch)
+            {
+                removedCount += RemoveMatchingTags(context, tagsToIgnore, matchingTags);
+            }
+            else if (matchingTags.Count == 0)
+            {
+                var tag = new TagToIgnoreEntity { Value = classification.Name };
+                context.Add(tag);
+                tagsToIgnore.Add(tag);
+                addedCount++;
+            }
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return $"Synced tags to ignore: {addedCount} added, {removedCount} removed.";
+    }
+
+    private static int RemoveMatchingTags(AppDbContext context, List<TagToIgnoreEntity> tagsToIgnore, List<TagToIgnoreEntity> matchingTags)
+    {
+        foreach (var tag in matchingTags)
+        {
+            context.Remove(tag);
+            tagsToIgnore.Remove(tag);
+        }
+
+        return matchingTags.Count;
+    }
 }

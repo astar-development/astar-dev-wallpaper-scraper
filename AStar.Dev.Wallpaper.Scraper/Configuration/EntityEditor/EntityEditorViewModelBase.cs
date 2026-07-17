@@ -43,6 +43,15 @@ public abstract class EntityEditorViewModelBase : ViewModelBase
     /// <summary>Writes the current <see cref="Items" /> to the table's export JSON file.</summary>
     public abstract ICommand ExportCommand { get; }
 
+    /// <summary>Button text for the editor-specific action, if the editor provides one.</summary>
+    public virtual string? CustomActionLabel => null;
+
+    /// <summary>Runs the editor-specific action, if the editor provides one.</summary>
+    public virtual ICommand? CustomActionCommand => null;
+
+    /// <summary>Whether this editor provides an editor-specific action.</summary>
+    public bool HasCustomAction => CustomActionCommand is not null;
+
     /// <summary>Feedback from the most recent Save, Import or Export command.</summary>
     public string StatusMessage
     {
