@@ -199,7 +199,7 @@ public sealed class GivenMainWindowViewModel
     }
 
     [Fact]
-    public async Task when_the_confirmation_is_declined_then_the_status_records_no_and_the_scrape_still_proceeds()
+    public async Task when_the_confirmation_is_declined_then_the_status_records_no_and_the_scrape_does_not_run()
     {
         var sut = CreateViewModel();
         sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(false); return Task.CompletedTask; });
@@ -207,7 +207,8 @@ public sealed class GivenMainWindowViewModel
         await sut.ScrapeTopCommand.Execute();
 
         sut.StatusText.ShouldContain("Scrape Top Wallpapers: No");
-        await playwrightService.Received().ConfigurePlaywrightAsync(Arg.Any<CancellationToken>());
+        await playwrightService.DidNotReceive().ConfigurePlaywrightAsync(Arg.Any<CancellationToken>());
+        sut.IsBusy.ShouldBeFalse();
     }
 
     [Fact]
