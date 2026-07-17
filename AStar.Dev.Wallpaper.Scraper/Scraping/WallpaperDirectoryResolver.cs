@@ -8,6 +8,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public static class WallpaperDirectoryResolver
 {
     private const int MaxTagSegments = 6;
+    private const int DrivePrefixLength = 5;
 
     /// <summary>
     ///     Builds the directory path for a wallpaper, nesting one path segment per categorised tag: famous and
@@ -29,6 +30,9 @@ public static class WallpaperDirectoryResolver
             .Concat(eligibleTags.Where(tag => !tag.IsFamous && !tag.IsInternet).OrderBy(tag => tag.Tag))
             .Take(MaxTagSegments);
 
-        return orderedTags.Aggregate(baseDirectoryWithCategory, (directory, tag) => directory.CombinePath(tag.Tag));
+        var path = orderedTags.Aggregate(baseDirectoryWithCategory, (directory, tag) => directory.CombinePath(tag.Tag));
+        var drivePrefixLength = Math.Min(DrivePrefixLength, path.Length);
+
+        return path[..drivePrefixLength] + path[drivePrefixLength..].Replace(":", string.Empty).CleanPath();
     }
 }

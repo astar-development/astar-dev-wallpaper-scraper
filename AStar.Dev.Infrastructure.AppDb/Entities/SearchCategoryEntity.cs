@@ -26,4 +26,14 @@ public sealed class SearchCategoryEntity : AuditableEntity
 
     /// <summary>Whether this category should be included in the scraping process.</summary>
     public bool IncludeInSearch { get; set; } = true;
+
+    /// <summary>
+    ///     Whether this category is considered "famous" and should be scraped before non-famous categories.
+    /// </summary>
+    public bool IsFamous { get; set; }
+
+    /// <summary>
+    ///     Whether this category is considered an "internet" model and should be scraped after famous categories but before the rest.
+    /// </summary>
+    public bool IsInternet { get; set; }
 }

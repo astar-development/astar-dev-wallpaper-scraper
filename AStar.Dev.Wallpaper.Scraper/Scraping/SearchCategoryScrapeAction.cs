@@ -22,6 +22,7 @@ public sealed class SearchCategoryScrapeAction(
 {
     private const int ImagesPerPage = 24;
     private const int WallpaperPageTimeoutMilliseconds = 30_000;
+    private const int ShortDelayForImageSkipInMilliseconds = 125;
 
     /// <inheritdoc />
     public string Name => "Scrape Search Categories";
@@ -72,7 +73,7 @@ public sealed class SearchCategoryScrapeAction(
         if (await fileClassificationRepository.IsAlreadyDownloadedAsync(wallpaperId, cancellationToken))
         {
             context.Progress.Report($"Skipping wallpaper page: {href} as we already have it downloaded");
-            await Task.Delay(context.ScrapeContext.ImagePauseInSeconds * 1_000, cancellationToken);
+            await Task.Delay(ShortDelayForImageSkipInMilliseconds, cancellationToken);
 
             return;
         }

@@ -97,6 +97,43 @@ public sealed class GivenWallpaperDirectoryResolver
     }
 
     [Fact]
+    public void when_a_tag_contains_a_colon_then_the_colon_is_removed_from_the_path()
+    {
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Marvel: Avengers", "movies")], _category);
+
+        directory.ShouldBe(Path.Combine("/root/regular", "L", _category.Name, "Marvel Avengers"));
+    }
+
+    [Fact]
+    public void when_the_root_directory_starts_with_a_drive_letter_then_the_drive_colon_is_preserved()
+    {
+        var layout = new DirectoryLayout("C:/w", "/regular", "/famous");
+
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [], _category);
+
+        directory.ShouldBe(Path.Combine("C:/w/regular", "L", _category.Name));
+    }
+
+    [Fact]
+    public void when_a_tag_contains_an_invalid_path_character_then_the_character_is_removed()
+    {
+        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Bad\0Tag", "outdoors")], _category);
+
+        directory.ShouldBe(Path.Combine("/root/regular", "L", _category.Name, "BadTag"));
+    }
+
+    [Fact]
+    public void when_the_directory_layout_is_empty_and_the_category_name_is_short_then_the_short_path_is_still_resolved()
+    {
+        var layout = new DirectoryLayout(string.Empty, string.Empty, string.Empty);
+        var category = new ScrapeCategory("A", "https://example.com/a");
+
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [], category);
+
+        directory.ShouldBe(Path.Combine("A", "A"));
+    }
+
+    [Fact]
     public void when_more_than_six_eligible_tags_are_present_then_only_the_first_six_contribute_path_segments()
     {
         List<TagData> tags =
