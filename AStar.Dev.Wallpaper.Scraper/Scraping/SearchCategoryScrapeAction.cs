@@ -67,6 +67,16 @@ public sealed class SearchCategoryScrapeAction(
 
     private async Task VisitWallpaperAsync(CategoryScrapeContext context, string href, CancellationToken cancellationToken)
     {
+        var wallpaperId = Path.GetFileName(href);
+
+        if (await fileClassificationRepository.IsAlreadyDownloadedAsync(wallpaperId, cancellationToken))
+        {
+            context.Progress.Report($"Skipping wallpaper page: {href} as we already have it downloaded");
+            await Task.Delay(context.ScrapeContext.ImagePauseInSeconds * 1_000, cancellationToken);
+
+            return;
+        }
+
         context.Progress.Report($"Visiting wallpaper page: {href}");
         var response = await context.Page.GotoAsync(href, new PageGotoOptions { Timeout = WallpaperPageTimeoutMilliseconds, });
 
@@ -80,9 +90,7 @@ public sealed class SearchCategoryScrapeAction(
 
         var tags = await tagReader.ReadAsync(context.Page, cancellationToken);
         var curation = TagCurator.Curate(tags, context.ScrapeContext.ModelsToIgnore, context.ScrapeContext.TagsToIgnore);
-
-        var (isAlreadyDownloaded, directoryPath) = await CheckWhetherFileIsAlreadyDownloadedAsync(context, href, curation.Kept, cancellationToken);
-        if (isAlreadyDownloaded) return;
+        var directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, curation.Kept, context.Category);
 
         var imageUrlOption = await imageLocator.LocateAsync(context.Page, cancellationToken);
 
@@ -94,22 +102,6 @@ public sealed class SearchCategoryScrapeAction(
 
                 return Unit.Instance;
             });
-    }
-
-    private async Task<(bool, string)> CheckWhetherFileIsAlreadyDownloadedAsync(CategoryScrapeContext context, string href, IReadOnlyList<TagData> tags, CancellationToken cancellationToken)
-    {
-        var directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, tags, context.Category);
-        var wallpaperId = Path.GetFileName(href);
-
-        if (await fileClassificationRepository.IsAlreadyDownloadedAsync(directoryPath, wallpaperId, cancellationToken))
-        {
-            context.Progress.Report($"Skipping wallpaper page: {href} as we already have it downloaded in directory: {directoryPath}");
-            await Task.Delay(context.ScrapeContext.ImagePauseInSeconds * 1_000, cancellationToken);
-
-            return (true, directoryPath);
-        }
-
-        return (false, directoryPath);
     }
 
     private async Task<Unit> DownloadWallpaperAsync(CategoryScrapeContext context, WallpaperDownloadContext download, CancellationToken cancellationToken)
