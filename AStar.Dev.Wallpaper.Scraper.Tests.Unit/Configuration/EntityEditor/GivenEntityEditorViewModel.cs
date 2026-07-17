@@ -267,6 +267,55 @@ public sealed class GivenEntityEditorViewModel : IDisposable
     }
 
     [Fact]
+    public void when_the_descriptor_has_no_custom_action_then_no_custom_action_is_exposed()
+    {
+        var sut = CreateSut();
+
+        sut.HasCustomAction.ShouldBeFalse();
+        sut.CustomActionCommand.ShouldBeNull();
+        sut.CustomActionLabel.ShouldBeNull();
+    }
+
+    [Fact]
+    public void when_the_descriptor_has_a_custom_action_then_the_label_and_command_are_exposed()
+    {
+        var sut = CreateCustomActionSut((_, _) => Task.FromResult("done"));
+
+        sut.HasCustomAction.ShouldBeTrue();
+        sut.CustomActionCommand.ShouldNotBeNull();
+        sut.CustomActionLabel.ShouldBe("Run Custom Action");
+    }
+
+    [Fact]
+    public async Task when_the_custom_action_runs_then_it_receives_the_editors_context_and_its_result_becomes_the_status_message()
+    {
+        var sut = CreateCustomActionSut(async (context, token) =>
+        {
+            context.Add(new TagToIgnoreEntity { Value = "added-by-action" });
+            await context.SaveChangesAsync(token);
+
+            return "Custom action completed.";
+        });
+
+        await Command(sut.CustomActionCommand!).Execute();
+
+        sut.StatusMessage.ShouldBe("Custom action completed.");
+        await using var context = new AppDbContext(options);
+        var row = await context.Set<TagToIgnoreEntity>().SingleAsync(TestContext.Current.CancellationToken);
+        row.Value.ShouldBe("added-by-action");
+    }
+
+    [Fact]
+    public async Task when_the_custom_action_throws_then_the_status_message_reports_the_failure()
+    {
+        var sut = CreateCustomActionSut((_, _) => throw new InvalidOperationException("The custom action failed."));
+
+        await Command(sut.CustomActionCommand!).Execute();
+
+        sut.StatusMessage.ShouldBe("Run Custom Action failed: The custom action failed.");
+    }
+
+    [Fact]
     public async Task when_the_descriptor_has_an_on_before_add_hook_then_it_runs_for_newly_added_rows_during_save()
     {
         var descriptor = new EntityEditorDescriptor<TagToIgnoreEntity>(
@@ -311,6 +360,21 @@ public sealed class GivenEntityEditorViewModel : IDisposable
             AllowAddRemove: true,
             ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
             ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)]);
+
+        return new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
+    }
+
+    private EntityEditorViewModel<TagToIgnoreEntity> CreateCustomActionSut(Func<AppDbContext, CancellationToken, Task<string>> customActionAsync)
+    {
+        var descriptor = new EntityEditorDescriptor<TagToIgnoreEntity>(
+            DisplayName: "Tag to Ignore",
+            TableName: "TagToIgnore",
+            CreateNew: () => new TagToIgnoreEntity(),
+            AllowAddRemove: true,
+            ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
+            ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)],
+            CustomActionLabel: "Run Custom Action",
+            CustomActionAsync: customActionAsync);
 
         return new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
     }

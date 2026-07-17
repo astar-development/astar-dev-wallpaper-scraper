@@ -17,6 +17,11 @@ namespace AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 ///     Optional hook invoked, for every newly added row, immediately before <c>SaveChangesAsync</c> runs. Used to
 ///     stamp foreign keys that are not exposed as editable columns.
 /// </param>
+/// <param name="CustomActionLabel">Optional button text for the editor-specific <paramref name="CustomActionAsync" /> action.</param>
+/// <param name="CustomActionAsync">
+///     Optional editor-specific action run against the editor's tracked <see cref="AppDbContext" />. The action is
+///     responsible for persisting its own changes and returns the status message to display on success.
+/// </param>
 public sealed record EntityEditorDescriptor<TEntity>(
     string DisplayName,
     string TableName,
@@ -24,5 +29,7 @@ public sealed record EntityEditorDescriptor<TEntity>(
     bool AllowAddRemove,
     IReadOnlyList<string> ExcludedColumns,
     IReadOnlyList<string> ReadOnlyColumns,
-    Func<AppDbContext, TEntity, CancellationToken, Task>? OnBeforeAddAsync = null)
+    Func<AppDbContext, TEntity, CancellationToken, Task>? OnBeforeAddAsync = null,
+    string? CustomActionLabel = null,
+    Func<AppDbContext, CancellationToken, Task<string>>? CustomActionAsync = null)
     where TEntity : class;

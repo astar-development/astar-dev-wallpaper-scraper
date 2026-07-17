@@ -16,6 +16,7 @@
             <Button Content="Save" Command="{Binding SaveCommand}" />
             <Button Content="Import" Command="{Binding ImportCommand}" />
             <Button Content="Export" Command="{Binding ExportCommand}" />
+            <Button Content="{Binding CustomActionLabel}" Command="{Binding CustomActionCommand}" IsVisible="{Binding HasCustomAction}" />
         </StackPanel>
         <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" Text="{Binding StatusMessage}" TextWrapping="Wrap" />
         <DataGrid x:Name="Grid" AutoGenerateColumns="True" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" />

@@ -59,6 +59,7 @@ public sealed class EntityEditorViewModel<TEntity> : EntityEditorViewModelBase, 
         SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync);
         ImportCommand = ReactiveCommand.CreateFromTask(ImportAsync);
         ExportCommand = ReactiveCommand.CreateFromTask(ExportAsync);
+        CustomActionCommand = descriptor.CustomActionAsync is null ? null : ReactiveCommand.CreateFromTask(RunCustomActionAsync);
     }
 
     /// <inheritdoc />
@@ -91,6 +92,12 @@ public sealed class EntityEditorViewModel<TEntity> : EntityEditorViewModelBase, 
 
     /// <inheritdoc />
     public override ICommand ExportCommand { get; }
+
+    /// <inheritdoc />
+    public override string? CustomActionLabel => descriptor.CustomActionLabel;
+
+    /// <inheritdoc />
+    public override ICommand? CustomActionCommand { get; }
 
     /// <inheritdoc />
     public override bool IsColumnVisible(string propertyName) =>
@@ -126,6 +133,10 @@ public sealed class EntityEditorViewModel<TEntity> : EntityEditorViewModelBase, 
     private async Task SaveAsync() =>
         await Try.RunAsync(PersistPendingChangesAsync)
             .TapAsync(savedRowCount => StatusMessage = $"Saved {savedRowCount} row(s).", exception => StatusMessage = $"Save failed: {exception.Message}");
+
+    private async Task RunCustomActionAsync() =>
+        await Try.RunAsync(() => descriptor.CustomActionAsync!(context, CancellationToken.None))
+            .TapAsync(message => StatusMessage = message, exception => StatusMessage = $"{descriptor.CustomActionLabel} failed: {exception.Message}");
 
     private Task ExportAsync()
     {
