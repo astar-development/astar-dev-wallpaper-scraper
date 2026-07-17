@@ -72,6 +72,7 @@ public sealed class SearchCategoryScrapeAction(
         if (await fileClassificationRepository.IsAlreadyDownloadedAsync(wallpaperId, cancellationToken))
         {
             context.Progress.Report($"Skipping wallpaper page: {href} as we already have it downloaded");
+            await Task.Delay(context.ScrapeContext.ImagePauseInSeconds * 1_000, cancellationToken);
 
             return;
         }
