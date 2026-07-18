@@ -7,8 +7,8 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// <inheritdoc cref="ISearchCategoryReader" />
 public sealed class SearchCategoryReader(IDbContextFactory<AppDbContext> dbContextFactory) : ISearchCategoryReader
 {
-    /// <inheritdoc cref="ISearchCategoryReader.GetLastKnownImageCountAsync" />
-    public async Task<Option<int>> GetLastKnownImageCountAsync(string categoryName, CancellationToken cancellationToken)
+    /// <inheritdoc cref="ISearchCategoryReader.GetProgressAsync" />
+    public async Task<Option<SearchCategoryProgress>> GetProgressAsync(string categoryName, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -17,6 +17,6 @@ public sealed class SearchCategoryReader(IDbContextFactory<AppDbContext> dbConte
             .AsAsyncEnumerable()
             .FirstOrNoneAsync(cancellationToken);
 
-        return categoryOption.Map(category => category.LastKnownImageCount);
+        return categoryOption.Map(category => SearchCategoryProgressFactory.Create(category.LastKnownImageCount, category.LastPageVisited));
     }
 }

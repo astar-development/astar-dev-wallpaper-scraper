@@ -48,8 +48,9 @@ public sealed class SearchCategoryScrapeAction(
         var wallpaperCount = await countReader.ReadAsync(context.Page, cancellationToken);
         context.Progress.Report($"Number of wallpapers found for category: {context.Category.Name} is {wallpaperCount}");
 
-        var storedCountOption = await searchCategoryReader.GetLastKnownImageCountAsync(context.Category.Name, cancellationToken);
-        var isFullyVisited = storedCountOption.MapOrDefault(storedCount => storedCount == wallpaperCount, false);
+        var pageCount = (int)Math.Ceiling(wallpaperCount / (double)ImagesPerPage);
+        var progressOption = await searchCategoryReader.GetProgressAsync(context.Category.Name, cancellationToken);
+        var isFullyVisited = progressOption.MapOrDefault(progress => progress.LastKnownImageCount == wallpaperCount && progress.LastPageVisited == pageCount, false);
 
         if (isFullyVisited)
         {
@@ -59,7 +60,6 @@ public sealed class SearchCategoryScrapeAction(
             return;
         }
 
-        var pageCount = (int)Math.Ceiling(wallpaperCount / (double)ImagesPerPage);
         context.Progress.Report($"Category: {context.Category.Name} has {wallpaperCount} wallpapers, need to get all {pageCount} pages for this category");
         await Enumerable.Range(1, pageCount).ForEachAsync(pageNumber => VisitCategoryPageAsync(context, pageNumber, pageCount, wallpaperCount, cancellationToken));
     }
