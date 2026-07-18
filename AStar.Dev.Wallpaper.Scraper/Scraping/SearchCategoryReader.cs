@@ -13,8 +13,11 @@ public sealed class SearchCategoryReader(IDbContextFactory<AppDbContext> dbConte
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var category = await context.SearchCategories.FirstOrDefaultAsync(c => c.Name == categoryName, cancellationToken);
+        var categoryOption = await context.SearchCategories
+            .Where(c => c.Name == categoryName)
+            .AsAsyncEnumerable()
+            .FirstOrNoneAsync(cancellationToken);
 
-        return category is null ? Option.None<int>() : new Option<int>.Some(category.LastKnownImageCount);
+        return categoryOption.Map(category => category.LastKnownImageCount);
     }
 }
