@@ -43,8 +43,8 @@ public sealed class GivenScrapeContextReader : IDisposable
         var result = await sut.ReadAsync(TestContext.Current.CancellationToken);
 
         result.Categories.ShouldBe([
-            new ScrapeCategory("Anteater", "https://wallhaven.cc/search?categories=1&sorting=random"),
-            new ScrapeCategory("Zebra", "https://wallhaven.cc/search?categories=2&sorting=random"),
+            new ScrapeCategory("Anteater", "https://wallhaven.cc/search?categories=1&sorting=random", false, false),
+            new ScrapeCategory("Zebra", "https://wallhaven.cc/search?categories=2&sorting=random", false, false),
         ]);
         result.ModelsToIgnore.ShouldBe(["Some Model"]);
         result.TagsToIgnore.ShouldBe(["Some Tag"]);
@@ -69,7 +69,7 @@ public sealed class GivenScrapeContextReader : IDisposable
 
         var result = await sut.ReadAsync(TestContext.Current.CancellationToken);
 
-        result.Categories.ShouldBe([new ScrapeCategory("Included", "https://wallhaven.cc/search?categories=1&sorting=random")]);
+        result.Categories.ShouldBe([new ScrapeCategory("Included", "https://wallhaven.cc/search?categories=1&sorting=random", false, false)]);
     }
 
     [Fact]

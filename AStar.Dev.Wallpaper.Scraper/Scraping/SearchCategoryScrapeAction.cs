@@ -10,6 +10,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// </summary>
 public sealed class SearchCategoryScrapeAction(
     IScrapeContextReader contextReader,
+    ISearchCategoryWriter searchCategoryWriter,
     IWallpaperCountReader countReader,
     IWallpaperHrefCollector hrefCollector,
     ITagReader tagReader,
@@ -31,9 +32,9 @@ public sealed class SearchCategoryScrapeAction(
     public async Task<Exceptional<Unit>> ExecuteAsync(IPage page, IProgress<string> progress, CancellationToken cancellationToken) =>
         await Try.RunAsync(async () =>
         {
-            var scrapeContext = await contextReader.ReadAsync(cancellationToken);
+            ScrapeContext scrapeContext = await contextReader.ReadAsync(cancellationToken);
 
-            await scrapeContext.Categories.ForEachAsync(category => VisitCategoryAsync(new CategoryScrapeContext(page, progress, scrapeContext, category), cancellationToken));
+            await scrapeContext.Categories.ForEachAsync(category => VisitCategoryAsync(new CategoryScrapeContext(page, progress, scrapeContext, category, scrapeContext.FileClassifications), cancellationToken));
 
             return Unit.Instance;
         }, cancellationToken);
@@ -45,25 +46,34 @@ public sealed class SearchCategoryScrapeAction(
 
         var wallpaperCount = await countReader.ReadAsync(context.Page, cancellationToken);
         context.Progress.Report($"Number of wallpapers found for category: {context.Category.Name} is {wallpaperCount}");
-
         var pageCount = (int)Math.Ceiling(wallpaperCount / (double)ImagesPerPage);
+
         context.Progress.Report($"Category: {context.Category.Name} has {wallpaperCount} wallpapers, need to get all {pageCount} pages for this category");
 
-        await Enumerable.Range(1, pageCount).ForEachAsync(pageNumber => VisitCategoryPageAsync(context, pageNumber, pageCount, cancellationToken));
+        await Enumerable.Range(1, pageCount).ForEachAsync(pageNumber => VisitCategoryPageAsync(context, pageNumber, pageCount, wallpaperCount, cancellationToken));
     }
 
-    private async Task VisitCategoryPageAsync(CategoryScrapeContext context, int pageNumber, int pageCount, CancellationToken cancellationToken)
+    private async Task VisitCategoryPageAsync(CategoryScrapeContext context, int pageNumber, int pageCount, int wallpaperCount, CancellationToken cancellationToken)
     {
+        SearchCategoryDto searchCategory = new(context.Category.Name, context.Category.IsFamous, context.Category.IsInternet, pageCount, wallpaperCount, pageNumber);
+        (await searchCategoryWriter.WriteAsync(searchCategory, cancellationToken)).Match(
+            onSuccess: _ => Unit.Instance,
+            onFailure: error =>
+            {
+                context.Progress.Report($"Failed to persist scrape progress for category: {context.Category.Name}, error: {error}");
+
+                return Unit.Instance;
+            });
+
         var pageUrl = $"{context.Category.SearchUrl}&page={pageNumber}";
         context.Progress.Report($"Visiting category: {context.Category.Name}, page {pageNumber} of {pageCount} with searchString: {pageUrl}");
         await context.Page.GotoAsync(pageUrl);
 
         var hrefs = await hrefCollector.CollectAsync(context.Page, cancellationToken);
-        hrefs.ForEach(href => context.Progress.Report($"Found wallpaper href: {href}"));
 
         await hrefs.ForEachAsync(href => VisitWallpaperAsync(context, href, cancellationToken));
 
-        await Task.Delay(context.ScrapeContext.ImagePauseInSeconds * 1_000, cancellationToken);
+        await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
     }
 
     private async Task VisitWallpaperAsync(CategoryScrapeContext context, string href, CancellationToken cancellationToken)
@@ -84,14 +94,14 @@ public sealed class SearchCategoryScrapeAction(
         if (response is not { Ok: true })
         {
             context.Progress.Report($"Failed to load wallpaper page: {href}, status: {response?.Status}");
-            await Task.Delay(context.ScrapeContext.ImagePauseInSeconds * 1_000, cancellationToken);
+            await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
 
             return;
         }
 
         var tags = await tagReader.ReadAsync(context.Page, cancellationToken);
         var curation = TagCurator.Curate(tags, context.ScrapeContext.ModelsToIgnore, context.ScrapeContext.TagsToIgnore);
-        var directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, curation.Kept, context.Category);
+        var directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, curation.Kept, context.Category, context.FileClassifications);
 
         var imageUrlOption = await imageLocator.LocateAsync(context.Page, cancellationToken);
 
@@ -119,7 +129,7 @@ public sealed class SearchCategoryScrapeAction(
                 var dimensions = dimensionsReader.Read(imageBytes);
 
                 await fileClassificationRepository.RecordAsync(download.Tags, download.ImageUrl, download.DirectoryPath, savedFile.SizeBytes, dimensions, cancellationToken);
-                await Task.Delay(context.ScrapeContext.ImagePauseInSeconds * 1_000, cancellationToken);
+                await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
 
                 return Unit.Instance;
             },

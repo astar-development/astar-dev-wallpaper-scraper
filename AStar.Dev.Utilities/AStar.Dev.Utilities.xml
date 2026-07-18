@@ -358,6 +358,22 @@
             <param name="fileSize">The file size in bytes (represented as a long integer)</param>
             <returns>The human-readable string format</returns>
         </member>
+        <member name="M:AStar.Dev.Utilities.StringExtensions.CaseInsensitiveContains(System.String,System.String)">
+            <summary>
+                The CaseInsensitiveContains method checks if the string contains the specified substring, ignoring case.
+            </summary>
+            <param name="value">The string to search within</param>
+            <param name="contains">The substring to search for</param>
+            <returns>True if the value contains the substring, false otherwise</returns>
+        </member>
+        <member name="M:AStar.Dev.Utilities.StringExtensions.CaseInsensitiveEquals(System.String,System.String)">
+            <summary>
+                The CaseInsensitiveEquals method checks if the string equals the specified substring, ignoring case.
+            </summary>
+            <param name="value">The string to compare</param>
+            <param name="equals">The string to compare with</param>
+            <returns>True if the value equals the specified string, false otherwise</returns>
+        </member>
         <member name="M:AStar.Dev.Utilities.StringExtensions.ToTitleCase(System.String,System.String)">
             <summary>
               The TitleCased method converts a string to title case using the specified culture.

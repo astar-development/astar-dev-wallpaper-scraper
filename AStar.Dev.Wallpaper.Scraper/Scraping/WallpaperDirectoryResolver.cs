@@ -7,32 +7,36 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// </summary>
 public static class WallpaperDirectoryResolver
 {
-    private const int MaxTagSegments = 6;
-    private const int DrivePrefixLength = 5;
+    private const int MaxTagSegments = 12;
+    private const int DrivePrefixLength = 3;
 
     /// <summary>
     ///     Builds the directory path for a wallpaper, nesting one path segment per categorised tag: famous and
     ///     internet-model tags first, then the remaining tags in alphabetical order. Tags without a category, or
-    ///     matching the search category's name, contribute no path segment. At most six tag segments are used.
+    ///     matching the search category's name, contribute no path segment. At most twelve tag segments are used.
     /// </summary>
-    /// <param name="directories">The directory naming conventions to use.</param>
+    /// <param name="directoryLayout">The directory naming conventions to use.</param>
     /// <param name="tags">The wallpaper's curated tags.</param>
     /// <param name="category">The search category the wallpaper was found under.</param>
-    public static string Resolve(DirectoryLayout directories, IReadOnlyList<TagData> tags, ScrapeCategory category)
+    public static string Resolve(DirectoryLayout directoryLayout, IReadOnlyList<TagData> tags, ScrapeCategory category, List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> fileClassifications)
     {
-        var baseDirectory = directories.RootDirectory + (tags.Any(tag => tag.IsFamous) ? directories.BaseDirectoryFamous : directories.BaseDirectory);
+        var baseDirectory = directoryLayout.RootDirectory + (tags.Any(tag => tag.IsFamous) ? directoryLayout.BaseDirectoryFamous : directoryLayout.BaseDirectory);
         var baseDirectoryWithCategory = baseDirectory.CombinePath(category.Name[0].ToString()).CombinePath(category.Name);
 
         var eligibleTags = tags.Where(tag => tag.Category is not null && !tag.Tag.Equals(category.Name, StringComparison.OrdinalIgnoreCase)).ToList();
-
-        var orderedTags = eligibleTags
-            .Where(tag => tag.IsFamous || tag.IsInternet)
-            .Concat(eligibleTags.Where(tag => !tag.IsFamous && !tag.IsInternet).OrderBy(tag => tag.Tag))
+        var orderedFileClassifications = GetOrderedFileClassifications(fileClassifications, eligibleTags)
             .Take(MaxTagSegments);
 
-        var path = orderedTags.Aggregate(baseDirectoryWithCategory, (directory, tag) => directory.CombinePath(tag.Tag));
+        var path = orderedFileClassifications.Aggregate(baseDirectoryWithCategory, (directory, tag) => directory.CombinePath(tag.Name));
         var drivePrefixLength = Math.Min(DrivePrefixLength, path.Length);
 
         return path[..drivePrefixLength] + path[drivePrefixLength..].Replace(":", string.Empty).CleanPath();
     }
+
+    private static List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> GetOrderedFileClassifications(List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> fileClassifications, List<TagData> eligibleTags)
+        => [.. fileClassifications
+                .Where(classification => classification.IncludeInSearch && eligibleTags.Any(tag => tag.Tag.CaseInsensitiveEquals(classification.Name)))
+                .OrderByDescending(t => t.IsFamous)
+                .ThenByDescending(t => t.IsInternet)
+                .ThenBy(t => t.Level)];
 }
