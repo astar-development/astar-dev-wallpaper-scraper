@@ -24,7 +24,7 @@ public sealed class GivenSearchCategoryScrapeAction
     public GivenSearchCategoryScrapeAction() =>
         categoryWriter.WriteAsync(Arg.Any<SearchCategoryDto>(), Arg.Any<CancellationToken>()).Returns(Result.Success<FunctionalParadigm.Unit, string>(FunctionalParadigm.Unit.Instance));
 
-    private static readonly ScrapeContext _singleCategoryContext = new(
+    private static readonly ScrapeContext singleCategoryContext = new(
         [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false)],
         [],
         [],
@@ -38,7 +38,7 @@ public sealed class GivenSearchCategoryScrapeAction
             UpdatedAt = DateTime.UtcNow
         });
 
-    private static readonly ScrapeContext _twoCategoryContext = new(
+    private static readonly ScrapeContext twoCategoryContext = new(
         [
             new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false), 
             new ScrapeCategory("Space", "https://wallhaven.cc/search?categories=2", false, false),
@@ -55,7 +55,7 @@ public sealed class GivenSearchCategoryScrapeAction
             UpdatedAt = DateTime.UtcNow
         });
 
-    private static readonly ScrapeContext _ignoredTagContext = new(
+    private static readonly ScrapeContext ignoredTagContext = new(
         [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false)],
         [],
         ["Ignored"],
@@ -72,7 +72,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_a_category_has_more_wallpapers_than_fit_on_one_page_then_progress_reports_the_page_count_and_a_success_result_is_returned()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(50);
         var sut = CreateSut();
 
@@ -86,7 +86,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_persisting_scrape_progress_fails_then_progress_reports_the_failure_and_the_page_is_still_visited()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
         categoryWriter.WriteAsync(Arg.Any<SearchCategoryDto>(), Arg.Any<CancellationToken>()).Returns(Result.Failure<FunctionalParadigm.Unit, string>("No search category named 'Nature' exists to update."));
         var sut = CreateSut();
@@ -101,7 +101,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_multiple_categories_are_configured_then_each_category_is_visited_on_its_own_search_url()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_twoCategoryContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(twoCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)[]);
         var sut = CreateSut();
@@ -119,7 +119,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_a_category_spans_multiple_pages_then_each_page_is_visited_and_hrefs_are_collected_per_page()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(30);
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)[]);
         var sut = CreateSut();
@@ -146,7 +146,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_page_fails_to_load_then_progress_reports_the_failure_and_no_tags_are_read()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
         var failedResponse = Substitute.For<IResponse>();
@@ -165,7 +165,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_has_no_image_url_then_progress_reports_the_failure_and_nothing_is_downloaded()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
         var okResponse = Substitute.For<IResponse>();
@@ -215,7 +215,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_a_wallpaper_has_a_tag_on_the_ignore_list_then_it_is_saved_under_the_curated_directory_path()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_ignoredTagContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(ignoredTagContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
         var okResponse = Substitute.For<IResponse>();
@@ -274,7 +274,7 @@ public sealed class GivenSearchCategoryScrapeAction
 
     private void ConfigureSuccessfulWallpaperVisit()
     {
-        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
         var okResponse = Substitute.For<IResponse>();

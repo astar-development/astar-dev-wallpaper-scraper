@@ -25,7 +25,7 @@ public sealed class GivenWallpaperFileStore
 
         var saved = await sut.SaveAsync("/wallpapers/nature", "pic.jpg", imageBytes, TestContext.Current.CancellationToken);
 
-        saved.FullPath.ShouldBe(fileSystem.Path.Combine("/wallpapers/nature", "pic.jpg"));
+        saved.FullPath.ShouldBe("/wallpapers/nature/pic.jpg");
         fileSystem.File.ReadAllBytes(saved.FullPath).ShouldBe(imageBytes);
     }
 
