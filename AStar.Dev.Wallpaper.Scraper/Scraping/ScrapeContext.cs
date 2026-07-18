@@ -11,4 +11,4 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// <param name="TagsToIgnore">Tag names that should be dropped from a wallpaper's tag list.</param>
 /// <param name="Directories">The directory naming conventions to use when saving wallpapers.</param>
 /// <param name="FileClassifications">The file classification categories to use when saving wallpapers.</param>
-public sealed record ScrapeContext(IReadOnlyList<ScrapeCategory> Categories, IReadOnlyList<string> ModelsToIgnore, IReadOnlyList<string> TagsToIgnore, DirectoryLayout Directories, List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> FileClassifications, SearchConfigurationEntity SearchConfiguration);
+public sealed record ScrapeContext(IReadOnlyList<ScrapeCategory> Categories, IReadOnlyList<string> ModelsToIgnore, IReadOnlyList<string> TagsToIgnore, DirectoryLayout Directories, IReadOnlyList<FileClassificationCategoryEntity> FileClassifications, SearchConfigurationEntity SearchConfiguration);

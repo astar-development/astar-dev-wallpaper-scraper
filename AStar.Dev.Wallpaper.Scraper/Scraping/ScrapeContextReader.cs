@@ -19,7 +19,7 @@ public sealed class ScrapeContextReader(IDbContextFactory<AppDbContext> dbContex
         var modelsToIgnore = await ReadModelsToIgnoreAsync(context, cancellationToken);
         var tagsToIgnore = await ReadTagsToIgnoreAsync(context, cancellationToken);
         var directoryLayout = await ReadDirectoryLayoutAsync(context, cancellationToken);
-        var fileClassifications = await context.FileClassificationCategories.ToListAsync(cancellationToken);
+        var fileClassifications = (IReadOnlyList<FileClassificationCategoryEntity>)await context.FileClassificationCategories.ToListAsync(cancellationToken);
 
         return new ScrapeContext(categories, modelsToIgnore, tagsToIgnore, directoryLayout, fileClassifications, searchConfiguration);
     }
