@@ -273,12 +273,12 @@ public sealed class GivenSearchCategoryScrapeAction
     }
 
     [Fact]
-    public async Task when_the_wallpaper_count_matches_the_stored_count_then_the_category_is_skipped_and_progress_is_reported()
+    public async Task when_the_wallpaper_count_and_last_page_visited_both_match_the_stored_progress_then_the_category_is_skipped_and_progress_is_reported()
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(42);
         var searchCategoryReader = Substitute.For<ISearchCategoryReader>();
-        searchCategoryReader.GetLastKnownImageCountAsync("Nature", Arg.Any<CancellationToken>()).Returns(42);
+        searchCategoryReader.GetProgressAsync("Nature", Arg.Any<CancellationToken>()).Returns(new SearchCategoryProgress(42, 2));
         var sut = CreateSut(searchCategoryReader);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
@@ -290,12 +290,30 @@ public sealed class GivenSearchCategoryScrapeAction
     }
 
     [Fact]
+    public async Task when_the_wallpaper_count_matches_but_the_last_page_visited_is_behind_the_calculated_page_count_then_the_category_is_scraped_normally()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(42);
+        var searchCategoryReader = Substitute.For<ISearchCategoryReader>();
+        searchCategoryReader.GetProgressAsync("Nature", Arg.Any<CancellationToken>()).Returns(new SearchCategoryProgress(42, 1));
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns([]);
+        var sut = CreateSut(searchCategoryReader);
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=1&page=1");
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=1&page=2");
+        await hrefCollector.Received(2).CollectAsync(page, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task when_the_wallpaper_count_differs_from_the_stored_count_then_the_category_is_scraped_normally()
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(24);
         var searchCategoryReader = Substitute.For<ISearchCategoryReader>();
-        searchCategoryReader.GetLastKnownImageCountAsync("Nature", Arg.Any<CancellationToken>()).Returns(20);
+        searchCategoryReader.GetProgressAsync("Nature", Arg.Any<CancellationToken>()).Returns(new SearchCategoryProgress(20, 1));
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns([]);
         var sut = CreateSut(searchCategoryReader);
 
@@ -307,12 +325,12 @@ public sealed class GivenSearchCategoryScrapeAction
     }
 
     [Fact]
-    public async Task when_reading_the_stored_image_count_returns_none_then_the_category_is_scraped_normally()
+    public async Task when_reading_the_stored_progress_returns_none_then_the_category_is_scraped_normally()
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(24);
         var searchCategoryReader = Substitute.For<ISearchCategoryReader>();
-        searchCategoryReader.GetLastKnownImageCountAsync("Nature", Arg.Any<CancellationToken>()).Returns(Option<int>.None.Instance);
+        searchCategoryReader.GetProgressAsync("Nature", Arg.Any<CancellationToken>()).Returns(Option<SearchCategoryProgress>.None.Instance);
         hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns([]);
         var sut = CreateSut(searchCategoryReader);
 
@@ -340,7 +358,7 @@ public sealed class GivenSearchCategoryScrapeAction
         if (searchCategoryReader == null)
         {
             searchCategoryReader = Substitute.For<ISearchCategoryReader>();
-            searchCategoryReader.GetLastKnownImageCountAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(Option.None<int>());
+            searchCategoryReader.GetProgressAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(Option.None<SearchCategoryProgress>());
         }
 
         return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository);

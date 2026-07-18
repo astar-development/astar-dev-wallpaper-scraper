@@ -1,9 +1,14 @@
 ---
-paths:
-    - "**/*Test*.cs"
+description: This file describes the C# testing guidelines for the project.
+applyTo: "**/*Test*.cs"
 ---
 
 # C# Testing Guidelines
+
+## Setup
+
+- Avoid mocks whenever possible. Use real instances of classes instead of mocks to ensure that tests are more reliable and reflect actual behavior. Swap out dependencies with mocks only when necessary, such as when testing error handling or when IO is involved. For example, if a class depends on a file system, use a mock for the file system to avoid actual file IO during tests.
+- When instantiating the system under test (SUT), use a helper method to create the SUT with all its dependencies. This keeps the test code clean and focused on the behavior being tested. For example, create a `CreateSut` method that sets up the SUT with either real instances or mocks as needed.
 
 ## Naming
 
