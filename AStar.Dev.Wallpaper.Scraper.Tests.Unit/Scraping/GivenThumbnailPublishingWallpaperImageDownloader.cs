@@ -16,9 +16,7 @@ public sealed class GivenThumbnailPublishingWallpaperImageDownloader
     {
         byte[] imageBytes = [1, 2, 3];
         byte[] thumbnailBytes = [4, 5, 6];
-        inner.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken).Returns(Exceptional.Success(imageBytes));
-        thumbnailGenerator.Generate(imageBytes).Returns(thumbnailBytes);
-        var sut = new ThumbnailPublishingWallpaperImageDownloader(inner, thumbnailGenerator, thumbnailPublisher);
+        var sut = CreateSut(downloadResult: Exceptional.Success(imageBytes), thumbnailBytes: thumbnailBytes);
 
         var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
 
@@ -31,8 +29,7 @@ public sealed class GivenThumbnailPublishingWallpaperImageDownloader
     public async Task when_the_inner_downloader_fails_then_no_thumbnail_is_generated_and_the_failure_is_returned()
     {
         var exception = new InvalidOperationException("Navigating to 'https://wallhaven.cc/images/pic.jpg' did not produce a response.");
-        inner.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken).Returns(Exceptional.Failure<byte[]>(exception));
-        var sut = new ThumbnailPublishingWallpaperImageDownloader(inner, thumbnailGenerator, thumbnailPublisher);
+        var sut = CreateSut(downloadResult: Exceptional.Failure<byte[]>(exception));
 
         var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
 
@@ -40,5 +37,17 @@ public sealed class GivenThumbnailPublishingWallpaperImageDownloader
         result.ShouldBe(new Failure<byte[]>(exception));
         thumbnailGenerator.DidNotReceive().Generate(Arg.Any<byte[]>());
         thumbnailPublisher.DidNotReceive().Publish(Arg.Any<byte[]>());
+    }
+
+    private ThumbnailPublishingWallpaperImageDownloader CreateSut(Exceptional<byte[]> downloadResult, byte[]? thumbnailBytes = null)
+    {
+        inner.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken).Returns(downloadResult);
+
+        if (thumbnailBytes is not null && downloadResult is Success<byte[]> success)
+        {
+            thumbnailGenerator.Generate(success.Value).Returns(thumbnailBytes);
+        }
+
+        return new ThumbnailPublishingWallpaperImageDownloader(inner, thumbnailGenerator, thumbnailPublisher);
     }
 }

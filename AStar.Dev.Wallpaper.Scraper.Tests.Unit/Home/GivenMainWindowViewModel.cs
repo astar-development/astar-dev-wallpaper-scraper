@@ -9,6 +9,7 @@ using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
+using NSubstitute.Core;
 using ReactiveUI;
 using RxUnit = System.Reactive.Unit;
 
@@ -25,20 +26,14 @@ public sealed class GivenMainWindowViewModel
         RxApp.MainThreadScheduler = ImmediateScheduler.Instance;
     }
 
-    public GivenMainWindowViewModel()
-    {
+    public GivenMainWindowViewModel() =>
         SynchronizationContext.SetSynchronizationContext(new ImmediateSynchronizationContext());
-        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(Substitute.For<IPage>())));
-        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance)));
-    }
 
     [Fact]
     public async Task when_search_categories_scrape_completes_then_the_injected_action_executes_against_the_configured_page()
     {
         var page = Substitute.For<IPage>();
-        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(page)));
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+        var sut = CreateViewModel(configureResult: Exceptional.Success(page));
 
         await sut.ScrapeSearchCategoriesCommand.Execute();
 
@@ -48,15 +43,12 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_the_search_categories_action_reports_progress_then_the_status_text_includes_the_message()
     {
-        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
-            .Returns(callInfo =>
-            {
-                callInfo.ArgAt<IProgress<string>>(1).Report("Visiting category: Nature");
+        var sut = CreateViewModel(scrapeActionBehavior: callInfo =>
+        {
+            callInfo.ArgAt<IProgress<string>>(1).Report("Visiting category: Nature");
 
-                return Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance));
-            });
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+            return Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance));
+        });
 
         await sut.ScrapeSearchCategoriesCommand.Execute();
 
@@ -66,10 +58,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_the_search_categories_action_fails_then_the_status_reports_the_failure_message()
     {
-        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<Exceptional<FunctionalParadigm.Unit>>(Exceptional.Failure<FunctionalParadigm.Unit>(new InvalidOperationException("boom"))));
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+        var sut = CreateViewModel(scrapeActionResult: Exceptional.Failure<FunctionalParadigm.Unit>(new InvalidOperationException("boom")));
 
         await sut.ScrapeSearchCategoriesCommand.Execute();
 
@@ -79,20 +68,17 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_the_status_text_exceeds_one_thousand_lines_then_the_oldest_lines_are_dropped()
     {
-        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
-            .Returns(callInfo =>
+        var sut = CreateViewModel(scrapeActionBehavior: callInfo =>
+        {
+            var progress = callInfo.ArgAt<IProgress<string>>(1);
+
+            for (var i = 0; i < 1005; i++)
             {
-                var progress = callInfo.ArgAt<IProgress<string>>(1);
+                progress.Report($"Message {i}");
+            }
 
-                for (var i = 0; i < 1005; i++)
-                {
-                    progress.Report($"Message {i}");
-                }
-
-                return Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance));
-            });
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+            return Task.FromResult(Exceptional.Success(FunctionalParadigm.Unit.Instance));
+        });
 
         await sut.ScrapeSearchCategoriesCommand.Execute();
 
@@ -114,7 +100,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_a_scrape_is_awaiting_confirmation_then_cancel_command_can_execute()
     {
-        var sut = CreateViewModel();
+        var sut = CreateViewModel(confirmScrape: null);
         var (confirmationGate, handlerEntered) = RegisterGatedConfirmHandler(sut);
 
         var execution = sut.ScrapeTopCommand.Execute().ToTask();
@@ -129,7 +115,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_cancel_command_is_invoked_while_awaiting_confirmation_then_the_scrape_is_cancelled_before_playwright_is_configured()
     {
-        var sut = CreateViewModel();
+        var sut = CreateViewModel(confirmScrape: null);
         var (confirmationGate, handlerEntered) = RegisterGatedConfirmHandler(sut);
 
         var execution = sut.ScrapeTopCommand.Execute().ToTask();
@@ -146,7 +132,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_cancel_command_is_invoked_then_the_scrape_command_is_no_longer_executing()
     {
-        var sut = CreateViewModel();
+        var sut = CreateViewModel(confirmScrape: null);
         var (confirmationGate, handlerEntered) = RegisterGatedConfirmHandler(sut);
 
         var execution = sut.ScrapeTopCommand.Execute().ToTask();
@@ -163,7 +149,6 @@ public sealed class GivenMainWindowViewModel
     public async Task when_a_scrape_completes_without_cancellation_then_playwright_is_configured_and_the_status_reports_success()
     {
         var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
 
         await sut.ScrapeTopCommand.Execute();
 
@@ -174,7 +159,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_disposed_while_a_scrape_is_awaiting_confirmation_then_the_scrape_is_cancelled()
     {
-        var sut = CreateViewModel();
+        var sut = CreateViewModel(confirmScrape: null);
         var (confirmationGate, handlerEntered) = RegisterGatedConfirmHandler(sut);
 
         var execution = sut.ScrapeTopCommand.Execute().ToTask();
@@ -191,7 +176,6 @@ public sealed class GivenMainWindowViewModel
     public async Task when_the_confirmation_is_accepted_then_the_status_records_yes()
     {
         var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
 
         await sut.ScrapeTopCommand.Execute();
 
@@ -201,8 +185,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_the_confirmation_is_declined_then_the_status_records_no_and_the_scrape_does_not_run()
     {
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(false); return Task.CompletedTask; });
+        var sut = CreateViewModel(confirmScrape: false);
 
         await sut.ScrapeTopCommand.Execute();
 
@@ -214,9 +197,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_playwright_configuration_fails_then_the_status_reports_the_configuration_error_and_the_action_does_not_execute()
     {
-        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Failure<IPage>(new InvalidOperationException("kaboom"))));
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+        var sut = CreateViewModel(configureResult: Exceptional.Failure<IPage>(new InvalidOperationException("kaboom")));
 
         await sut.ScrapeSearchCategoriesCommand.Execute();
 
@@ -229,9 +210,7 @@ public sealed class GivenMainWindowViewModel
     public async Task when_a_scrape_command_has_no_action_then_the_configured_page_navigates_to_the_login_page()
     {
         var page = Substitute.For<IPage>();
-        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(page)));
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+        var sut = CreateViewModel(configureResult: Exceptional.Success(page));
 
         await sut.ScrapeTopCommand.Execute();
 
@@ -242,9 +221,7 @@ public sealed class GivenMainWindowViewModel
     public async Task when_a_scrape_command_has_an_action_then_the_configured_page_navigates_to_the_root_page()
     {
         var page = Substitute.For<IPage>();
-        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult(Exceptional.Success(page)));
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+        var sut = CreateViewModel(configureResult: Exceptional.Success(page));
 
         await sut.ScrapeSearchCategoriesCommand.Execute();
 
@@ -256,14 +233,12 @@ public sealed class GivenMainWindowViewModel
     {
         var configureGate = new TaskCompletionSource<Exceptional<IPage>>();
         var configureEntered = new TaskCompletionSource();
-        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+        var sut = CreateViewModel(configureBehavior: _ =>
         {
             configureEntered.TrySetResult();
 
             return configureGate.Task;
         });
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
 
         var execution = sut.ScrapeSearchCategoriesCommand.Execute().ToTask();
         await configureEntered.Task;
@@ -279,9 +254,7 @@ public sealed class GivenMainWindowViewModel
     [Fact]
     public async Task when_the_scrape_body_throws_unexpectedly_then_the_status_reports_the_error_and_the_command_is_no_longer_busy()
     {
-        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>()).Returns<Task<Exceptional<IPage>>>(_ => throw new InvalidOperationException("kaboom"));
-        var sut = CreateViewModel();
-        sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(true); return Task.CompletedTask; });
+        var sut = CreateViewModel(configureBehavior: _ => throw new InvalidOperationException("kaboom"));
 
         await Should.ThrowAsync<InvalidOperationException>(sut.ScrapeTopCommand.Execute().ToTask());
 
@@ -385,11 +358,29 @@ public sealed class GivenMainWindowViewModel
         handled.ShouldBe(editor);
     }
 
-    private MainWindowViewModel CreateViewModel()
+    private MainWindowViewModel CreateViewModel(
+        Exceptional<IPage>? configureResult = null,
+        Func<CallInfo, Task<Exceptional<IPage>>>? configureBehavior = null,
+        Exceptional<FunctionalParadigm.Unit>? scrapeActionResult = null,
+        Func<CallInfo, Task<Exceptional<FunctionalParadigm.Unit>>>? scrapeActionBehavior = null,
+        bool? confirmScrape = true)
     {
-        var scrapeConfiguration = Options.Create(new ScrapeConfiguration { ApplicationName = "Test App" });
+        playwrightService.ConfigurePlaywrightAsync(Arg.Any<CancellationToken>())
+            .Returns(configureBehavior ?? (_ => Task.FromResult(configureResult ?? Exceptional.Success(Substitute.For<IPage>()))));
 
-        return new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction, entityEditorFactory);
+        searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
+            .Returns(scrapeActionBehavior ?? (_ => Task.FromResult(scrapeActionResult ?? Exceptional.Success(FunctionalParadigm.Unit.Instance))));
+
+        var scrapeConfiguration = Options.Create(new ScrapeConfiguration { ApplicationName = "Test App" });
+        var sut = new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction, entityEditorFactory);
+
+        if (confirmScrape.HasValue)
+        {
+            var confirmed = confirmScrape.Value;
+            sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(confirmed); return Task.CompletedTask; });
+        }
+
+        return sut;
     }
 
     private static async Task<EntityEditorViewModelBase?> ExecuteAndCaptureOpenedEditor(MainWindowViewModel sut, ReactiveCommand<RxUnit, RxUnit> command)

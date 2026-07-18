@@ -12,8 +12,7 @@ public class GivenServiceCollectionExtensions
     [Fact]
     public void when_application_services_are_added_then_the_playwright_service_is_registered_as_a_singleton()
     {
-        IConfiguration configuration = new ConfigurationBuilder().Build();
-        var services = new ServiceCollection().AddApplicationServices(configuration);
+        var services = CreateServices();
 
         var descriptor = services.Single(service => service.ServiceType == typeof(IPlaywrightService));
         descriptor.Lifetime.ShouldBe(ServiceLifetime.Singleton);
@@ -23,8 +22,7 @@ public class GivenServiceCollectionExtensions
     [Fact]
     public void when_application_services_are_added_then_the_app_db_context_factory_is_registered()
     {
-        IConfiguration configuration = new ConfigurationBuilder().Build();
-        var services = new ServiceCollection().AddApplicationServices(configuration);
+        var services = CreateServices();
 
         services.ShouldContain(service => service.ServiceType == typeof(IDbContextFactory<AppDbContext>));
     }
@@ -32,12 +30,17 @@ public class GivenServiceCollectionExtensions
     [Fact]
     public void when_application_services_are_added_then_the_search_category_scrape_action_is_registered_as_the_scrape_action()
     {
-        IConfiguration configuration = new ConfigurationBuilder().Build();
-        var services = new ServiceCollection().AddApplicationServices(configuration);
+        var services = CreateServices();
 
         var descriptor = services.Single(service => service.ServiceType == typeof(IScrapeAction));
         descriptor.Lifetime.ShouldBe(ServiceLifetime.Singleton);
         descriptor.ImplementationType.ShouldBe(typeof(SearchCategoryScrapeAction));
     }
 
+    private static IServiceCollection CreateServices()
+    {
+        IConfiguration configuration = new ConfigurationBuilder().Build();
+
+        return new ServiceCollection().AddApplicationServices(configuration);
+    }
 }

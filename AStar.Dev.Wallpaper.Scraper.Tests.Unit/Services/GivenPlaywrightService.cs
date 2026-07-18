@@ -170,7 +170,7 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
     public async Task when_a_failed_launch_is_followed_by_a_corrected_configuration_then_a_page_is_returned()
     {
         var configuration = new ScrapeConfiguration { UserDataDirectory = "\0invalid-user-data-directory", SearchConfiguration = new SearchConfiguration { BaseUrl = new Uri("https://localhost"), UseHeadless = true } };
-        var sut = new PlaywrightService(NullLoggerFactory.Instance.CreateLogger<PlaywrightService>(), Options.Create(configuration), fileSystem);
+        var sut = CreatePlaywrightService(configuration);
 
         var firstResult = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
         configuration.UserDataDirectory = userDataDirectory;
@@ -226,12 +226,14 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
         }
     }
 
-    private IPlaywrightService CreatePlaywrightService(bool useHeadless = true, string? userDataDirectoryOverride = null, Uri? baseUrlOverride = null)
+    private IPlaywrightService CreatePlaywrightService(bool useHeadless = true, string? userDataDirectoryOverride = null, Uri? baseUrlOverride = null) =>
+        CreatePlaywrightService(new ScrapeConfiguration { UserDataDirectory = userDataDirectoryOverride ?? userDataDirectory, SearchConfiguration = new SearchConfiguration { BaseUrl = baseUrlOverride ?? new Uri("https://localhost"), UseHeadless = useHeadless } });
+
+    private IPlaywrightService CreatePlaywrightService(ScrapeConfiguration configuration)
     {
         var logger = NullLoggerFactory.Instance.CreateLogger<PlaywrightService>();
-        var scrapeConfiguration = Options.Create(new ScrapeConfiguration { UserDataDirectory = userDataDirectoryOverride ?? userDataDirectory, SearchConfiguration = new SearchConfiguration { BaseUrl = baseUrlOverride ?? new Uri("https://localhost"), UseHeadless = useHeadless } });
 
-        return new PlaywrightService(logger, scrapeConfiguration, fileSystem);
+        return new PlaywrightService(logger, Options.Create(configuration), fileSystem);
     }
 
     private static void SetPrivateField(PlaywrightService target, string fieldName, object value) =>
