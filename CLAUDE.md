@@ -13,9 +13,10 @@ Full test suite runs automatically at end of turn - only run new / affected test
 - Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests. 
 - Async methods MUST end in `Async` - exceptions: EventHandlers and tests. Neither have the suffix
 - return statements MUST be proceeded by a blank line - except when they immediately follow a control statement (`if` etc.)
-- ALL new code must use TDD to develop. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc
+- ALL new code must use TDD to develop. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc. If no GH Issue exists, create one - ask user for details if necessary
 - On the rare occasion that a class is not testable/offers little to no protection: mark with `[ExcludeFromCodeCoverage]` from `System.Diagnostics.CodeAnalysis`
 - All new development work must have a GitHub Issue raised before work begins. If one doesn't exist, create it with full context
+- When development complete. Stop, request human review and offer to raise PR
 
 ## Build & Test
 
