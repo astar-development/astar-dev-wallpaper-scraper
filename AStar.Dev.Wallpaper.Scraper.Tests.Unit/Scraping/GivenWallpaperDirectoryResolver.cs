@@ -4,15 +4,15 @@ namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
 public sealed class GivenWallpaperDirectoryResolver
 {
-    private static readonly DirectoryLayout _layout = new("/root", "/regular", "/famous");
-    private static readonly ScrapeCategory _category = new("Landscapes", "https://example.com/landscapes", false, false);
+    private static readonly DirectoryLayout layout = new("/root", "/regular", "/famous");
+    private static readonly ScrapeCategory category = new("Landscapes", "https://example.com/landscapes", false, false);
 
     [Fact]
     public void when_no_tags_are_famous_then_the_regular_base_directory_is_used()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Nature", "outdoors")], _category, [new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Nature", IncludeInSearch = true, Level = 1 }]);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [new TagData("Nature", "outdoors")], category, [new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Nature", IncludeInSearch = true, Level = 1 }]);
 
-        directory.ShouldBe(Path.Combine("/root/regular", "L", _category.Name, "Nature"));
+        directory.ShouldBe("/root/regular/L/Landscapes/Nature");
     }
 
     [Fact]
@@ -20,41 +20,41 @@ public sealed class GivenWallpaperDirectoryResolver
     {
         List<TagData> tags = [new("Emma Stone", "people > actress")];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category, [new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Emma Stone", IncludeInSearch = true, Level = 1 }]);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, tags, category, [new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Emma Stone", IncludeInSearch = true, Level = 1 }]);
 
-        directory.ShouldStartWith(Path.Combine("/root/famous/L", _category.Name));
+        directory.ShouldStartWith("/root/famous/L/Landscapes");
     }
 
     [Fact]
     public void when_there_are_no_tags_then_only_the_root_base_and_category_directories_are_returned()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [], _category, []);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [], category, []);
 
-        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
+        directory.ShouldBe("/root/regular/L/Landscapes");
     }
 
     [Fact]
     public void when_a_tag_has_no_category_then_it_contributes_no_path_segment()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Untagged", null)], _category, []);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [new TagData("Untagged", null)], category, []);
 
-        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
+        directory.ShouldBe("/root/regular/L/Landscapes");
     }
 
     [Fact]
     public void when_a_tag_matches_the_category_name_then_it_contributes_no_path_segment()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData(_category.Name, "outdoors")], _category, []);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [new TagData(category.Name, "outdoors")], category, []);
 
-        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
+        directory.ShouldBe("/root/regular/L/Landscapes");
     }
 
     [Fact]
     public void when_a_tag_matches_the_category_name_with_different_casing_then_it_contributes_no_path_segment()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData(_category.Name.ToUpperInvariant(), "outdoors")], _category, []);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [new TagData(category.Name.ToUpperInvariant(), "outdoors")], category, []);
 
-        directory.ShouldBe(Path.Combine("/root/regular/L", _category.Name));
+        directory.ShouldBe("/root/regular/L/Landscapes");
     }
 
     [Fact]
@@ -65,10 +65,9 @@ public sealed class GivenWallpaperDirectoryResolver
         TagData internetModel = new("SomeModel", "people > model");
         List<TagData> tags = [ordinary, famous, internetModel];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category, [new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = famous.Tag, IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = internetModel.Tag, IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = ordinary.Tag, IncludeInSearch = true, Level = 1 }]);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, tags, category, [new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = famous.Tag, IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = internetModel.Tag, IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = ordinary.Tag, IncludeInSearch = true, Level = 1 }]);
 
-        var expected = Path.Combine("/root/famous/L", _category.Name, famous.Tag, internetModel.Tag, ordinary.Tag);
-        directory.ShouldBe(expected);
+        directory.ShouldBe("/root/famous/L/Landscapes/Emma Stone/SomeModel/Nature");
     }
 
     [Fact]
@@ -76,10 +75,9 @@ public sealed class GivenWallpaperDirectoryResolver
     {
         List<TagData> tags = [new("Zebra", "animals"), new("Apple", "food"), new("Mango", "food")];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Apple", IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Mango", IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Zebra", IncludeInSearch = true, Level = 1 }]);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, tags, category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Apple", IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Mango", IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Zebra", IncludeInSearch = true, Level = 1 }]);
 
-        var expected = Path.Combine("/root/regular/L", _category.Name, "Apple", "Mango", "Zebra");
-        directory.ShouldBe(expected);
+        directory.ShouldBe("/root/regular/L/Landscapes/Apple/Mango/Zebra");
     }
 
     [Fact]
@@ -90,22 +88,21 @@ public sealed class GivenWallpaperDirectoryResolver
         TagData famous = new("Emma Stone", "people > actress");
         List<TagData> tags = [zebra, famous, apple];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category, [
+        var directory = WallpaperDirectoryResolver.Resolve(layout, tags, category, [
 
-            new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = famous.Tag, IncludeInSearch = true, Level = 1 }, 
+            new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = famous.Tag, IncludeInSearch = true, Level = 1 },
             new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = apple.Tag, IncludeInSearch = true, Level = 1 },
             new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = zebra.Tag, IncludeInSearch = true, Level = 1 }]);
 
-        var expected = Path.Combine("/root/famous/L", _category.Name, famous.Tag, apple.Tag, zebra.Tag);
-        directory.ShouldBe(expected);
+        directory.ShouldBe("/root/famous/L/Landscapes/Emma Stone/Apple/Zebra");
     }
 
     [Fact]
     public void when_a_tag_contains_a_colon_then_the_colon_is_removed_from_the_path()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Marvel: Avengers", "movies")], _category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Marvel: Avengers", IncludeInSearch = true, Level = 1 }]);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [new TagData("Marvel: Avengers", "movies")], category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Marvel: Avengers", IncludeInSearch = true, Level = 1 }]);
 
-        directory.ShouldBe(Path.Combine("/root/regular", "L", _category.Name, "Marvel Avengers"));
+        directory.ShouldBe("/root/regular/L/Landscapes/Marvel Avengers");
     }
 
     [Fact]
@@ -113,17 +110,17 @@ public sealed class GivenWallpaperDirectoryResolver
     {
         var layout = new DirectoryLayout("C:/w", "/regular", "/famous");
 
-        var directory = WallpaperDirectoryResolver.Resolve(layout, [], _category, []);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [], category, []);
 
-        directory.ShouldBe(Path.Combine("C:/w/regular", "L", _category.Name));
+        directory.ShouldBe("C:/w/regular/L/Landscapes");
     }
 
     [Fact]
     public void when_a_tag_contains_an_invalid_path_character_then_the_character_is_removed()
     {
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, [new TagData("Bad\0Tag", "outdoors")], _category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Bad\0Tag", IncludeInSearch = true, Level = 1 }]);
+        var directory = WallpaperDirectoryResolver.Resolve(layout, [new TagData("Bad\0Tag", "outdoors")], category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Bad\0Tag", IncludeInSearch = true, Level = 1 }]);
 
-        directory.ShouldBe(Path.Combine("/root/regular", "L", _category.Name, "Bad Tag"));
+        directory.ShouldBe("/root/regular/L/Landscapes/Bad Tag");
     }
 
     [Fact]
@@ -134,7 +131,7 @@ public sealed class GivenWallpaperDirectoryResolver
 
         var directory = WallpaperDirectoryResolver.Resolve(layout, [], category, []);
 
-        directory.ShouldBe(Path.Combine("A", "A"));
+        directory.ShouldBe("A/A");
     }
 
     [Fact]
@@ -157,7 +154,7 @@ public sealed class GivenWallpaperDirectoryResolver
             new("Kiwi", "food")
         ];
 
-        var directory = WallpaperDirectoryResolver.Resolve(_layout, tags, _category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Emma Stone", IncludeInSearch = true, Level = 1 },
+        var directory = WallpaperDirectoryResolver.Resolve(layout, tags, category, [ new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Emma Stone", IncludeInSearch = true, Level = 1 },
             new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "SomeModel", IncludeInSearch = true, Level = 1 },
             new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Apple", IncludeInSearch = true, Level = 1 },
             new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Banana", IncludeInSearch = true, Level = 1 },
@@ -172,7 +169,22 @@ public sealed class GivenWallpaperDirectoryResolver
             new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = "Kiwi", IncludeInSearch = true, Level = 1 }
         ]);
 
-        var expected = Path.Combine("/root/famous/L", _category.Name, "Emma Stone", "SomeModel", "Apple", "Banana", "Cherry", "Damson", "Elderberry", "Fig", "Grape", "Honeydew", "Iced Tea", "Jackfruit");
-        directory.ShouldBe(expected);
+        directory.ShouldBe("/root/famous/L/Landscapes/Emma Stone/SomeModel/Apple/Banana/Cherry/Damson/Elderberry/Fig/Grape/Honeydew/Iced Tea/Jackfruit");
+    }
+
+    [Fact]
+    public void when_tags_include_duplicates_then_only_one_path_segment_is_created()
+    {
+        TagData ordinary = new("Nature", "outdoors");
+        TagData famous = new("Emma Stone", "people > actress");
+        TagData internetModel = new("SomeModel", "people > model");
+        TagData ordinary2 = new("Nature", "outdoors");
+        TagData famous2 = new("Emma Stone", "people > actress");
+        TagData internetModel2 = new("SomeModel", "people > model");
+        List<TagData> tags = [ordinary, internetModel2, internetModel, ordinary2, ordinary2, ordinary2, famous2, famous];
+
+        var directory = WallpaperDirectoryResolver.Resolve(layout, tags, category, [new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = famous.Tag, IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = internetModel.Tag, IncludeInSearch = true, Level = 1 }, new Infrastructure.AppDb.Entities.FileClassificationCategoryEntity { Name = ordinary.Tag, IncludeInSearch = true, Level = 1 }]);
+
+        directory.ShouldBe("/root/famous/L/Landscapes/Emma Stone/SomeModel/Nature");
     }
 }
