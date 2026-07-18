@@ -103,7 +103,7 @@ public sealed class GivenSearchCategoryScrapeAction
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(twoCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
-        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)[]);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns([]);
         var sut = CreateSut();
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
@@ -121,7 +121,7 @@ public sealed class GivenSearchCategoryScrapeAction
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(30);
-        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)[]);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns([]);
         var sut = CreateSut();
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
@@ -148,7 +148,7 @@ public sealed class GivenSearchCategoryScrapeAction
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
-        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns(["https://wallhaven.cc/w/abc123"]);
         var failedResponse = Substitute.For<IResponse>();
         failedResponse.Ok.Returns(false);
         failedResponse.Status.Returns(404);
@@ -167,11 +167,11 @@ public sealed class GivenSearchCategoryScrapeAction
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
-        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns(["https://wallhaven.cc/w/abc123"]);
         var okResponse = Substitute.For<IResponse>();
         okResponse.Ok.Returns(true);
         page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(okResponse);
-        tagReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<TagData>)[new TagData("Nature", "outdoors")]);
+        tagReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns([new TagData("Nature", "outdoors")]);
         imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(Option<string>.None.Instance);
         var sut = CreateSut();
 
@@ -217,12 +217,12 @@ public sealed class GivenSearchCategoryScrapeAction
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(ignoredTagContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
-        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns(["https://wallhaven.cc/w/abc123"]);
         var okResponse = Substitute.For<IResponse>();
         okResponse.Ok.Returns(true);
         page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(okResponse);
         tagReader.ReadAsync(page, Arg.Any<CancellationToken>())
-            .Returns((IReadOnlyList<TagData>)[new TagData("Nature", "outdoors"), new TagData("Ignored", "outdoors")]);
+            .Returns([new TagData("Nature", "outdoors"), new TagData("Ignored", "outdoors")]);
         imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(new Option<string>.Some("https://wallhaven.cc/images/pic.jpg"));
         byte[] imageBytes = [1, 2, 3];
         imageDownloader.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", Arg.Any<CancellationToken>()).Returns(Exceptional.Success(imageBytes));
@@ -272,18 +272,77 @@ public sealed class GivenSearchCategoryScrapeAction
         await fileClassificationRepository.DidNotReceive().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<ImageDimensions>(), Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task when_the_wallpaper_count_matches_the_stored_count_then_the_category_is_skipped_and_progress_is_reported()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(42);
+        var searchCategoryReader = Substitute.For<ISearchCategoryReader>();
+        searchCategoryReader.GetLastKnownImageCountAsync("Nature", Arg.Any<CancellationToken>()).Returns(42);
+        var sut = CreateSut(searchCategoryReader);
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Category: Nature") && message!.Contains("already fully visited")));
+        await page.DidNotReceive().GotoAsync(Arg.Is<string>(url => url!.Contains("&page=")), Arg.Any<PageGotoOptions>());
+        await hrefCollector.DidNotReceive().CollectAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_the_wallpaper_count_differs_from_the_stored_count_then_the_category_is_scraped_normally()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(24);
+        var searchCategoryReader = Substitute.For<ISearchCategoryReader>();
+        searchCategoryReader.GetLastKnownImageCountAsync("Nature", Arg.Any<CancellationToken>()).Returns(20);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns([]);
+        var sut = CreateSut(searchCategoryReader);
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=1&page=1");
+        await hrefCollector.Received(1).CollectAsync(page, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_reading_the_stored_image_count_returns_none_then_the_category_is_scraped_normally()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(24);
+        var searchCategoryReader = Substitute.For<ISearchCategoryReader>();
+        searchCategoryReader.GetLastKnownImageCountAsync("Nature", Arg.Any<CancellationToken>()).Returns(Option<int>.None.Instance);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns([]);
+        var sut = CreateSut(searchCategoryReader);
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        await page.Received(1).GotoAsync("https://wallhaven.cc/search?categories=1&page=1");
+        await hrefCollector.Received(1).CollectAsync(page, Arg.Any<CancellationToken>());
+    }
+
     private void ConfigureSuccessfulWallpaperVisit()
     {
         contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(singleCategoryContext);
         countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
-        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<string>)["https://wallhaven.cc/w/abc123"]);
+        hrefCollector.CollectAsync(page, Arg.Any<CancellationToken>()).Returns(["https://wallhaven.cc/w/abc123"]);
         var okResponse = Substitute.For<IResponse>();
         okResponse.Ok.Returns(true);
         page.GotoAsync("https://wallhaven.cc/w/abc123", Arg.Any<PageGotoOptions>()).Returns(okResponse);
-        tagReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<TagData>)[new TagData("Nature", "outdoors")]);
+        tagReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns([new TagData("Nature", "outdoors")]);
         imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(new Option<string>.Some("https://wallhaven.cc/images/pic.jpg"));
     }
 
-    private SearchCategoryScrapeAction CreateSut() =>
-        new(contextReader, categoryWriter, countReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository);
+    private SearchCategoryScrapeAction CreateSut(ISearchCategoryReader? searchCategoryReader = null)
+    {
+        if (searchCategoryReader == null)
+        {
+            searchCategoryReader = Substitute.For<ISearchCategoryReader>();
+            searchCategoryReader.GetLastKnownImageCountAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(Option.None<int>());
+        }
+
+        return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository);
+    }
 }
