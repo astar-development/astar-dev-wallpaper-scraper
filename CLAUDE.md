@@ -17,6 +17,7 @@ Full test suite runs automatically at end of turn - only run new / affected test
 - On the rare occasion that a class is not testable/offers little to no protection: mark with `[ExcludeFromCodeCoverage]` from `System.Diagnostics.CodeAnalysis`
 - All new development work must have a GitHub Issue raised before work begins. If one doesn't exist, create it with full context
 - When development complete. Stop, request human review and offer to raise PR
+- NEVER change code unrelated to the requested change (no judgement-call restructuring, reordering, or "while I'm here" cleanup). If a change might be beneficial (logical grouping, indirect refactor, etc.), SUGGEST it as a separate item - do NOT implement it
 
 ## Shared Utility Placement
 
