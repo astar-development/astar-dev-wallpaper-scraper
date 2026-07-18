@@ -206,15 +206,7 @@ public sealed class GivenEntityEditorViewModel : IDisposable
     [Fact]
     public async Task when_the_save_command_fails_then_the_status_message_reports_the_failure()
     {
-        var descriptor = new EntityEditorDescriptor<TagToIgnoreEntity>(
-            DisplayName: "Tag to Ignore",
-            TableName: "TagToIgnore",
-            CreateNew: () => new TagToIgnoreEntity(),
-            AllowAddRemove: true,
-            ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
-            ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)],
-            OnBeforeAddAsync: (_, _, _) => throw new InvalidOperationException("The before-add hook failed."));
-        var sut = new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
+        var sut = CreateOnBeforeAddSut((_, _, _) => throw new InvalidOperationException("The before-add hook failed."));
 
         await Command(sut.AddCommand).Execute();
         await Command(sut.SaveCommand).Execute();
@@ -344,20 +336,12 @@ public sealed class GivenEntityEditorViewModel : IDisposable
     [Fact]
     public async Task when_the_descriptor_has_an_on_before_add_hook_then_it_runs_for_newly_added_rows_during_save()
     {
-        var descriptor = new EntityEditorDescriptor<TagToIgnoreEntity>(
-            DisplayName: "Tag to Ignore",
-            TableName: "TagToIgnore",
-            CreateNew: () => new TagToIgnoreEntity(),
-            AllowAddRemove: true,
-            ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
-            ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)],
-            OnBeforeAddAsync: (_, entity, _) =>
-            {
-                entity.Value = "stamped-by-hook";
+        var sut = CreateOnBeforeAddSut((_, entity, _) =>
+        {
+            entity.Value = "stamped-by-hook";
 
-                return Task.CompletedTask;
-            });
-        var sut = new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
+            return Task.CompletedTask;
+        });
 
         await Command(sut.AddCommand).Execute();
         await Command(sut.SaveCommand).Execute();
@@ -428,6 +412,20 @@ public sealed class GivenEntityEditorViewModel : IDisposable
             AllowAddRemove: false,
             ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
             ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)]);
+
+        return new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
+    }
+
+    private EntityEditorViewModel<TagToIgnoreEntity> CreateOnBeforeAddSut(Func<AppDbContext, TagToIgnoreEntity, CancellationToken, Task> onBeforeAddAsync)
+    {
+        var descriptor = new EntityEditorDescriptor<TagToIgnoreEntity>(
+            DisplayName: "Tag to Ignore",
+            TableName: "TagToIgnore",
+            CreateNew: () => new TagToIgnoreEntity(),
+            AllowAddRemove: true,
+            ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
+            ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)],
+            OnBeforeAddAsync: onBeforeAddAsync);
 
         return new EntityEditorViewModel<TagToIgnoreEntity>(dbContextFactory, descriptor, fileSystem, "/exports");
     }
