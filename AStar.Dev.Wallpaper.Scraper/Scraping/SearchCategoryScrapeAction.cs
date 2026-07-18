@@ -56,7 +56,14 @@ public sealed class SearchCategoryScrapeAction(
     private async Task VisitCategoryPageAsync(CategoryScrapeContext context, int pageNumber, int pageCount, int wallpaperCount, CancellationToken cancellationToken)
     {
         SearchCategoryDto searchCategory = new(context.Category.Name, context.Category.IsFamous, context.Category.IsInternet, pageCount, wallpaperCount, pageNumber);
-        await searchCategoryWriter.WriteAsync(searchCategory, cancellationToken);
+        (await searchCategoryWriter.WriteAsync(searchCategory, cancellationToken)).Match(
+            onSuccess: _ => Unit.Instance,
+            onFailure: error =>
+            {
+                context.Progress.Report($"Failed to persist scrape progress for category: {context.Category.Name}, error: {error}");
+
+                return Unit.Instance;
+            });
 
         var pageUrl = $"{context.Category.SearchUrl}&page={pageNumber}";
         context.Progress.Report($"Visiting category: {context.Category.Name}, page {pageNumber} of {pageCount} with searchString: {pageUrl}");

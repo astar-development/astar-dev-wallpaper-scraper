@@ -2,7 +2,6 @@ using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using Microsoft.Playwright;
-using Mono.Cecil;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
@@ -21,6 +20,9 @@ public sealed class GivenSearchCategoryScrapeAction
     private readonly IWallpaperFileClassificationRepository fileClassificationRepository = Substitute.For<IWallpaperFileClassificationRepository>();
     private readonly IProgress<string> progress = Substitute.For<IProgress<string>>();
     private readonly IPage page = Substitute.For<IPage>();
+
+    public GivenSearchCategoryScrapeAction() =>
+        categoryWriter.WriteAsync(Arg.Any<SearchCategoryDto>(), Arg.Any<CancellationToken>()).Returns(Result.Success<FunctionalParadigm.Unit, string>(FunctionalParadigm.Unit.Instance));
 
     private static readonly ScrapeContext _singleCategoryContext = new(
         [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false)],
@@ -79,6 +81,21 @@ public sealed class GivenSearchCategoryScrapeAction
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
         progress.Received().Report(Arg.Is<string>(message => message!.Contains("Visiting category: Nature")));
         progress.Received().Report(Arg.Is<string>(message => message!.Contains("need to get all 3 pages")));
+    }
+
+    [Fact]
+    public async Task when_persisting_scrape_progress_fails_then_progress_reports_the_failure_and_the_page_is_still_visited()
+    {
+        contextReader.ReadAsync(Arg.Any<CancellationToken>()).Returns(_singleCategoryContext);
+        countReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(1);
+        categoryWriter.WriteAsync(Arg.Any<SearchCategoryDto>(), Arg.Any<CancellationToken>()).Returns(Result.Failure<FunctionalParadigm.Unit, string>("No search category named 'Nature' exists to update."));
+        var sut = CreateSut();
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("Failed to persist scrape progress for category: Nature") && message!.Contains("No search category named 'Nature' exists to update.")));
+        await page.Received().GotoAsync(Arg.Is<string>(url => url!.Contains("&page=1")));
     }
 
     [Fact]

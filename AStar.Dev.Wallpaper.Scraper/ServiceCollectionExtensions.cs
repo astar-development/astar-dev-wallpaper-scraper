@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IFileSystem, RealFileSystem>();
         services.AddSingleton<IPlaywrightService, PlaywrightService>();
+        services.AddSingleton<ISearchCategoryWriter, SearchCategoryWriter>();
         services.AddSingleton<UpdateService>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
