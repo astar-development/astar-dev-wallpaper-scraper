@@ -9,13 +9,13 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// </summary>
 public sealed class WallpaperThumbnailBroadcaster : IWallpaperThumbnailPublisher, IWallpaperThumbnailFeed, IDisposable
 {
-    private readonly Subject<byte[]> thumbnails = new();
+    private readonly Subject<WallpaperThumbnailPayload> thumbnails = new();
 
     /// <inheritdoc />
-    public IObservable<byte[]> Thumbnails => thumbnails.AsObservable();
+    public IObservable<WallpaperThumbnailPayload> Thumbnails => thumbnails.AsObservable();
 
     /// <inheritdoc />
-    public void Publish(byte[] thumbnailBytes) => thumbnails.OnNext(thumbnailBytes);
+    public void Publish(WallpaperThumbnailPayload payload) => thumbnails.OnNext(payload);
 
     /// <summary>
     ///     Completes and disposes the underlying subject.

@@ -10,7 +10,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class ThumbnailPublishingWallpaperImageDownloader(IWallpaperImageDownloader inner, IWallpaperThumbnailGenerator thumbnailGenerator, IWallpaperThumbnailPublisher thumbnailPublisher) : IWallpaperImageDownloader
 {
     /// <inheritdoc />
-    public Task<Exceptional<byte[]>> DownloadAsync(IPage page, string imageUrl, CancellationToken cancellationToken) =>
-        inner.DownloadAsync(page, imageUrl, cancellationToken)
-            .TapAsync(imageBytes => thumbnailPublisher.Publish(thumbnailGenerator.Generate(imageBytes)));
+    public Task<Exceptional<byte[]>> DownloadAsync(IPage page, string imageUrl, string categoryName, IReadOnlyList<string> tags, CancellationToken cancellationToken) =>
+        inner.DownloadAsync(page, imageUrl, categoryName, tags, cancellationToken)
+            .TapAsync(imageBytes => thumbnailPublisher.Publish(WallpaperThumbnailPayloadFactory.Create(thumbnailGenerator.Generate(imageBytes), categoryName, tags)));
 }

@@ -20,6 +20,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private const int MaxStatusLines = 1000;
 
     private string statusText = string.Empty;
+    private string thumbnailCategoryName = string.Empty;
+    private string thumbnailTags = string.Empty;
     private bool isBusy;
     private CancellationTokenSource? scrapeCancellationSource;
     private readonly IPlaywrightService playwrightService;
@@ -105,6 +107,26 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         get => statusText;
         private set => this.RaiseAndSetIfChanged(ref statusText, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the category name of the most recently published thumbnail, shown as a heading below the
+    ///     thumbnail preview.
+    /// </summary>
+    public string ThumbnailCategoryName
+    {
+        get => thumbnailCategoryName;
+        set => this.RaiseAndSetIfChanged(ref thumbnailCategoryName, value);
+    }
+
+    /// <summary>
+    ///     Gets or sets the display string of the tags kept for the most recently published thumbnail, shown below
+    ///     the category name.
+    /// </summary>
+    public string ThumbnailTags
+    {
+        get => thumbnailTags;
+        set => this.RaiseAndSetIfChanged(ref thumbnailTags, value);
     }
 
     private void CancelRunningScrape() => scrapeCancellationSource?.Cancel();
