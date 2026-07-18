@@ -28,5 +28,4 @@ public static class LinqExtensions
         foreach (var item in enumerable)
             await action(item).ConfigureAwait(false);
     }
-
 }
