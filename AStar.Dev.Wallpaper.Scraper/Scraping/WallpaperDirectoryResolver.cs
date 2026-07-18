@@ -1,3 +1,4 @@
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Utilities;
 
 namespace AStar.Dev.Wallpaper.Scraper.Scraping;
@@ -18,7 +19,7 @@ public static class WallpaperDirectoryResolver
     /// <param name="directoryLayout">The directory naming conventions to use.</param>
     /// <param name="tags">The wallpaper's curated tags.</param>
     /// <param name="category">The search category the wallpaper was found under.</param>
-    public static string Resolve(DirectoryLayout directoryLayout, IReadOnlyList<TagData> tags, ScrapeCategory category, List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> fileClassifications)
+    public static string Resolve(DirectoryLayout directoryLayout, IReadOnlyList<TagData> tags, ScrapeCategory category, IReadOnlyList<FileClassificationCategoryEntity> fileClassifications)
     {
         var baseDirectory = directoryLayout.RootDirectory + (tags.Any(tag => tag.IsFamous) ? directoryLayout.BaseDirectoryFamous : directoryLayout.BaseDirectory);
         var baseDirectoryWithCategory = baseDirectory.CombinePath(category.Name[0].ToString()).CombinePath(category.Name);
@@ -33,7 +34,7 @@ public static class WallpaperDirectoryResolver
         return path[..drivePrefixLength] + path[drivePrefixLength..].Replace(":", string.Empty).CleanPath();
     }
 
-    private static List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> GetOrderedFileClassifications(List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> fileClassifications, List<TagData> eligibleTags)
+    private static IReadOnlyList<FileClassificationCategoryEntity> GetOrderedFileClassifications(IReadOnlyList<FileClassificationCategoryEntity> fileClassifications, List<TagData> eligibleTags)
         => [.. fileClassifications
                 .Where(classification => classification.IncludeInSearch && eligibleTags.Any(tag => tag.Tag.CaseInsensitiveEquals(classification.Name)))
                 .OrderByDescending(t => t.IsFamous)
