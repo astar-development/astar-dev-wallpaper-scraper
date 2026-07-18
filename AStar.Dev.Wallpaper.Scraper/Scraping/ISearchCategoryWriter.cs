@@ -1,16 +1,15 @@
-using AStar.Dev.FunctionalParadigm;
-
 namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 
 /// <summary>
-///     Writes the SearchCategoryEntity to the database, updating as necessary.
+///     Persists a search category's scrape progress to the database.
 /// </summary>
 public interface ISearchCategoryWriter
 {
     /// <summary>
-    ///     Writes the current search categories, ignore lists, and directory layout to the database.
+    ///     Creates or updates the <c>SearchCategoryEntity</c> matching <paramref name="searchCategory" />'s name with its
+    ///     famous/internet flags and latest scrape progress.
     /// </summary>
-    /// <param name="searchCategory">The search category to write.</param>
+    /// <param name="searchCategory">The scrape progress to persist.</param>
     /// <param name="cancellationToken">A token used to observe cancellation of the write.</param>
-    Task<Exceptional<Exception>> WriteAsync(SearchCategoryDto searchCategory, CancellationToken cancellationToken);
+    Task WriteAsync(SearchCategoryDto searchCategory, CancellationToken cancellationToken);
 }
