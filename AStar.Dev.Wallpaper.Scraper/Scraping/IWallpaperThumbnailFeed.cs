@@ -6,7 +6,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public interface IWallpaperThumbnailFeed
 {
     /// <summary>
-    ///     Gets the stream of PNG-encoded thumbnail bytes, one per downloaded wallpaper.
+    ///     Gets the stream of thumbnail payloads, one per downloaded wallpaper.
     /// </summary>
-    IObservable<byte[]> Thumbnails { get; }
+    IObservable<WallpaperThumbnailPayload> Thumbnails { get; }
 }

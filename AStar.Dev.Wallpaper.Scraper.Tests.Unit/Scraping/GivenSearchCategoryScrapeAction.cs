@@ -25,6 +25,7 @@ public sealed class GivenSearchCategoryScrapeAction
     private const string WallpaperImageUrl = "https://wallhaven.cc/images/pic.jpg";
 
     private static readonly byte[] imageBytes = [1, 2, 3];
+    private static readonly string[] expectedNatureTagOnly = ["Nature"];
 
     private static readonly ScrapeContext singleCategoryContext = new(
         [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false)],
@@ -154,7 +155,7 @@ public sealed class GivenSearchCategoryScrapeAction
 
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
         progress.Received().Report(Arg.Is<string>(message => message!.Contains("Failed to get wallpaper image URL")));
-        await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -167,7 +168,7 @@ public sealed class GivenSearchCategoryScrapeAction
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
         await page.DidNotReceive().GotoAsync(WallpaperHref, Arg.Any<PageGotoOptions>());
         await tagReader.DidNotReceive().ReadAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>());
-        await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await imageDownloader.DidNotReceive().DownloadAsync(Arg.Any<IPage>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
         await fileStore.DidNotReceive().SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
         await fileClassificationRepository.DidNotReceive().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<ImageDimensions>(), Arg.Any<CancellationToken>());
     }
@@ -204,6 +205,7 @@ public sealed class GivenSearchCategoryScrapeAction
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
         await categoryRegistrar.Received().EnsureCategoriesExistAsync(Arg.Is<IReadOnlyList<TagData>>(tags => tags != null && tags.Any(tag => tag.Tag == "Nature")), Arg.Any<CancellationToken>());
         await fileClassificationRepository.Received().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), WallpaperImageUrl, Arg.Any<string>(), 3, dimensions, Arg.Any<CancellationToken>());
+        await imageDownloader.Received().DownloadAsync(page, WallpaperImageUrl, "Nature", Arg.Is<IReadOnlyList<string>>(tags => tags!.SequenceEqual(expectedNatureTagOnly)), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -317,7 +319,7 @@ public sealed class GivenSearchCategoryScrapeAction
         tagReader.ReadAsync(page, Arg.Any<CancellationToken>()).Returns(tags ?? [new TagData("Nature", "outdoors")]);
         imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(imageUrl ?? new Option<string>.Some(WallpaperImageUrl));
         fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(isAlreadyDownloaded);
-        imageDownloader.DownloadAsync(page, WallpaperImageUrl, Arg.Any<CancellationToken>()).Returns(downloadResult ?? Exceptional.Success(imageBytes));
+        imageDownloader.DownloadAsync(page, WallpaperImageUrl, Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>()).Returns(downloadResult ?? Exceptional.Success(imageBytes));
         fileStore.SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(savedFile ?? new SavedWallpaperFile("/root/base/pic.jpg", 3));
         dimensionsReader.Read(Arg.Any<byte[]>()).Returns(dimensions ?? new ImageDimensions(0, 0));
 

@@ -13,7 +13,7 @@ public sealed class GivenWallpaperImageDownloader
         var page = CreatePageWithResponseBody(imageBytes);
         var sut = new WallpaperImageDownloader();
 
-        var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
+        var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", "Nature", ["forest"], TestContext.Current.CancellationToken);
 
         result.ShouldBeOfType<Success<byte[]>>();
         result.ShouldBe(new Success<byte[]>(imageBytes));
@@ -25,7 +25,7 @@ public sealed class GivenWallpaperImageDownloader
         var page = CreatePageWithResponseBody(null);
         var sut = new WallpaperImageDownloader();
 
-        var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", TestContext.Current.CancellationToken);
+        var result = await sut.DownloadAsync(page, "https://wallhaven.cc/images/pic.jpg", "Nature", ["forest"], TestContext.Current.CancellationToken);
 
         result.ShouldBeOfType<Failure<byte[]>>();
     }

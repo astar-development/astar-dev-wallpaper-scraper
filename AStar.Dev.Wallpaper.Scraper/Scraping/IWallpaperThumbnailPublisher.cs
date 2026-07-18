@@ -6,8 +6,8 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public interface IWallpaperThumbnailPublisher
 {
     /// <summary>
-    ///     Publishes a PNG-encoded thumbnail to any subscribers.
+    ///     Publishes a thumbnail, along with the category and tags it was downloaded under, to any subscribers.
     /// </summary>
-    /// <param name="thumbnailBytes">The PNG-encoded thumbnail bytes.</param>
-    void Publish(byte[] thumbnailBytes);
+    /// <param name="payload">The thumbnail bytes and their associated category and tags.</param>
+    void Publish(WallpaperThumbnailPayload payload);
 }

@@ -11,21 +11,21 @@ public sealed class GivenWallpaperThumbnailBroadcaster : IDisposable
     [Fact]
     public void when_a_thumbnail_is_published_then_subscribers_to_the_feed_receive_it()
     {
-        byte[] thumbnailBytes = [1, 2, 3];
-        byte[]? received = null;
-        using var subscription = sut.Thumbnails.Subscribe(bytes => received = bytes);
+        var payload = WallpaperThumbnailPayloadFactory.Create([1, 2, 3], "Nature", ["forest"]);
+        WallpaperThumbnailPayload? received = null;
+        using var subscription = sut.Thumbnails.Subscribe(publishedPayload => received = publishedPayload);
 
-        sut.Publish(thumbnailBytes);
+        sut.Publish(payload);
 
-        received.ShouldBe(thumbnailBytes);
+        received.ShouldBe(payload);
     }
 
     [Fact]
     public void when_no_subscriber_is_present_then_publishing_does_not_throw()
     {
-        byte[] thumbnailBytes = [1, 2, 3];
+        var payload = WallpaperThumbnailPayloadFactory.Create([1, 2, 3], "Nature", ["forest"]);
 
-        var exception = Record.Exception(() => sut.Publish(thumbnailBytes));
+        var exception = Record.Exception(() => sut.Publish(payload));
 
         exception.ShouldBeNull();
     }

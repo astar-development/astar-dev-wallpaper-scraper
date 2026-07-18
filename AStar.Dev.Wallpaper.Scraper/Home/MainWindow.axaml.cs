@@ -39,7 +39,12 @@ public partial class MainWindow : Window
 
         thumbnailSubscription = thumbnailFeed.Thumbnails
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(thumbnailBytes => ThumbnailImage.Source = new Bitmap(new MemoryStream(thumbnailBytes)));
+            .Subscribe(payload =>
+            {
+                ThumbnailImage.Source = new Bitmap(new MemoryStream(payload.Bytes));
+                viewModel.ThumbnailCategoryName = payload.CategoryName;
+                viewModel.ThumbnailTags = string.Join(", ", payload.Tags);
+            });
 
         Closed += (_, _) => thumbnailSubscription?.Dispose();
     }

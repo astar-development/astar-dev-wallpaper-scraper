@@ -40,9 +40,13 @@
             <Button x:Name="CancelButton" Content="Cancel" Command="{Binding CancelCommand}" />
         </StackPanel>
 
-        <Border DockPanel.Dock="Right" Width="750" Margin="0,8,12,8" VerticalAlignment="Top" CornerRadius="10" ClipToBounds="True">
-            <Image x:Name="ThumbnailImage" Width="750" Height="750" Stretch="Uniform" />
-        </Border>
+        <StackPanel DockPanel.Dock="Right" Width="750" Margin="0,8,12,8" Spacing="4">
+            <Border VerticalAlignment="Top" CornerRadius="10" ClipToBounds="True">
+                <Image x:Name="ThumbnailImage" Width="750" Height="750" Stretch="Uniform" />
+            </Border>
+            <TextBlock Text="{Binding ThumbnailCategoryName}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding ThumbnailTags}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+        </StackPanel>
 
         <ScrollViewer x:Name="StatusScroller" Margin="12,8">
             <TextBlock x:Name="StatusLabel" Text="{Binding StatusText}" TextWrapping="Wrap" FontFamily="Consolas,Monospace" />

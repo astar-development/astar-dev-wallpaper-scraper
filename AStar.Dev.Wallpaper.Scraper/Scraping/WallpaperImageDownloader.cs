@@ -11,7 +11,7 @@ public sealed class WallpaperImageDownloader : IWallpaperImageDownloader
     private const int NavigationTimeoutMilliseconds = 30_000;
 
     /// <inheritdoc />
-    public async Task<Exceptional<byte[]>> DownloadAsync(IPage page, string imageUrl, CancellationToken cancellationToken) =>
+    public async Task<Exceptional<byte[]>> DownloadAsync(IPage page, string imageUrl, string categoryName, IReadOnlyList<string> tags, CancellationToken cancellationToken) =>
         await Try.RunAsync(async () =>
         {
             var response = await page.GotoAsync(imageUrl, new PageGotoOptions { Timeout = NavigationTimeoutMilliseconds, }).ConfigureAwait(false);

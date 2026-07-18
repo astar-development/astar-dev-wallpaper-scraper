@@ -132,7 +132,7 @@ public sealed class SearchCategoryScrapeAction(
 
         var fileName = Path.GetFileName(download.ImageUrl);
 
-        return await (await imageDownloader.DownloadAsync(context.Page, download.ImageUrl, cancellationToken)).MatchAsync(
+        return await (await imageDownloader.DownloadAsync(context.Page, download.ImageUrl, context.Category.Name, download.Tags.Select(tag => tag.Tag).ToList(), cancellationToken)).MatchAsync(
             onSuccess: async imageBytes =>
             {
                 context.Progress.Report($"Downloaded wallpaper image from URL: {download.ImageUrl}, size: {imageBytes.Length} bytes");
