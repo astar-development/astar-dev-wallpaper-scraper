@@ -12,6 +12,7 @@ public sealed class SearchCategoryScrapeAction(
     IScrapeContextReader contextReader,
     ISearchCategoryWriter searchCategoryWriter,
     IWallpaperCountReader countReader,
+    ISearchCategoryReader searchCategoryReader,
     IWallpaperHrefCollector hrefCollector,
     ITagReader tagReader,
     IWallpaperImageLocator imageLocator,
@@ -46,10 +47,20 @@ public sealed class SearchCategoryScrapeAction(
 
         var wallpaperCount = await countReader.ReadAsync(context.Page, cancellationToken);
         context.Progress.Report($"Number of wallpapers found for category: {context.Category.Name} is {wallpaperCount}");
+
+        var storedCountOption = await searchCategoryReader.GetLastKnownImageCountAsync(context.Category.Name, cancellationToken);
+        var isFullyVisited = storedCountOption.MapOrDefault(storedCount => storedCount == wallpaperCount, false);
+
+        if (isFullyVisited)
+        {
+            context.Progress.Report($"Category: {context.Category.Name} already fully visited (image count: {wallpaperCount})");
+            await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
+
+            return;
+        }
+
         var pageCount = (int)Math.Ceiling(wallpaperCount / (double)ImagesPerPage);
-
         context.Progress.Report($"Category: {context.Category.Name} has {wallpaperCount} wallpapers, need to get all {pageCount} pages for this category");
-
         await Enumerable.Range(1, pageCount).ForEachAsync(pageNumber => VisitCategoryPageAsync(context, pageNumber, pageCount, wallpaperCount, cancellationToken));
     }
 

@@ -13,9 +13,24 @@ Full test suite runs automatically at end of turn - only run new / affected test
 - Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests. 
 - Async methods MUST end in `Async` - exceptions: EventHandlers and tests. Neither have the suffix
 - return statements MUST be proceeded by a blank line - except when they immediately follow a control statement (`if` etc.)
-- ALL new code must use TDD to develop. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc
+- ALL new code must use TDD to develop. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc. If no GH Issue exists, create one - ask user for details if necessary
 - On the rare occasion that a class is not testable/offers little to no protection: mark with `[ExcludeFromCodeCoverage]` from `System.Diagnostics.CodeAnalysis`
 - All new development work must have a GitHub Issue raised before work begins. If one doesn't exist, create it with full context
+- When development complete. Stop, request human review and offer to raise PR
+
+## Shared Utility Placement
+
+When adding new shared extensions/helpers:
+
+- **AStar.Dev.Utilities:** Pure LINQ/collection helpers independent of domain types. Examples: `ForEach`, `ForEachAsync`. No dependencies on other AStar packages.
+- **AStar.Dev.FunctionalParadigm:** Functional combinators, monadic operations, and LINQ bridges that return or work with `Option<T>`, `Result<T,E>`, etc. Examples: `FirstOrNone`, `FirstOrNoneAsync`, `Map`, `Bind`. Must not depend on Utilities.
+
+**Challenge requests that specify Utilities location if:**
+- Extension returns a type from FunctionalParadigm (e.g., `Option<T>`, `Result<T,E>`)
+- Extension is inherently functional (monadic, transforms over types from FunctionalParadigm)
+- Adding it to Utilities would create a circular dependency
+
+**Decision framework:** Utilities → FunctionalParadigm is one-way (or not at all). FunctionalParadigm must be self-contained and not depend on Utilities.
 
 ## Build & Test
 
