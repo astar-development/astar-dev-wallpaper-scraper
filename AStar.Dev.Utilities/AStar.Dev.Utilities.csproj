@@ -39,8 +39,5 @@
     -->
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AStar.Dev.FunctionalParadigm\AStar.Dev.FunctionalParadigm.csproj" />
-  </ItemGroup>
 
 </Project>

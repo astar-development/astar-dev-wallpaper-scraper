@@ -103,42 +103,6 @@
             <param name="action"></param>
             <typeparam name="T"></typeparam>
         </member>
-        <member name="M:AStar.Dev.Utilities.LinqExtensions.FirstOrNone``1(System.Collections.Generic.IEnumerable{``0})">
-            <summary>
-                Returns the first element of <paramref name="source" /> as an <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" />, or <c>None</c> if the
-                sequence is empty.
-            </summary>
-            <param name="source">The sequence to search.</param>
-            <typeparam name="T">The element type.</typeparam>
-        </member>
-        <member name="M:AStar.Dev.Utilities.LinqExtensions.FirstOrNone``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.Boolean})">
-            <summary>
-                Returns the first element of <paramref name="source" /> matching <paramref name="predicate" /> as an
-                <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" />, or <c>None</c> if no element matches.
-            </summary>
-            <param name="source">The sequence to search.</param>
-            <param name="predicate">The condition an element must satisfy.</param>
-            <typeparam name="T">The element type.</typeparam>
-        </member>
-        <member name="M:AStar.Dev.Utilities.LinqExtensions.FirstOrNoneAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)">
-            <summary>
-                Asynchronously returns the first element of <paramref name="source" /> as an <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" />, or
-                <c>None</c> if the sequence is empty.
-            </summary>
-            <param name="source">The sequence to search.</param>
-            <param name="cancellationToken">A token used to observe cancellation of the enumeration.</param>
-            <typeparam name="T">The element type.</typeparam>
-        </member>
-        <member name="M:AStar.Dev.Utilities.LinqExtensions.FirstOrNoneAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Func{``0,System.Boolean},System.Threading.CancellationToken)">
-            <summary>
-                Asynchronously returns the first element of <paramref name="source" /> matching <paramref name="predicate" />
-                as an <see cref="T:AStar.Dev.FunctionalParadigm.Option`1" />, or <c>None</c> if no element matches.
-            </summary>
-            <param name="source">The sequence to search.</param>
-            <param name="predicate">The condition an element must satisfy.</param>
-            <param name="cancellationToken">A token used to observe cancellation of the enumeration.</param>
-            <typeparam name="T">The element type.</typeparam>
-        </member>
         <member name="T:AStar.Dev.Utilities.ObjectExtensions">
             <summary>
                 The <see cref="T:AStar.Dev.Utilities.ObjectExtensions" /> class contains some useful methods to enable various tasks

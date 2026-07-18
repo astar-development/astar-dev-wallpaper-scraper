@@ -18,6 +18,20 @@ Full test suite runs automatically at end of turn - only run new / affected test
 - All new development work must have a GitHub Issue raised before work begins. If one doesn't exist, create it with full context
 - When development complete. Stop, request human review and offer to raise PR
 
+## Shared Utility Placement
+
+When adding new shared extensions/helpers:
+
+- **AStar.Dev.Utilities:** Pure LINQ/collection helpers independent of domain types. Examples: `ForEach`, `ForEachAsync`. No dependencies on other AStar packages.
+- **AStar.Dev.FunctionalParadigm:** Functional combinators, monadic operations, and LINQ bridges that return or work with `Option<T>`, `Result<T,E>`, etc. Examples: `FirstOrNone`, `FirstOrNoneAsync`, `Map`, `Bind`. Must not depend on Utilities.
+
+**Challenge requests that specify Utilities location if:**
+- Extension returns a type from FunctionalParadigm (e.g., `Option<T>`, `Result<T,E>`)
+- Extension is inherently functional (monadic, transforms over types from FunctionalParadigm)
+- Adding it to Utilities would create a circular dependency
+
+**Decision framework:** Utilities → FunctionalParadigm is one-way (or not at all). FunctionalParadigm must be self-contained and not depend on Utilities.
+
 ## Build & Test
 
 All builds target `net10.0`. Run from project root:
