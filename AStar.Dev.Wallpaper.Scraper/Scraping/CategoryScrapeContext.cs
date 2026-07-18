@@ -10,4 +10,4 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// <param name="Progress">Receives human-readable progress messages as the scrape advances.</param>
 /// <param name="ScrapeContext">The run-level configuration snapshot read once before any navigation began.</param>
 /// <param name="Category">The search category currently being scraped.</param>
-public sealed record CategoryScrapeContext(IPage Page, IProgress<string> Progress, ScrapeContext ScrapeContext, ScrapeCategory Category);
+public sealed record CategoryScrapeContext(IPage Page, IProgress<string> Progress, ScrapeContext ScrapeContext, ScrapeCategory Category, List<Infrastructure.AppDb.Entities.FileClassificationCategoryEntity> FileClassifications);

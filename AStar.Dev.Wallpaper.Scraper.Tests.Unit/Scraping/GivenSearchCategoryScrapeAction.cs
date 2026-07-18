@@ -1,12 +1,15 @@
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using Microsoft.Playwright;
+using Mono.Cecil;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
 public sealed class GivenSearchCategoryScrapeAction
 {
     private readonly IScrapeContextReader contextReader = Substitute.For<IScrapeContextReader>();
+    private readonly ISearchCategoryWriter categoryWriter = Substitute.For<ISearchCategoryWriter>();
     private readonly IWallpaperCountReader countReader = Substitute.For<IWallpaperCountReader>();
     private readonly IWallpaperHrefCollector hrefCollector = Substitute.For<IWallpaperHrefCollector>();
     private readonly ITagReader tagReader = Substitute.For<ITagReader>();
@@ -20,25 +23,49 @@ public sealed class GivenSearchCategoryScrapeAction
     private readonly IPage page = Substitute.For<IPage>();
 
     private static readonly ScrapeContext _singleCategoryContext = new(
-        [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1")],
+        [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false)],
         [],
         [],
-        new DirectoryLayout("/root", "/base", "/famous"));
+        new DirectoryLayout("/root", "/base", "/famous"), [], new SearchConfigurationEntity
+        {
+            Id = 1,
+            SearchStringPrefix = "https://wallhaven.cc/search?categories=",
+            SearchStringSuffix = string.Empty,
+            ImagePauseInSeconds = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
 
     private static readonly ScrapeContext _twoCategoryContext = new(
         [
-            new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1"),
-            new ScrapeCategory("Space", "https://wallhaven.cc/search?categories=2"),
+            new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false), 
+            new ScrapeCategory("Space", "https://wallhaven.cc/search?categories=2", false, false),
         ],
         [],
         [],
-        new DirectoryLayout("/root", "/base", "/famous"));
+        new DirectoryLayout("/root", "/base", "/famous"), [], new SearchConfigurationEntity
+        {
+            Id = 1,
+            SearchStringPrefix = "https://wallhaven.cc/search?categories=",
+            SearchStringSuffix = string.Empty,
+            ImagePauseInSeconds = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
 
     private static readonly ScrapeContext _ignoredTagContext = new(
-        [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1")],
+        [new ScrapeCategory("Nature", "https://wallhaven.cc/search?categories=1", false, false)],
         [],
         ["Ignored"],
-        new DirectoryLayout("/root", "/base", "/famous"));
+        new DirectoryLayout("/root", "/base", "/famous"), [], new SearchConfigurationEntity
+        {
+            Id = 1,
+            SearchStringPrefix = "https://wallhaven.cc/search?categories=",
+            SearchStringSuffix = string.Empty,
+            ImagePauseInSeconds = 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
 
     [Fact]
     public async Task when_a_category_has_more_wallpapers_than_fit_on_one_page_then_progress_reports_the_page_count_and_a_success_result_is_returned()
@@ -241,5 +268,5 @@ public sealed class GivenSearchCategoryScrapeAction
     }
 
     private SearchCategoryScrapeAction CreateSut() =>
-        new(contextReader, countReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository);
+        new(contextReader, categoryWriter, countReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository);
 }

@@ -1,6 +1,9 @@
+using System.Diagnostics;
+
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>Persisted category node in the file classification hierarchy.</summary>
+[DebuggerDisplay("Id = {Id}, Name = {Name}, Level = {Level}, ParentId = {ParentId}")]
 public sealed class FileClassificationCategoryEntity : AuditableEntity
 {
     /// <summary>Primary key.</summary>

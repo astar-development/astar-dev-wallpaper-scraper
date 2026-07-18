@@ -19,8 +19,9 @@ public sealed class ScrapeContextReader(IDbContextFactory<AppDbContext> dbContex
         var modelsToIgnore = await ReadModelsToIgnoreAsync(context, cancellationToken);
         var tagsToIgnore = await ReadTagsToIgnoreAsync(context, cancellationToken);
         var directoryLayout = await ReadDirectoryLayoutAsync(context, cancellationToken);
+        var fileClassifications = await context.FileClassificationCategories.ToListAsync(cancellationToken);
 
-        return new ScrapeContext(categories, modelsToIgnore, tagsToIgnore, directoryLayout, searchConfiguration.ImagePauseInSeconds);
+        return new ScrapeContext(categories, modelsToIgnore, tagsToIgnore, directoryLayout, fileClassifications, searchConfiguration);
     }
 
     private static Task<SearchConfigurationEntity> ReadSearchConfigurationAsync(AppDbContext context, CancellationToken cancellationToken) =>
@@ -30,7 +31,7 @@ public sealed class ScrapeContextReader(IDbContextFactory<AppDbContext> dbContex
     {
         var categories = await context.SearchCategories.Where(category => category.IncludeInSearch).OrderByDescending(category => category.IsFamous).ThenByDescending(category => category.IsInternet).ThenBy(category => category.Name).ToListAsync(cancellationToken);
 
-        return [.. categories.Select(category => new ScrapeCategory(category.Name, $"{searchConfiguration.SearchStringPrefix}{category.Id}{searchConfiguration.SearchStringSuffix}"))];
+        return [.. categories.Select(category => new ScrapeCategory(category.Name, $"{searchConfiguration.SearchStringPrefix}{category.Id}{searchConfiguration.SearchStringSuffix}", category.IsFamous, category.IsInternet))];
     }
 
     private static async Task<IReadOnlyList<string>> ReadModelsToIgnoreAsync(AppDbContext context, CancellationToken cancellationToken) =>

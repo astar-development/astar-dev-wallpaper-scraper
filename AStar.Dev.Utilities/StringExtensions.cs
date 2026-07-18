@@ -220,6 +220,24 @@ public static class StringExtensions
     };
 
     /// <summary>
+    ///     The CaseInsensitiveContains method checks if the string contains the specified substring, ignoring case.
+    /// </summary>
+    /// <param name="value">The string to search within</param>
+    /// <param name="contains">The substring to search for</param>
+    /// <returns>True if the value contains the substring, false otherwise</returns>
+    public static bool CaseInsensitiveContains(this string value, string contains)
+        => value.Contains(contains, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    ///     The CaseInsensitiveEquals method checks if the string equals the specified substring, ignoring case.
+    /// </summary>
+    /// <param name="value">The string to compare</param>
+    /// <param name="equals">The string to compare with</param>
+    /// <returns>True if the value equals the specified string, false otherwise</returns>
+    public static bool CaseInsensitiveEquals(this string value, string equals)
+        => value.Equals(equals, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     ///   The TitleCased method converts a string to title case using the specified culture.
     /// </summary>
     /// <param name="value">The string to convert</param>
