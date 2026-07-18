@@ -183,7 +183,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
         await page.MatchAsync(
             configuredPage => RunOnConfiguredPageAsync(actionName, action, configuredPage, cancellationToken),
-            ReportConfigurationError);
+            error => ReportConfigurationError(error, cancellationToken));
     }
 
     private async Task<FunctionalParadigm.Unit> RunOnConfiguredPageAsync(string actionName, IScrapeAction? action, IPage configuredPage, CancellationToken cancellationToken)
@@ -201,19 +201,25 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         var progress = new Progress<string>(AppendStatusLine);
 
         return await action.ExecuteAsync(configuredPage, progress, cancellationToken)
-            .MatchAsync(_ => FunctionalParadigm.Unit.Instance, error => ReportActionError(actionName, error));
+            .MatchAsync(_ => FunctionalParadigm.Unit.Instance, error => ReportActionError(actionName, error, cancellationToken));
     }
 
-    private FunctionalParadigm.Unit ReportActionError(string actionName, Exception error)
+    private FunctionalParadigm.Unit ReportActionError(string actionName, Exception error, CancellationToken cancellationToken)
     {
-        AppendStatusLine($"{actionName}: {error.Message}");
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            AppendStatusLine($"{actionName}: {error.Message}");
+        }
 
         return FunctionalParadigm.Unit.Instance;
     }
 
-    private FunctionalParadigm.Unit ReportConfigurationError(Exception error)
+    private FunctionalParadigm.Unit ReportConfigurationError(Exception error, CancellationToken cancellationToken)
     {
-        AppendStatusLine($"Error configuring Playwright page: {error.Message}");
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            AppendStatusLine($"Error configuring Playwright page: {error.Message}");
+        }
 
         return FunctionalParadigm.Unit.Instance;
     }

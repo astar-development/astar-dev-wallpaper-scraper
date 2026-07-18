@@ -66,6 +66,30 @@ public sealed class GivenMainWindowViewModel
     }
 
     [Fact]
+    public async Task when_the_search_categories_action_fails_with_a_non_cancellation_error_after_cancellation_has_been_requested_then_the_status_does_not_report_the_failure_message()
+    {
+        var actionEntered = new TaskCompletionSource();
+        var actionGate = new TaskCompletionSource();
+        var sut = CreateViewModel(scrapeActionBehavior: async _ =>
+        {
+            actionEntered.TrySetResult();
+            await actionGate.Task;
+
+            return Exceptional.Failure<FunctionalParadigm.Unit>(new InvalidOperationException("Protocol error: kaboom"));
+        });
+
+        var execution = sut.ScrapeSearchCategoriesCommand.Execute().ToTask();
+        await actionEntered.Task;
+        await sut.CancelCommand.Execute();
+        actionGate.SetResult();
+        await execution;
+
+        sut.StatusText.ShouldNotContain("Protocol error");
+        sut.StatusText.ShouldNotContain("kaboom");
+        sut.IsBusy.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task when_the_status_text_exceeds_one_thousand_lines_then_the_oldest_lines_are_dropped()
     {
         var sut = CreateViewModel(scrapeActionBehavior: callInfo =>
