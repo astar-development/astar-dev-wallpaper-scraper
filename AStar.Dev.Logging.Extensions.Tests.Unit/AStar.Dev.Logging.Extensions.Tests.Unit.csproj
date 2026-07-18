@@ -14,6 +14,8 @@
 
     <ItemGroup>
         <PackageReference Include="AStar.Dev.Utilities" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
         <PackageReference Include="Microsoft.Extensions.Logging" />
         <PackageReference Include="coverlet.collector">
             <PrivateAssets>all</PrivateAssets>
@@ -48,6 +50,10 @@
 
     <ItemGroup>
         <Compile Remove="ConfigurationTest.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\AStar.Dev.Logging.Extensions\astar-logging-settings.json" Link="astar-logging-settings.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>
