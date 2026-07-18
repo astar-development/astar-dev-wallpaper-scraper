@@ -20,7 +20,7 @@ public sealed class GivenUpdateService
     {
         var sut = CreateUpdateService("https://github.com/astar-development/astar-dev-wallpaper-scraper");
 
-        await Should.NotThrowAsync(() => sut.CheckForUpdatesAsync((Window)null!));
+        await Should.NotThrowAsync(() => sut.CheckForUpdatesAsync(null!));
 
         var logContent = ReadLog();
         logContent.ShouldContain("Not a Velopack install");
@@ -32,7 +32,7 @@ public sealed class GivenUpdateService
     {
         var sut = CreateUpdateService(string.Empty);
 
-        await Should.NotThrowAsync(() => sut.CheckForUpdatesAsync((Window)null!));
+        await Should.NotThrowAsync(() => sut.CheckForUpdatesAsync(null!));
 
         ReadLog().ShouldContain("Update check failed");
     }
