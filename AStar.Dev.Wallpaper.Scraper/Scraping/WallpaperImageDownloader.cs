@@ -8,17 +8,15 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 /// </summary>
 public sealed class WallpaperImageDownloader : IWallpaperImageDownloader
 {
-    private const int NavigationTimeoutMilliseconds = 30_000;
-
     /// <inheritdoc />
     public async Task<Exceptional<byte[]>> DownloadAsync(IPage page, string imageUrl, string categoryName, IReadOnlyList<string> tags, CancellationToken cancellationToken) =>
         await Try.RunAsync(async () =>
         {
-            var response = await page.GotoAsync(imageUrl, new PageGotoOptions { Timeout = NavigationTimeoutMilliseconds, }).ConfigureAwait(false);
+            var response = await page.APIRequest.GetAsync(imageUrl).ConfigureAwait(false);
 
-            if (response is null)
+            if (!response.Ok)
             {
-                throw new InvalidOperationException($"Navigating to '{imageUrl}' did not produce a response.");
+                throw new InvalidOperationException($"Requesting '{imageUrl}' returned status {response.Status}.");
             }
 
             return await response.BodyAsync().ConfigureAwait(false);

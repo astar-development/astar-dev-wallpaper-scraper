@@ -55,7 +55,7 @@ public sealed class SearchCategoryScrapeAction(
         if (isFullyVisited)
         {
             context.Progress.Report($"Category: {context.Category.Name} already fully visited (image count: {wallpaperCount})");
-            await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
+            await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 2_000, cancellationToken);
 
             return;
         }
