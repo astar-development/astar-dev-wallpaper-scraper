@@ -17,7 +17,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Home;
 
 public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    private const int MaxStatusLines = 1000;
+    private const int MaxStatusLines = 1_000;
 
     private string statusText = string.Empty;
     private string thumbnailCategoryName = string.Empty;
@@ -32,6 +32,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         Title = $"{scrapeConfiguration.Value.ApplicationName} V{ApplicationVersion}";
         this.playwrightService = playwrightService;
+        SetWindowSize(scrapeConfiguration.Value.WindowSize);
 
         ScrapeSearchCategoriesCommand = CreateScrapeCommand("Scrape Search Categories", searchCategoryScrapeAction);
         ScrapeTopCommand = CreateScrapeCommand("Scrape Top Wallpapers");
@@ -48,6 +49,15 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         OpenTagToIgnoreCommand = CreateOpenEditorCommand(entityEditorFactory.CreateTagToIgnoreEditor);
         OpenUserConfigurationCommand = CreateOpenEditorCommand(entityEditorFactory.CreateUserConfigurationEditor);
     }
+
+    private void SetWindowSize(WindowSize windowSize)
+    {
+        WindowWidth = windowSize.Width;
+        WindowHeight = windowSize.Height;
+    }
+
+    public double WindowWidth { get; set; } = 1_000;
+    public double WindowHeight { get; set; } = 1_000;
 
     public string Title { get; }
 

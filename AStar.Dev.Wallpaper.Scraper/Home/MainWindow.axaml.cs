@@ -24,6 +24,8 @@ public partial class MainWindow : Window
     public MainWindow(MainWindowViewModel viewModel, IWallpaperThumbnailFeed thumbnailFeed) : this()
     {
         DataContext = viewModel;
+        Width = viewModel.WindowWidth;
+        Height = viewModel.WindowHeight;
 
         viewModel.ConfirmScrape.RegisterHandler(async context =>
             context.SetOutput(await new ConfirmDialog(context.Input).ShowDialog<bool?>(this) ?? false));
