@@ -1,4 +1,6 @@
 using AStar.Dev.Infrastructure.AppDb;
+using AStar.Dev.Wallpaper.Scraper.Configuration;
+using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +50,27 @@ public class GivenServiceCollectionExtensions
 
         rawDownloader.ShouldBeOfType<WallpaperImageDownloader>();
         decoratedDownloader.ShouldBeOfType<ThumbnailPublishingWallpaperImageDownloader>();
+    }
+
+    [Fact]
+    public void when_application_services_are_added_then_the_entity_editor_factory_is_registered_as_a_simple_singleton()
+    {
+        var services = CreateServices();
+
+        var descriptor = services.Single(service => service.ServiceType == typeof(IEntityEditorFactory));
+        descriptor.Lifetime.ShouldBe(ServiceLifetime.Singleton);
+        descriptor.ImplementationType.ShouldBe(typeof(EntityEditorFactory));
+    }
+
+    [Fact]
+    public void when_application_services_are_added_then_an_export_directory_is_registered_as_a_singleton()
+    {
+        var services = CreateServices();
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var exportDirectory = serviceProvider.GetRequiredService<ExportDirectory>();
+
+        exportDirectory.Value.ShouldNotBeNullOrWhiteSpace();
     }
 
     private static IServiceCollection CreateServices()
