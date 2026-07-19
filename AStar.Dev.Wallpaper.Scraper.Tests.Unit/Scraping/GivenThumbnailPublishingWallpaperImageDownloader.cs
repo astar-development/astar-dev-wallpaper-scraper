@@ -6,7 +6,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
 public sealed class GivenThumbnailPublishingWallpaperImageDownloader
 {
-    private readonly IWallpaperImageDownloader inner = Substitute.For<IWallpaperImageDownloader>();
+    private readonly IRawWallpaperImageDownloader inner = Substitute.For<IRawWallpaperImageDownloader>();
     private readonly IWallpaperThumbnailGenerator thumbnailGenerator = Substitute.For<IWallpaperThumbnailGenerator>();
     private readonly IWallpaperThumbnailPublisher thumbnailPublisher = Substitute.For<IWallpaperThumbnailPublisher>();
     private readonly IPage page = Substitute.For<IPage>();

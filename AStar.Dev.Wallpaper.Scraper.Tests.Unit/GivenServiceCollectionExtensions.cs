@@ -37,6 +37,19 @@ public class GivenServiceCollectionExtensions
         descriptor.ImplementationType.ShouldBe(typeof(SearchCategoryScrapeAction));
     }
 
+    [Fact]
+    public void when_application_services_are_added_then_the_wallpaper_image_downloader_is_registered_without_a_circular_dependency()
+    {
+        var services = CreateServices();
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var rawDownloader = serviceProvider.GetRequiredService<IRawWallpaperImageDownloader>();
+        var decoratedDownloader = serviceProvider.GetRequiredService<IWallpaperImageDownloader>();
+
+        rawDownloader.ShouldBeOfType<WallpaperImageDownloader>();
+        decoratedDownloader.ShouldBeOfType<ThumbnailPublishingWallpaperImageDownloader>();
+    }
+
     private static IServiceCollection CreateServices()
     {
         IConfiguration configuration = new ConfigurationBuilder().Build();
