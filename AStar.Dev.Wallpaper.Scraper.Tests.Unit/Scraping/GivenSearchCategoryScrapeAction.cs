@@ -1,6 +1,7 @@
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
+using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.Playwright;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
@@ -20,6 +21,7 @@ public sealed class GivenSearchCategoryScrapeAction
     private readonly IWallpaperFileClassificationRepository fileClassificationRepository = Substitute.For<IWallpaperFileClassificationRepository>();
     private readonly IProgress<string> progress = Substitute.For<IProgress<string>>();
     private readonly IPage page = Substitute.For<IPage>();
+    private readonly Clock clock = () => new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     private const string WallpaperHref = "https://wallhaven.cc/w/abc123";
     private const string WallpaperImageUrl = "https://wallhaven.cc/images/pic.jpg";
@@ -75,7 +77,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_a_category_has_more_wallpapers_than_fit_on_one_page_then_progress_reports_the_page_count_and_a_success_result_is_returned()
     {
-        var sut = CreateSut(wallpaperCount: 50);
+        var sut = CreateSut(clock, wallpaperCount: 50);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -87,7 +89,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_persisting_scrape_progress_fails_then_progress_reports_the_failure_and_the_page_is_still_visited()
     {
-        var sut = CreateSut(writerResult: Result.Failure<FunctionalParadigm.Unit, string>("No search category named 'Nature' exists to update."));
+        var sut = CreateSut(clock, writerResult: Result.Failure<FunctionalParadigm.Unit, string>("No search category named 'Nature' exists to update."));
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -99,7 +101,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_multiple_categories_are_configured_then_each_category_is_visited_on_its_own_search_url()
     {
-        var sut = CreateSut(context: twoCategoryContext);
+        var sut = CreateSut(clock, context: twoCategoryContext);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -114,7 +116,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_a_category_spans_multiple_pages_then_each_page_is_visited_and_hrefs_are_collected_per_page()
     {
-        var sut = CreateSut(wallpaperCount: 30);
+        var sut = CreateSut(clock, wallpaperCount: 30);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -127,7 +129,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_reading_the_scrape_context_fails_then_a_failure_result_is_returned_instead_of_throwing()
     {
-        var sut = CreateSut(contextReaderException: new InvalidOperationException("Sequence contains no elements"));
+        var sut = CreateSut(clock, contextReaderException: new InvalidOperationException("Sequence contains no elements"));
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -137,7 +139,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_page_fails_to_load_then_progress_reports_the_failure_and_no_tags_are_read()
     {
-        var sut = CreateSut(hrefs: [WallpaperHref], wallpaperPageOk: false, wallpaperPageStatus: 404);
+        var sut = CreateSut(clock, hrefs: [WallpaperHref], wallpaperPageOk: false, wallpaperPageStatus: 404);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -149,7 +151,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_has_no_image_url_then_progress_reports_the_failure_and_nothing_is_downloaded()
     {
-        var sut = CreateSut(hrefs: [WallpaperHref], imageUrl: Option<string>.None.Instance);
+        var sut = CreateSut(clock, hrefs: [WallpaperHref], imageUrl: Option<string>.None.Instance);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -161,7 +163,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_was_already_downloaded_then_its_page_is_never_visited_and_it_is_not_downloaded_again()
     {
-        var sut = CreateSut(hrefs: [WallpaperHref], isAlreadyDownloaded: true);
+        var sut = CreateSut(clock, hrefs: [WallpaperHref], isAlreadyDownloaded: true);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -176,7 +178,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_checking_whether_a_wallpaper_is_already_downloaded_then_the_check_is_a_contains_match_on_the_wallpaper_id()
     {
-        var sut = CreateSut(hrefs: [WallpaperHref], imageUrl: Option<string>.None.Instance);
+        var sut = CreateSut(clock, hrefs: [WallpaperHref], imageUrl: Option<string>.None.Instance);
 
         await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -186,7 +188,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_a_wallpaper_has_a_tag_on_the_ignore_list_then_it_is_saved_under_the_curated_directory_path()
     {
-        var sut = CreateSut(context: ignoredTagContext, hrefs: [WallpaperHref], tags: [new TagData("Nature", "outdoors"), new TagData("Ignored", "outdoors")]);
+        var sut = CreateSut(clock, context: ignoredTagContext, hrefs: [WallpaperHref], tags: [new TagData("Nature", "outdoors"), new TagData("Ignored", "outdoors")]);
 
         await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -198,7 +200,7 @@ public sealed class GivenSearchCategoryScrapeAction
     public async Task when_a_new_wallpaper_is_visited_then_its_categories_are_registered_and_it_is_downloaded_saved_and_recorded()
     {
         var dimensions = new ImageDimensions(10, 20);
-        var sut = CreateSut(hrefs: [WallpaperHref], dimensions: dimensions);
+        var sut = CreateSut(clock, hrefs: [WallpaperHref], dimensions: dimensions);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -212,7 +214,7 @@ public sealed class GivenSearchCategoryScrapeAction
     public async Task when_the_image_download_fails_then_progress_reports_the_failure_and_nothing_is_saved_or_recorded()
     {
         var exception = new InvalidOperationException("Navigating to 'https://wallhaven.cc/images/pic.jpg' did not produce a response.");
-        var sut = CreateSut(hrefs: [WallpaperHref], downloadResult: Exceptional.Failure<byte[]>(exception));
+        var sut = CreateSut(clock, hrefs: [WallpaperHref], downloadResult: Exceptional.Failure<byte[]>(exception));
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -225,7 +227,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_count_and_last_page_visited_both_match_the_stored_progress_then_the_category_is_skipped_and_progress_is_reported()
     {
-        var sut = CreateSut(wallpaperCount: 42, storedProgress: new SearchCategoryProgress(42, 2));
+        var sut = CreateSut(clock, wallpaperCount: 42, storedProgress: new SearchCategoryProgress(42, 2));
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -238,7 +240,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_count_matches_but_the_last_page_visited_is_behind_the_calculated_page_count_then_the_category_is_scraped_normally()
     {
-        var sut = CreateSut(wallpaperCount: 42, storedProgress: new SearchCategoryProgress(42, 1));
+        var sut = CreateSut(clock, wallpaperCount: 42, storedProgress: new SearchCategoryProgress(42, 1));
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -251,7 +253,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_the_wallpaper_count_differs_from_the_stored_count_then_the_category_is_scraped_normally()
     {
-        var sut = CreateSut(wallpaperCount: 24, storedProgress: new SearchCategoryProgress(20, 1));
+        var sut = CreateSut(clock, wallpaperCount: 24, storedProgress: new SearchCategoryProgress(20, 1));
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -263,7 +265,7 @@ public sealed class GivenSearchCategoryScrapeAction
     [Fact]
     public async Task when_reading_the_stored_progress_returns_none_then_the_category_is_scraped_normally()
     {
-        var sut = CreateSut(wallpaperCount: 24);
+        var sut = CreateSut(clock, wallpaperCount: 24);
 
         var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
 
@@ -273,6 +275,7 @@ public sealed class GivenSearchCategoryScrapeAction
     }
 
     private SearchCategoryScrapeAction CreateSut(
+        Clock clock,
         ScrapeContext? context = null,
         int wallpaperCount = 1,
         SearchCategoryProgress? storedProgress = null,
@@ -323,6 +326,6 @@ public sealed class GivenSearchCategoryScrapeAction
         fileStore.SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(savedFile ?? new SavedWallpaperFile("/root/base/pic.jpg", 3));
         dimensionsReader.Read(Arg.Any<byte[]>()).Returns(dimensions ?? new ImageDimensions(0, 0));
 
-        return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository);
+        return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository, clock);
     }
 }
