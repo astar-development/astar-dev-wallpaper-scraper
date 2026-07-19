@@ -2,8 +2,8 @@ using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Infrastructure.AppDb.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using AccountId = AStar.Dev.Infrastructure.AppDb.Entities.AccountId;
-using OneDriveItemId = AStar.Dev.Infrastructure.AppDb.Entities.OneDriveItemId;
+using AccountId = AStar.Dev.Infrastructure.AppDb.ValueTypes.AccountId;
+using OneDriveItemId = AStar.Dev.Infrastructure.AppDb.ValueTypes.OneDriveItemId;
 
 namespace AStar.Dev.Infrastructure.AppDb.Configuration;
 

@@ -1,3 +1,5 @@
+using AStar.Dev.Infrastructure.AppDb.Enums;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>An audit record of a change made to a scraped file.</summary>

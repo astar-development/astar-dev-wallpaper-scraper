@@ -1,3 +1,4 @@
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>A unique tag observed during a scrape run.</summary>

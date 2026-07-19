@@ -1,4 +1,4 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>An opaque, stable handle identifying a file across renames and moves.</summary>
 /// <param name="Value">The handle value.</param>

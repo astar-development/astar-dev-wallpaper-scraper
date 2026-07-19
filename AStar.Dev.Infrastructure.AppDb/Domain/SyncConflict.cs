@@ -1,7 +1,8 @@
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb.Entities;
-using AccountId = AStar.Dev.Infrastructure.AppDb.Entities.AccountId;
-using OneDriveItemId = AStar.Dev.Infrastructure.AppDb.Entities.OneDriveItemId;
+using AccountId = AStar.Dev.Infrastructure.AppDb.ValueTypes.AccountId;
+using OneDriveItemId = AStar.Dev.Infrastructure.AppDb.ValueTypes.OneDriveItemId;
+using AStar.Dev.Infrastructure.AppDb.Enums;
 
 namespace AStar.Dev.Infrastructure.AppDb.Domain;
 

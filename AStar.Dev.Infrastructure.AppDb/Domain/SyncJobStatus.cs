@@ -1,5 +1,6 @@
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Infrastructure.AppDb.Enums;
 
 namespace AStar.Dev.Infrastructure.AppDb.Domain;
 

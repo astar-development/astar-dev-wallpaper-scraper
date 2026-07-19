@@ -1,3 +1,4 @@
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>Junction row linking a file to a category in the normalised classification taxonomy, regardless of which application classified it.</summary>

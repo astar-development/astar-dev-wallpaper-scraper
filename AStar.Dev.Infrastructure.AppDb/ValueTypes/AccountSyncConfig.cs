@@ -1,6 +1,7 @@
 using AStar.Dev.Infrastructure.AppDb.Domain;
+using AStar.Dev.Infrastructure.AppDb.Enums;
 
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>
 /// Represents the synchronization configuration for a OneDrive account, including conflict resolution policy and local sync path.

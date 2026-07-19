@@ -1,4 +1,5 @@
 using AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 namespace AStar.Dev.Infrastructure.AppDb.Domain;
 

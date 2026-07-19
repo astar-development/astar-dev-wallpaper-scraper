@@ -1,6 +1,7 @@
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.Factories;
 
 /// <summary>
 /// Factory for creating instances of <see cref="VersionInfo"/>.

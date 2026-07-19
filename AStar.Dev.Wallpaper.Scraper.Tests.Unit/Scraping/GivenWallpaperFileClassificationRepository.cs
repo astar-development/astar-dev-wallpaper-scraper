@@ -3,6 +3,7 @@ using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 

@@ -1,4 +1,4 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>
 /// Represents the storage quota information for a OneDrive account, including total storage capacity and used storage. This entity can be used to track and display the storage usage of the account within the sync client application, allowing users to manage their storage effectively and make informed decisions about their synchronization needs.

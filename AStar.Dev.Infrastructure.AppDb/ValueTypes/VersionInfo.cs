@@ -1,6 +1,6 @@
 using AStar.Dev.FunctionalParadigm;
 
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>
 /// Represents version information for a OneDrive item, including ETag and CTag values.

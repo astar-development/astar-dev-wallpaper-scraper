@@ -1,6 +1,7 @@
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 namespace AStar.Dev.Infrastructure.AppDb.Configuration;
 

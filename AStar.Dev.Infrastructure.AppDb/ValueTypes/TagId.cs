@@ -1,6 +1,7 @@
+using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Source.Generators.Attributes;
 
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>
 /// A strongly-typed identifier for a <see cref="TagToIgnoreEntity"/>.

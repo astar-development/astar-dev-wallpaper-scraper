@@ -1,6 +1,6 @@
 using AStar.Dev.Source.Generators.Attributes;
 
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>
 /// A strongly-typed identifier for a OneDrive account within the sync client.

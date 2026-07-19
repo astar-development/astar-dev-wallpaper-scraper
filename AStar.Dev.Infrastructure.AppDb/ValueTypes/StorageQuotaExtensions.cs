@@ -1,4 +1,4 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>
 /// Provides extension methods for the <see cref="StorageQuota"/> record, allowing for additional functionality such as calculating the fraction of storage used. This class serves as a utility to enhance the capabilities of the StorageQuota entity without modifying its original structure, adhering to the open/closed principle and promoting separation of concerns within the codebase.
