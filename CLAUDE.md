@@ -10,14 +10,14 @@ Full test suite runs automatically at end of turn - only run new / affected test
 
 ## Project Rules
 
-- Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests. 
+- Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests.
 - Async methods MUST end in `Async` - exceptions: EventHandlers and tests. Neither have the suffix
 - return statements MUST be proceeded by a blank line - except when they immediately follow a control statement (`if` etc.)
-- ALL new code must use TDD to develop. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc. If no GH Issue exists, create one - ask user for details if necessary
-- On the rare occasion that a class is not testable/offers little to no protection: mark with `[ExcludeFromCodeCoverage]` from `System.Diagnostics.CodeAnalysis`
-- All new development work must have a GitHub Issue raised before work begins. If one doesn't exist, create it with full context
+- ALL new code must use have GH issue, must use TDD, commit failing test first (red), confirm fail, then implement + commit production code separately (green). Never batch test + production code in one commit. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc.
+- When a class is not testable/offers little regression: add `[ExcludeFromCodeCoverage]`
 - When development complete. Stop, request human review and offer to raise PR
 - NEVER change code unrelated to the requested change (no judgement-call restructuring, reordering, or "while I'm here" cleanup). If a change might be beneficial (logical grouping, indirect refactor, etc.), SUGGEST it as a separate item - do NOT implement it
+- Before editing a table/data store, confirm correct target. `SearchCategories` manually-maintained - never insert/restructure (progress-field updates fine). New/unrecognised tags go to `FileClassificationCategories` under "Unclassified"
 
 ## Shared Utility Placement
 
@@ -27,6 +27,7 @@ When adding new shared extensions/helpers:
 - **AStar.Dev.FunctionalParadigm:** Functional combinators, monadic operations, and LINQ bridges that return or work with `Option<T>`, `Result<T,E>`, etc. Examples: `FirstOrNone`, `FirstOrNoneAsync`, `Map`, `Bind`. Must not depend on Utilities.
 
 **Challenge requests that specify Utilities location if:**
+
 - Extension returns a type from FunctionalParadigm (e.g., `Option<T>`, `Result<T,E>`)
 - Extension is inherently functional (monadic, transforms over types from FunctionalParadigm)
 - Adding it to Utilities would create a circular dependency
@@ -58,6 +59,8 @@ dotnet test -- --filter-method "*when_action_then*"  # Run by test method
 ```bash
 bash code-coverage.sh  # Runs tests with coverage, HTML report: CoverageReport/ - runs as stop hook.
 ```
+
+Before commit, run build + affected/new tests, report pass count (e.g. `206/206 passing`).
 
 ## Codebase Architecture
 
