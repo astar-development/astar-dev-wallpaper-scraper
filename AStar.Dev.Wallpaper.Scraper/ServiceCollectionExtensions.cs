@@ -1,4 +1,5 @@
 using System.IO.Abstractions;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
@@ -51,10 +52,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IWallpaperCategoryRegistrar, WallpaperCategoryRegistrar>();
         services.AddSingleton<IWallpaperFileClassificationRepository, WallpaperFileClassificationRepository>();
         services.AddSingleton<IScrapeAction, SearchCategoryScrapeAction>();
-        services.AddSingleton<IEntityEditorFactory>(serviceProvider => new EntityEditorFactory(
-            serviceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>(),
-            serviceProvider.GetRequiredService<IFileSystem>(),
-            ApplicationDirectories.DocumentsExportDirectory));
+        services.AddSingleton(ExportDirectoryFactory.Create(ApplicationDirectories.DocumentsExportDirectory)
+            .Match(exportDirectory => exportDirectory, error => throw new InvalidOperationException(error)));
+        services.AddSingleton<IEntityEditorFactory, EntityEditorFactory>();
         services.AddTransient<Clock>(serviceProvider => () => DateTimeOffset.Now);
 
         return services;

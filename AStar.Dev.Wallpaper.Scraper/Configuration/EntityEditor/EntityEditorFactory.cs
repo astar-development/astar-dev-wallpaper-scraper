@@ -12,7 +12,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 /// <param name="dbContextFactory">Passed through to every editor so each opens its own tracked <see cref="AppDbContext" />.</param>
 /// <param name="fileSystem">Passed through to every editor for JSON import/export.</param>
 /// <param name="exportDirectory">The directory every editor's Import/Export command reads from and writes to.</param>
-public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContextFactory, IFileSystem fileSystem, string exportDirectory) : IEntityEditorFactory
+public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContextFactory, IFileSystem fileSystem, ExportDirectory exportDirectory) : IEntityEditorFactory
 {
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateConnectionStringsEditor() =>
@@ -26,7 +26,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
                 ReadOnlyColumns: [nameof(ConnectionStringsEntity.Id)]),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateFileClassificationCategoriesEditor() =>
@@ -43,7 +43,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 CustomActionAsync: SyncTagsToIgnoreAsync,
                 OrderItemsBy: classification => classification.Name),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateSearchConfigurationEditor() =>
@@ -60,7 +60,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ],
                 ReadOnlyColumns: [nameof(SearchConfigurationEntity.Id)]),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateModelToIgnoreEditor() =>
@@ -74,7 +74,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
                 ReadOnlyColumns: [nameof(ModelToIgnoreEntity.Id)]),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateScrapeDirectoriesEditor() =>
@@ -88,7 +88,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
                 ReadOnlyColumns: [nameof(ScrapeDirectoriesEntity.Id)]),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateSearchCategoriesEditor() =>
@@ -108,7 +108,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 OnBeforeAddAsync: async (context, entity, token) =>
                     entity.SearchConfigurationId = await context.Set<SearchConfigurationEntity>().Select(configuration => configuration.Id).FirstAsync(token)),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateTagToIgnoreEditor() =>
@@ -122,7 +122,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
                 ReadOnlyColumns: [nameof(TagToIgnoreEntity.Id)]),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     /// <inheritdoc />
     public EntityEditorViewModelBase CreateUserConfigurationEditor() =>
@@ -136,7 +136,7 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
                 ExcludedColumns: [nameof(AuditableEntity.CreatedAt), nameof(AuditableEntity.UpdatedAt)],
                 ReadOnlyColumns: [nameof(UserConfigurationEntity.Id)]),
             fileSystem,
-            exportDirectory);
+            exportDirectory.Value);
 
     private static async Task<string> SyncTagsToIgnoreAsync(AppDbContext context, CancellationToken cancellationToken)
     {
