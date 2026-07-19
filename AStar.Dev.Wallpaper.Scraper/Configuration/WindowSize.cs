@@ -1,8 +1,8 @@
 namespace AStar.Dev.Wallpaper.Scraper.Configuration;
 
 /// <summary>
-///    Represents the size of a window in terms of width and height.
+///    Represents the width and height of the application window.
 /// </summary>
-/// <param name="Width">The width of the window.</param>
-/// <param name="Height">The height of the window.</param>
-public record WindowSize(double Width = 1_000, double Height = 1_000);
+/// <param name="Width">The width of the application window.</param>
+/// <param name="Height">The height of the application window.</param>
+public record WindowSize(int Width, int Height);

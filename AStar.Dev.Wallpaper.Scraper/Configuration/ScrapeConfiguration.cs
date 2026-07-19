@@ -25,8 +25,5 @@ public class ScrapeConfiguration
     /// </summary>
     public SearchConfiguration SearchConfiguration { get; set; } = new SearchConfiguration();
 
-    /// <summary>
-    ///    Gets or sets the window size for the main application window.
-    /// </summary>
-    public WindowSize WindowSize { get; set; } = new WindowSize();
+    public WindowSize WindowSize { get; set; } = new WindowSize(1_000, 1_000);
 }

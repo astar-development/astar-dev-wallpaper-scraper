@@ -44,12 +44,13 @@
             <Border VerticalAlignment="Top" CornerRadius="10" ClipToBounds="True">
                 <Image x:Name="ThumbnailImage" Width="750" Height="750" Stretch="Uniform" />
             </Border>
-            <TextBlock Text="{Binding ThumbnailCategoryName}" FontSize="24" FontWeight="Bold" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding ThumbnailCategoryName}" FontSize="32" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" Height="50" VerticalAlignment="Center" />
             <TextBlock Text="{Binding ThumbnailTags}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
         </StackPanel>
 
         <ScrollViewer x:Name="StatusScroller" Margin="12,8">
-            <TextBlock x:Name="StatusLabel" Text="{Binding StatusText}" TextWrapping="Wrap" FontFamily="Consolas,Monospace" />
+            <TextBlock x:Name="StatusLabel" vm:StatusTextBehavior.FormattedText="{Binding StatusText}" TextWrapping="Wrap" FontFamily="Consolas,Monospace" />
         </ScrollViewer>
+        
     </DockPanel>
 </Window>

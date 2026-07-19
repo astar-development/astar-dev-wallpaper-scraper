@@ -42,11 +42,11 @@ public sealed class SearchCategoryScrapeAction(
 
     private async Task VisitCategoryAsync(CategoryScrapeContext context, CancellationToken cancellationToken)
     {
-        context.Progress.Report($"Visiting category: {context.Category.Name}, searchString: {context.Category.SearchUrl}");
+        context.Progress.Report($"{DateTimeOffset.Now:T} Visiting category: <Run FontSize=\"24\">{context.Category.Name}</Run>");
         await context.Page.GotoAsync(context.Category.SearchUrl);
 
         var wallpaperCount = await countReader.ReadAsync(context.Page, cancellationToken);
-        context.Progress.Report($"Number of wallpapers found for category: {context.Category.Name} is {wallpaperCount}");
+        context.Progress.Report($"{DateTimeOffset.Now:T} Number of wallpapers found for category: {context.Category.Name} is {wallpaperCount}");
 
         var pageCount = (int)Math.Ceiling(wallpaperCount / (double)ImagesPerPage);
         var progressOption = await searchCategoryReader.GetProgressAsync(context.Category.Name, cancellationToken);
@@ -54,13 +54,13 @@ public sealed class SearchCategoryScrapeAction(
 
         if (isFullyVisited)
         {
-            context.Progress.Report($"Category: {context.Category.Name} already fully visited (image count: {wallpaperCount})");
+            context.Progress.Report($"{DateTimeOffset.Now:T} Category: {context.Category.Name} already fully visited (image count: {wallpaperCount})");
             await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 2_000, cancellationToken);
 
             return;
         }
 
-        context.Progress.Report($"Category: {context.Category.Name} has {wallpaperCount} wallpapers, need to get all {pageCount} pages for this category");
+        context.Progress.Report($"{DateTimeOffset.Now:T} Category: {context.Category.Name} has {wallpaperCount} wallpapers, need to get all {pageCount} pages for this category");
         await Enumerable.Range(1, pageCount).ForEachAsync(pageNumber => VisitCategoryPageAsync(context, pageNumber, pageCount, wallpaperCount, cancellationToken));
     }
 
@@ -71,13 +71,13 @@ public sealed class SearchCategoryScrapeAction(
             onSuccess: _ => Unit.Instance,
             onFailure: error =>
             {
-                context.Progress.Report($"Failed to persist scrape progress for category: {context.Category.Name}, error: {error}");
+                context.Progress.Report($"{DateTimeOffset.Now:T} Failed to persist scrape progress for category: {context.Category.Name}, error: {error}");
 
                 return Unit.Instance;
             });
 
         var pageUrl = $"{context.Category.SearchUrl}&page={pageNumber}";
-        context.Progress.Report($"Visiting category: {context.Category.Name}, page {pageNumber} of {pageCount} with searchString: {pageUrl}");
+        context.Progress.Report($"{DateTimeOffset.Now:T} Visiting category: {context.Category.Name}, page {pageNumber} of {pageCount} with searchString: {pageUrl}");
         await context.Page.GotoAsync(pageUrl);
 
         var hrefs = await hrefCollector.CollectAsync(context.Page, cancellationToken);
@@ -93,18 +93,18 @@ public sealed class SearchCategoryScrapeAction(
 
         if (await fileClassificationRepository.IsAlreadyDownloadedAsync(wallpaperId, cancellationToken))
         {
-            context.Progress.Report($"Skipping wallpaper page: {href} as we already have it downloaded");
+            context.Progress.Report($"{DateTimeOffset.Now:T} Skipping wallpaper page: {href} as we already have it downloaded");
             await Task.Delay(ShortDelayForImageSkipInMilliseconds, cancellationToken);
 
             return;
         }
 
-        context.Progress.Report($"Visiting wallpaper page: {href}");
+        context.Progress.Report($"{DateTimeOffset.Now:T} Visiting wallpaper page: {href}");
         var response = await context.Page.GotoAsync(href, new PageGotoOptions { Timeout = WallpaperPageTimeoutMilliseconds, });
 
         if (response is not { Ok: true })
         {
-            context.Progress.Report($"Failed to load wallpaper page: {href}, status: {response?.Status}");
+            context.Progress.Report($"{DateTimeOffset.Now:T} Failed to load wallpaper page: {href}, status: {response?.Status}");
             await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
 
             return;
@@ -120,7 +120,7 @@ public sealed class SearchCategoryScrapeAction(
             onSomeAsync: imageUrl => DownloadWallpaperAsync(context, new WallpaperDownloadContext(imageUrl, directoryPath, curation.Kept), cancellationToken),
             onNone: () =>
             {
-                context.Progress.Report($"Failed to get wallpaper image URL for page: {href}");
+                context.Progress.Report($"{DateTimeOffset.Now:T} Failed to get wallpaper image URL for page: {href}");
 
                 return Unit.Instance;
             });
@@ -135,7 +135,7 @@ public sealed class SearchCategoryScrapeAction(
         return await (await imageDownloader.DownloadAsync(context.Page, download.ImageUrl, context.Category.Name, download.Tags.Select(tag => tag.Tag).ToList(), cancellationToken)).MatchAsync(
             onSuccess: async imageBytes =>
             {
-                context.Progress.Report($"Downloaded wallpaper image from URL: {download.ImageUrl}, size: {imageBytes.Length} bytes");
+                context.Progress.Report($"{DateTimeOffset.Now:T} Downloaded wallpaper image from URL: {download.ImageUrl}, size: {imageBytes.Length} bytes");
                 var savedFile = await fileStore.SaveAsync(download.DirectoryPath, fileName, imageBytes, cancellationToken);
                 var dimensions = dimensionsReader.Read(imageBytes);
 
@@ -146,7 +146,7 @@ public sealed class SearchCategoryScrapeAction(
             },
             onFailure: exception =>
             {
-                context.Progress.Report($"Failed to download wallpaper image from URL: {download.ImageUrl}, error: {exception.Message}");
+                context.Progress.Report($"{DateTimeOffset.Now:T} Failed to download wallpaper image from URL: {download.ImageUrl}, error: {exception.Message}");
 
                 return Unit.Instance;
             });

@@ -388,6 +388,13 @@ public sealed class GivenMainWindowViewModel
         var sut = CreateViewModel();
 
         sut.WindowWidth.ShouldBe(1_234);
+    }
+
+    [Fact]
+    public async Task when_main_window_loads_then_the_height_is_set_from_the_appsettings()
+    {
+        var sut = CreateViewModel();
+
         sut.WindowHeight.ShouldBe(567);
     }
 
@@ -404,7 +411,7 @@ public sealed class GivenMainWindowViewModel
         searchCategoryScrapeAction.ExecuteAsync(Arg.Any<IPage>(), Arg.Any<IProgress<string>>(), Arg.Any<CancellationToken>())
             .Returns(scrapeActionBehavior ?? (_ => Task.FromResult(scrapeActionResult ?? Exceptional.Success(FunctionalParadigm.Unit.Instance))));
 
-        var scrapeConfiguration = Options.Create(new ScrapeConfiguration { ApplicationName = "Test App" });
+        var scrapeConfiguration = Options.Create(new ScrapeConfiguration { ApplicationName = "Test App", WindowSize = new WindowSize(1_234, 567) });
         var sut = new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction, entityEditorFactory);
 
         if (confirmScrape.HasValue)
