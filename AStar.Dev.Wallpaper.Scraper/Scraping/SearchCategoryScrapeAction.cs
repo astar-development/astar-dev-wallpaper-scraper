@@ -42,7 +42,7 @@ public sealed class SearchCategoryScrapeAction(
 
     private async Task VisitCategoryAsync(CategoryScrapeContext context, CancellationToken cancellationToken)
     {
-        context.Progress.Report($"Visiting category: {context.Category.Name}, searchString: {context.Category.SearchUrl}");
+        context.Progress.Report($"<Run FontSize=\"24\">Visiting category:</Run> {context.Category.Name}, searchString: {context.Category.SearchUrl}");
         await context.Page.GotoAsync(context.Category.SearchUrl);
 
         var wallpaperCount = await countReader.ReadAsync(context.Page, cancellationToken);
