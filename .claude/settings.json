@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/jbarden/.local/bin/graphify hook-guard search"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/jbarden/.local/bin/graphify hook-guard read"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "serena@claude-plugins-official": true
+  }
+}
