@@ -382,6 +382,15 @@ public sealed class GivenMainWindowViewModel
         handled.ShouldBe(editor);
     }
 
+    [Fact]
+    public async Task when_main_window_loads_then_the_width_is_set_from_the_appsettings()
+    {
+        var sut = CreateViewModel();
+
+        sut.WindowWidth.ShouldBe(1_234);
+        sut.WindowHeight.ShouldBe(567);
+    }
+
     private MainWindowViewModel CreateViewModel(
         Exceptional<IPage>? configureResult = null,
         Func<CallInfo, Task<Exceptional<IPage>>>? configureBehavior = null,
