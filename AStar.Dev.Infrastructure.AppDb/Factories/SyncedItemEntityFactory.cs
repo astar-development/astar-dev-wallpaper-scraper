@@ -1,8 +1,10 @@
 using System.IO.Abstractions;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb.Domain;
+using AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.Factories;
 
 /// <summary>
 /// Factory class for creating instances of <see cref="SyncedItemEntity"/> from various sources such as remote delta items and synchronization jobs.

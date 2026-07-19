@@ -1,4 +1,6 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Infrastructure.AppDb.Entities;
+
+namespace AStar.Dev.Infrastructure.AppDb.Enums;
 
 /// <summary>The kind of change recorded by an <see cref="EventEntity"/>.</summary>
 public enum EventType

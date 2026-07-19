@@ -1,3 +1,4 @@
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>A file discovered and tracked by the scraper.</summary>

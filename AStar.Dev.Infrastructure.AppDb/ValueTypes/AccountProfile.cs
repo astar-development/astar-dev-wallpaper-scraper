@@ -1,4 +1,4 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 /// <summary>
 /// Represents the profile information of a OneDrive account, including display name and email address.

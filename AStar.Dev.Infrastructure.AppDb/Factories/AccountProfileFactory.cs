@@ -1,4 +1,5 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
+namespace AStar.Dev.Infrastructure.AppDb.Factories;
 
 /// <summary>
 /// Factory for creating instances of <see cref="AccountProfile"/> with default or specified values.

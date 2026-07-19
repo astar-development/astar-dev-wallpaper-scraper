@@ -1,4 +1,4 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.Enums;
 
 /// <summary>
 /// Defines the various states that a synchronization job can be in during its lifecycle, including Queued, InProgress, Completed, Failed, and Skipped. This enumeration is used to track and manage the status of sync operations within the sync client, allowing for appropriate handling of each state and providing feedback to the user about the progress of their synchronization tasks.

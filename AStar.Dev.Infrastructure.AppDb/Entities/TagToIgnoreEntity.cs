@@ -1,3 +1,4 @@
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>A tag that should cause a scraped file to be ignored.</summary>

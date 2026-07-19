@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using AStar.Dev.FunctionalParadigm;
+using AStar.Dev.Infrastructure.AppDb.Enums;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 

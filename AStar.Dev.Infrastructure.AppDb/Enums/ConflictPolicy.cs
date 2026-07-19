@@ -1,4 +1,4 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.Enums;
 
 /// <summary>
 /// Defines the policies for resolving file conflicts during synchronization between local and remote OneDrive storage.

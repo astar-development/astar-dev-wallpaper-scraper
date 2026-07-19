@@ -1,3 +1,4 @@
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 namespace AStar.Dev.Infrastructure.AppDb.Entities;
 
 /// <summary>A model whose files should be ignored completely by the scraper.</summary>

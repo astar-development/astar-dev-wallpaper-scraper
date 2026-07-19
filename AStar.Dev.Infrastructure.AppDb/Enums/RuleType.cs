@@ -1,4 +1,4 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.Enums;
 
 /// <summary>
 /// Represents the type of a synchronization rule, indicating whether it is an inclusion or exclusion rule. This is used to determine how files and folders are processed during synchronization based on the defined rules in the sync configuration.

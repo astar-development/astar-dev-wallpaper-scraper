@@ -1,4 +1,5 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
+namespace AStar.Dev.Infrastructure.AppDb.Factories;
 
 /// <summary>Creates <see cref="FileHandle" /> instances, normalizing invalid input instead of throwing.</summary>
 public static class FileHandleFactory

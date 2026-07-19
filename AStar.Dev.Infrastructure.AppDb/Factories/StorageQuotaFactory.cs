@@ -1,4 +1,5 @@
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
+namespace AStar.Dev.Infrastructure.AppDb.Factories;
 
 /// <summary>
 /// Factory class for creating instances of <see cref="StorageQuota"/>. This class provides methods to create StorageQuota objects from raw byte counts, as well as a predefined "Unknown" quota for cases where storage information is not yet available. By centralizing the creation logic for StorageQuota instances, this factory promotes consistency and maintainability in how storage quota data is handled throughout the sync client application.

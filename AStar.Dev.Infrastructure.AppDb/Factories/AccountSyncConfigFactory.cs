@@ -1,6 +1,8 @@
 using AStar.Dev.Infrastructure.AppDb.Domain;
+using AStar.Dev.Infrastructure.AppDb.Enums;
+using AStar.Dev.Infrastructure.AppDb.ValueTypes;
 
-namespace AStar.Dev.Infrastructure.AppDb.Entities;
+namespace AStar.Dev.Infrastructure.AppDb.Factories;
 
 /// <summary>
 /// Factory for creating instances of <see cref="AccountSyncConfig"/> with default or specified values.
