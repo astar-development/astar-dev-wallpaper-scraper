@@ -67,6 +67,9 @@ Generated\ Files/
 *.trx
 CoverageReport/*
 
+# Graphify cache directory
+graphify-out
+
 # NUnit
 *.VisualState.xml
 TestResult.xml
