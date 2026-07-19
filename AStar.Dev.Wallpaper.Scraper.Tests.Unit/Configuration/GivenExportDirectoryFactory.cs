@@ -1,3 +1,4 @@
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Configuration;
