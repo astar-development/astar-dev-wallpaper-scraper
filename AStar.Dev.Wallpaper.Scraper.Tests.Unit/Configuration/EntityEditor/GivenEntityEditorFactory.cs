@@ -1,6 +1,8 @@
 using System.Reactive.Linq;
+using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Infrastructure.AppDb.Entities;
+using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +32,7 @@ public sealed class GivenEntityEditorFactory : IDisposable
             migrationContext.SaveChanges();
         }
 
-        sut = new EntityEditorFactory(new TestDbContextFactory(options), new MockFileSystem(), "/exports");
+        sut = new EntityEditorFactory(new TestDbContextFactory(options), new MockFileSystem(), ExportDirectoryFactory.Create("/exports").Match(exportDirectory => exportDirectory, error => throw new InvalidOperationException(error)));
     }
 
     [Fact]
