@@ -58,6 +58,7 @@ public static class ServiceCollectionExtensions
             serviceProvider.GetRequiredService<IDbContextFactory<AppDbContext>>(),
             serviceProvider.GetRequiredService<IFileSystem>(),
             ApplicationDirectories.DocumentsExportDirectory));
+        services.AddTransient<Clock>(serviceProvider => () => DateTimeOffset.Now);
 
         return services;
     }
