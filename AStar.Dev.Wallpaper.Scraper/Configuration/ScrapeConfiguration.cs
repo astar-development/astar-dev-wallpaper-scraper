@@ -24,4 +24,9 @@ public class ScrapeConfiguration
     ///     Gets or sets the search parameters guiding the scraper's navigation of the target website.
     /// </summary>
     public SearchConfiguration SearchConfiguration { get; set; } = new SearchConfiguration();
+
+    /// <summary>
+    ///    Gets or sets the window size for the main application window.
+    /// </summary>
+    public WindowSize WindowSize { get; set; } = new WindowSize();
 }
