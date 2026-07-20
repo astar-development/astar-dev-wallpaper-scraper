@@ -51,7 +51,12 @@ public partial class MainWindow : Window
 
         categorySkippedSubscription = thumbnailFeed.CategorySkipped
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(categoryName => viewModel.ThumbnailCategoryName = $"Skipping {categoryName}, fully downloaded");
+            .Subscribe(categoryName =>
+            {
+                ThumbnailImage.Source = null;
+                viewModel.ThumbnailCategoryName = $"Skipping {categoryName}, fully downloaded";
+                viewModel.ThumbnailTags = string.Empty;
+            });
 
         Closed += (_, _) =>
         {
