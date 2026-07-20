@@ -130,29 +130,37 @@ public sealed class SearchCategoryScrapeAction(
             });
     }
 
-    private async Task<Unit> DownloadWallpaperAsync(CategoryScrapeContext context, WallpaperDownloadContext download, CancellationToken cancellationToken)
-    {
-        await categoryRegistrar.EnsureCategoriesExistAsync(download.Tags, cancellationToken);
+    private async Task<Unit> DownloadWallpaperAsync(CategoryScrapeContext context, WallpaperDownloadContext download, CancellationToken cancellationToken) =>
+        (await Try.RunAsync(async () =>
+        {
+            await categoryRegistrar.EnsureCategoriesExistAsync(download.Tags, cancellationToken);
 
-        var fileName = Path.GetFileName(download.ImageUrl);
+            var fileName = Path.GetFileName(download.ImageUrl);
 
-        return await (await imageDownloader.DownloadAsync(context.Page, download.ImageUrl, context.Category.Name, download.Tags.Select(tag => tag.Tag).ToList(), cancellationToken)).MatchAsync(
-            onSuccess: async imageBytes =>
-            {
-                context.Progress.Report($"{clock():T} Downloaded wallpaper image from URL: <Span Foreground=\"Green\">{download.ImageUrl}</Span>, size: <Span Foreground=\"Green\">{imageBytes.Length}</Span> bytes");
-                var savedFile = await fileStore.SaveAsync(download.DirectoryPath, fileName, imageBytes, cancellationToken);
-                var dimensions = dimensionsReader.Read(imageBytes);
+            return await (await imageDownloader.DownloadAsync(context.Page, download.ImageUrl, context.Category.Name, download.Tags.Select(tag => tag.Tag).ToList(), cancellationToken)).MatchAsync(
+                onSuccess: async imageBytes =>
+                {
+                    var savedFile = await fileStore.SaveAsync(download.DirectoryPath, fileName, imageBytes, cancellationToken);
+                    context.Progress.Report($"{clock():T} Downloaded wallpaper image from URL: <Span Foreground=\"Green\">{download.ImageUrl}</Span>, size: <Span Foreground=\"Green\">{imageBytes.Length}</Span> bytes");
+                    var dimensions = dimensionsReader.Read(imageBytes);
 
-                await fileClassificationRepository.RecordAsync(download.Tags, download.ImageUrl, download.DirectoryPath, savedFile.SizeBytes, dimensions, cancellationToken);
-                await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
+                    await fileClassificationRepository.RecordAsync(download.Tags, download.ImageUrl, download.DirectoryPath, savedFile.SizeBytes, dimensions, cancellationToken);
+                    await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 1_000, cancellationToken);
 
-                return Unit.Instance;
-            },
+                    return Unit.Instance;
+                },
+                onFailure: exception =>
+                {
+                    context.Progress.Report($"{clock():T} Failed to download wallpaper image from URL: {download.ImageUrl}, error: <Span Foreground=\"Red\">{exception.Message}</Span>");
+
+                    return Unit.Instance;
+                });
+        }, cancellationToken)).Match(
+            onSuccess: unit => unit,
             onFailure: exception =>
             {
-                context.Progress.Report($"{clock():T} Failed to download wallpaper image from URL: {download.ImageUrl}, error: <Span Foreground=\"Red\">{exception.Message}</Span>");
+                context.Progress.Report($"{clock():T} Failed to process wallpaper image from URL: <Span Foreground=\"Red\">{download.ImageUrl}</Span>, error: <Span Foreground=\"Red\">{exception.Message}</Span>");
 
                 return Unit.Instance;
             });
-    }
 }
