@@ -9,4 +9,9 @@ public interface IWallpaperThumbnailFeed
     ///     Gets the stream of thumbnail payloads, one per downloaded wallpaper.
     /// </summary>
     IObservable<WallpaperThumbnailPayload> Thumbnails { get; }
+
+    /// <summary>
+    ///     Gets the stream of category names skipped because they are already fully downloaded.
+    /// </summary>
+    IObservable<string> CategorySkipped { get; }
 }

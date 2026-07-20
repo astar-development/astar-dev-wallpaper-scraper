@@ -10,15 +10,26 @@ namespace AStar.Dev.Wallpaper.Scraper.Scraping;
 public sealed class WallpaperThumbnailBroadcaster : IWallpaperThumbnailPublisher, IWallpaperThumbnailFeed, IDisposable
 {
     private readonly Subject<WallpaperThumbnailPayload> thumbnails = new();
+    private readonly Subject<string> categorySkipped = new();
 
     /// <inheritdoc />
     public IObservable<WallpaperThumbnailPayload> Thumbnails => thumbnails.AsObservable();
 
     /// <inheritdoc />
+    public IObservable<string> CategorySkipped => categorySkipped.AsObservable();
+
+    /// <inheritdoc />
     public void Publish(WallpaperThumbnailPayload payload) => thumbnails.OnNext(payload);
 
+    /// <inheritdoc />
+    public void PublishCategorySkipped(string categoryName) => categorySkipped.OnNext(categoryName);
+
     /// <summary>
-    ///     Completes and disposes the underlying subject.
+    ///     Completes and disposes the underlying subjects.
     /// </summary>
-    public void Dispose() => thumbnails.Dispose();
+    public void Dispose()
+    {
+        thumbnails.Dispose();
+        categorySkipped.Dispose();
+    }
 }

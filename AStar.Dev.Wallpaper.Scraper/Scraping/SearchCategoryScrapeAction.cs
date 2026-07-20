@@ -22,6 +22,7 @@ public sealed class SearchCategoryScrapeAction(
     IWallpaperFileStore fileStore,
     IWallpaperCategoryRegistrar categoryRegistrar,
     IWallpaperFileClassificationRepository fileClassificationRepository,
+    IWallpaperThumbnailPublisher thumbnailPublisher,
     Clock clock) : IScrapeAction
 {
     private const int ImagesPerPage = 24;
@@ -57,6 +58,7 @@ public sealed class SearchCategoryScrapeAction(
         if (isFullyVisited)
         {
             context.Progress.Report($"{clock():T} Category: <Run FontSize=\"18\">{context.Category.Name}</Run> already fully visited (image count: <Span Foreground=\"Green\"><Run FontSize=\"18\">{wallpaperCount}</Run></Span>)");
+            thumbnailPublisher.PublishCategorySkipped(context.Category.Name);
             await Task.Delay(context.ScrapeContext.SearchConfiguration.ImagePauseInSeconds * 2_000, cancellationToken);
 
             return;
