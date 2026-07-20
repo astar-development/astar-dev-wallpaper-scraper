@@ -226,6 +226,18 @@ public sealed class GivenSearchCategoryScrapeAction
     }
 
     [Fact]
+    public async Task when_saving_the_downloaded_file_throws_then_progress_reports_the_real_exception_detail_and_execution_still_succeeds()
+    {
+        var sut = CreateSut(clock, hrefs: [WallpaperHref], saveException: new InvalidOperationException("disk full"));
+
+        var result = await sut.ExecuteAsync(page, progress, TestContext.Current.CancellationToken);
+
+        result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
+        progress.Received().Report(Arg.Is<string>(message => message!.Contains("disk full")));
+        await fileClassificationRepository.DidNotReceive().RecordAsync(Arg.Any<IReadOnlyList<TagData>>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<ImageDimensions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task when_the_wallpaper_count_and_last_page_visited_both_match_the_stored_progress_then_the_category_is_skipped_and_progress_is_reported()
     {
         var sut = CreateSut(clock, wallpaperCount: 42, storedProgress: new SearchCategoryProgress(42, 2));
@@ -291,7 +303,8 @@ public sealed class GivenSearchCategoryScrapeAction
         Exceptional<byte[]>? downloadResult = null,
         SavedWallpaperFile? savedFile = null,
         ImageDimensions? dimensions = null,
-        Exception? contextReaderException = null)
+        Exception? contextReaderException = null,
+        Exception? saveException = null)
     {
         if (contextReaderException is not null)
         {
@@ -325,7 +338,14 @@ public sealed class GivenSearchCategoryScrapeAction
         imageLocator.LocateAsync(page, Arg.Any<CancellationToken>()).Returns(imageUrl ?? new Option<string>.Some(WallpaperImageUrl));
         fileClassificationRepository.IsAlreadyDownloadedAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(isAlreadyDownloaded);
         imageDownloader.DownloadAsync(page, WallpaperImageUrl, Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>()).Returns(downloadResult ?? Exceptional.Success(imageBytes));
-        fileStore.SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(savedFile ?? new SavedWallpaperFile("/root/base/pic.jpg", 3));
+        if (saveException is not null)
+        {
+            fileStore.SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns<SavedWallpaperFile>(_ => throw saveException);
+        }
+        else
+        {
+            fileStore.SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(savedFile ?? new SavedWallpaperFile("/root/base/pic.jpg", 3));
+        }
         dimensionsReader.Read(Arg.Any<byte[]>()).Returns(dimensions ?? new ImageDimensions(0, 0));
 
         return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository, thumbnailPublisher, clock);
