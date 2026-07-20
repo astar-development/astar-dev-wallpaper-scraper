@@ -54,7 +54,7 @@ public partial class MainWindow : Window
             .Subscribe(categoryName =>
             {
                 ThumbnailImage.Source = null;
-                viewModel.ThumbnailCategoryName = $"Skipping {categoryName}, fully downloaded";
+                viewModel.ThumbnailCategoryName = $"Skipping Category: {categoryName} as already fully downloaded";
                 viewModel.ThumbnailTags = string.Empty;
             });
 
