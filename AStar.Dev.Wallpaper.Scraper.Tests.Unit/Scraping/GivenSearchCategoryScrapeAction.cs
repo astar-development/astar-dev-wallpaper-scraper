@@ -19,6 +19,7 @@ public sealed class GivenSearchCategoryScrapeAction
     private readonly IWallpaperFileStore fileStore = Substitute.For<IWallpaperFileStore>();
     private readonly IWallpaperCategoryRegistrar categoryRegistrar = Substitute.For<IWallpaperCategoryRegistrar>();
     private readonly IWallpaperFileClassificationRepository fileClassificationRepository = Substitute.For<IWallpaperFileClassificationRepository>();
+    private readonly IWallpaperThumbnailPublisher thumbnailPublisher = Substitute.For<IWallpaperThumbnailPublisher>();
     private readonly IProgress<string> progress = Substitute.For<IProgress<string>>();
     private readonly IPage page = Substitute.For<IPage>();
     private readonly Clock clock = () => new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
@@ -233,6 +234,7 @@ public sealed class GivenSearchCategoryScrapeAction
 
         result.ShouldBeOfType<Success<FunctionalParadigm.Unit>>();
         progress.Received().Report(Arg.Is<string>(message => message!.Contains("Category: <Run FontSize=\"18\">Nature</Run>") && message!.Contains("already fully visited")));
+        thumbnailPublisher.Received().PublishCategorySkipped("Nature");
         await page.DidNotReceive().GotoAsync(Arg.Is<string>(url => url!.Contains("&page=")), Arg.Any<PageGotoOptions>());
         await hrefCollector.DidNotReceive().CollectAsync(Arg.Any<IPage>(), Arg.Any<CancellationToken>());
     }
@@ -326,6 +328,6 @@ public sealed class GivenSearchCategoryScrapeAction
         fileStore.SaveAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(savedFile ?? new SavedWallpaperFile("/root/base/pic.jpg", 3));
         dimensionsReader.Read(Arg.Any<byte[]>()).Returns(dimensions ?? new ImageDimensions(0, 0));
 
-        return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository, clock);
+        return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository, thumbnailPublisher, clock);
     }
 }
