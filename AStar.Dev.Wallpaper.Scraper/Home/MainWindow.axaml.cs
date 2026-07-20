@@ -14,6 +14,7 @@ namespace AStar.Dev.Wallpaper.Scraper.Home;
 public partial class MainWindow : Window
 {
     private IDisposable? thumbnailSubscription;
+    private IDisposable? categorySkippedSubscription;
 
     // Parameterless constructor is required by the XAML previewer only; the app resolves the DI constructor.
     public MainWindow()
@@ -48,6 +49,14 @@ public partial class MainWindow : Window
                 viewModel.ThumbnailTags = string.Join(", ", payload.Tags);
             });
 
-        Closed += (_, _) => thumbnailSubscription?.Dispose();
+        categorySkippedSubscription = thumbnailFeed.CategorySkipped
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(categoryName => viewModel.ThumbnailCategoryName = $"Skipping {categoryName}, fully downloaded");
+
+        Closed += (_, _) =>
+        {
+            thumbnailSubscription?.Dispose();
+            categorySkippedSubscription?.Dispose();
+        };
     }
 }
