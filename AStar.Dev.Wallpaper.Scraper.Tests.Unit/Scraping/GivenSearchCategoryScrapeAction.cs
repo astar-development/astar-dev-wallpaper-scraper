@@ -3,11 +3,13 @@ using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.Playwright;
+using Testably.Abstractions.Testing;
 
 namespace AStar.Dev.Wallpaper.Scraper.Tests.Unit.Scraping;
 
 public sealed class GivenSearchCategoryScrapeAction
 {
+    private readonly MockFileSystem fileSystem = new();
     private readonly IScrapeContextReader contextReader = Substitute.For<IScrapeContextReader>();
     private readonly ISearchCategoryWriter categoryWriter = Substitute.For<ISearchCategoryWriter>();
     private readonly IWallpaperCountReader countReader = Substitute.For<IWallpaperCountReader>();
@@ -348,6 +350,6 @@ public sealed class GivenSearchCategoryScrapeAction
         }
         dimensionsReader.Read(Arg.Any<byte[]>()).Returns(dimensions ?? new ImageDimensions(0, 0));
 
-        return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository, thumbnailPublisher, clock);
+        return new(contextReader, categoryWriter, countReader, searchCategoryReader, hrefCollector, tagReader, imageLocator, imageDownloader, dimensionsReader, fileStore, categoryRegistrar, fileClassificationRepository, thumbnailPublisher, clock, fileSystem);
     }
 }
