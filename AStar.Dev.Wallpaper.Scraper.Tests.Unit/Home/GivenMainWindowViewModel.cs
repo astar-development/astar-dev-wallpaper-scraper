@@ -5,6 +5,7 @@ using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Home;
+using AStar.Dev.Wallpaper.Scraper.Maintenance;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.Theming;
@@ -22,6 +23,7 @@ public sealed class GivenMainWindowViewModel
     private readonly IScrapeAction searchCategoryScrapeAction = Substitute.For<IScrapeAction>();
     private readonly IEntityEditorFactory entityEditorFactory = Substitute.For<IEntityEditorFactory>();
     private readonly IThemeService themeService = Substitute.For<IThemeService>();
+    private readonly IDatabaseResetService databaseResetService = Substitute.For<IDatabaseResetService>();
 
     static GivenMainWindowViewModel()
     {
@@ -436,6 +438,62 @@ public sealed class GivenMainWindowViewModel
         sut.WindowHeight.ShouldBe(567);
     }
 
+    [Fact]
+    public async Task when_reset_database_and_directories_command_executes_and_both_prompts_are_confirmed_then_both_operations_run()
+    {
+        var sut = CreateViewModel(confirmScrape: null);
+        RegisterResetConfirmationHandler(sut, resetDatabaseConfirmed: true, removeFilesConfirmed: true);
+
+        await sut.ResetDatabaseAndDirectoriesCommand.Execute();
+
+        await databaseResetService.Received().ResetDatabaseAsync(Arg.Any<CancellationToken>());
+        await databaseResetService.Received().RemoveDownloadedFilesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_reset_database_and_directories_command_executes_and_the_database_prompt_is_declined_then_the_database_is_not_reset()
+    {
+        var sut = CreateViewModel(confirmScrape: null);
+        RegisterResetConfirmationHandler(sut, resetDatabaseConfirmed: false, removeFilesConfirmed: true);
+
+        await sut.ResetDatabaseAndDirectoriesCommand.Execute();
+
+        await databaseResetService.DidNotReceive().ResetDatabaseAsync(Arg.Any<CancellationToken>());
+        await databaseResetService.Received().RemoveDownloadedFilesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_reset_database_and_directories_command_executes_and_the_remove_files_prompt_is_declined_then_no_files_are_removed()
+    {
+        var sut = CreateViewModel(confirmScrape: null);
+        RegisterResetConfirmationHandler(sut, resetDatabaseConfirmed: true, removeFilesConfirmed: false);
+
+        await sut.ResetDatabaseAndDirectoriesCommand.Execute();
+
+        await databaseResetService.Received().ResetDatabaseAsync(Arg.Any<CancellationToken>());
+        await databaseResetService.DidNotReceive().RemoveDownloadedFilesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task when_reset_database_and_directories_command_executes_and_both_prompts_are_declined_then_neither_operation_runs()
+    {
+        var sut = CreateViewModel(confirmScrape: null);
+        RegisterResetConfirmationHandler(sut, resetDatabaseConfirmed: false, removeFilesConfirmed: false);
+
+        await sut.ResetDatabaseAndDirectoriesCommand.Execute();
+
+        await databaseResetService.DidNotReceive().ResetDatabaseAsync(Arg.Any<CancellationToken>());
+        await databaseResetService.DidNotReceive().RemoveDownloadedFilesAsync(Arg.Any<CancellationToken>());
+    }
+
+    private static void RegisterResetConfirmationHandler(MainWindowViewModel sut, bool resetDatabaseConfirmed, bool removeFilesConfirmed) =>
+        sut.ConfirmScrape.RegisterHandler(context =>
+        {
+            context.SetOutput(context.Input == "Reset the database?" ? resetDatabaseConfirmed : removeFilesConfirmed);
+
+            return Task.CompletedTask;
+        });
+
     private MainWindowViewModel CreateViewModel(
         Exceptional<IPage>? configureResult = null,
         Func<CallInfo, Task<Exceptional<IPage>>>? configureBehavior = null,
@@ -450,7 +508,7 @@ public sealed class GivenMainWindowViewModel
             .Returns(scrapeActionBehavior ?? (_ => Task.FromResult(scrapeActionResult ?? Exceptional.Success(FunctionalParadigm.Unit.Instance))));
 
         var scrapeConfiguration = Options.Create(new ScrapeConfiguration { ApplicationName = "Test App", WindowSize = new WindowSize(1_234, 567) });
-        var sut = new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction, entityEditorFactory, themeService);
+        var sut = new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction, entityEditorFactory, themeService, databaseResetService);
 
         if (confirmScrape.HasValue)
         {
