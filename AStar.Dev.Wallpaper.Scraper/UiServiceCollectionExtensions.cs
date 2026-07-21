@@ -1,6 +1,7 @@
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Home;
 using AStar.Dev.Wallpaper.Scraper.Services;
+using AStar.Dev.Wallpaper.Scraper.Theming;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AStar.Dev.Wallpaper.Scraper;
@@ -17,6 +18,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<IEntityEditorFactory, EntityEditorFactory>();
+        services.AddSingleton<IThemeService, ThemeService>();
 
         return services;
     }

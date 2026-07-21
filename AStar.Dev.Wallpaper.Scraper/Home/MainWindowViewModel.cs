@@ -5,6 +5,7 @@ using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
+using AStar.Dev.Wallpaper.Scraper.Theming;
 using AStar.Dev.Wallpaper.Scraper.ViewModels;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -25,14 +26,19 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private bool isBusy;
     private CancellationTokenSource? scrapeCancellationSource;
     private readonly IPlaywrightService playwrightService;
+    private readonly IThemeService themeService;
     private readonly Queue<string> statusLines = new();
+    private ThemeMode selectedTheme;
 
     public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService, IScrapeAction searchCategoryScrapeAction,
-        IEntityEditorFactory entityEditorFactory)
+        IEntityEditorFactory entityEditorFactory, IThemeService themeService)
     {
         Title = $"{scrapeConfiguration.Value.ApplicationName} V{ApplicationVersion}";
         this.playwrightService = playwrightService;
+        this.themeService = themeService;
         SetWindowSize(scrapeConfiguration.Value.WindowSize);
+        SetSelectedTheme(themeService.CurrentTheme);
+        SelectThemeCommand = ReactiveCommand.Create<ThemeMode>(SelectTheme);
 
         ScrapeSearchCategoriesCommand = CreateScrapeCommand("Scrape Search Categories", searchCategoryScrapeAction);
         ScrapeTopCommand = CreateScrapeCommand("Scrape Top Wallpapers");
@@ -103,6 +109,21 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     /// <summary>Opens the User Configuration editor.</summary>
     public ReactiveCommand<Unit, Unit> OpenUserConfigurationCommand { get; }
 
+    /// <summary>Applies and persists the chosen <see cref="ThemeMode" />.</summary>
+    public ReactiveCommand<ThemeMode, Unit> SelectThemeCommand { get; }
+
+    /// <summary>Gets a value indicating whether <see cref="ThemeMode.System" /> is the currently selected theme.</summary>
+    public bool IsSystemThemeSelected => selectedTheme == ThemeMode.System;
+
+    /// <summary>Gets a value indicating whether <see cref="ThemeMode.Light" /> is the currently selected theme.</summary>
+    public bool IsLightThemeSelected => selectedTheme == ThemeMode.Light;
+
+    /// <summary>Gets a value indicating whether <see cref="ThemeMode.Dark" /> is the currently selected theme.</summary>
+    public bool IsDarkThemeSelected => selectedTheme == ThemeMode.Dark;
+
+    /// <summary>Gets a value indicating whether <see cref="ThemeMode.Hacker" /> is the currently selected theme.</summary>
+    public bool IsHackerThemeSelected => selectedTheme == ThemeMode.Hacker;
+
     /// <summary>
     ///     Gets a value indicating whether a scrape command is currently running. Drives whether
     ///     <see cref="CancelCommand" /> can execute.
@@ -137,6 +158,21 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         get => thumbnailTags;
         set => this.RaiseAndSetIfChanged(ref thumbnailTags, value);
+    }
+
+    private void SelectTheme(ThemeMode themeMode)
+    {
+        themeService.ApplyTheme(themeMode);
+        SetSelectedTheme(themeMode);
+    }
+
+    private void SetSelectedTheme(ThemeMode themeMode)
+    {
+        selectedTheme = themeMode;
+        this.RaisePropertyChanged(nameof(IsSystemThemeSelected));
+        this.RaisePropertyChanged(nameof(IsLightThemeSelected));
+        this.RaisePropertyChanged(nameof(IsDarkThemeSelected));
+        this.RaisePropertyChanged(nameof(IsHackerThemeSelected));
     }
 
     private void CancelRunningScrape() => scrapeCancellationSource?.Cancel();

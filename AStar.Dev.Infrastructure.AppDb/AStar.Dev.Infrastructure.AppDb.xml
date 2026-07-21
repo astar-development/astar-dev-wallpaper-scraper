@@ -716,6 +716,11 @@
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.FileClassificationCategoryEntity.Level">
             <summary>Hierarchy level: 1 = top, 2 = sub, 3 = leaf.</summary>
         </member>
+        <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.FileClassificationCategoryEntity.Priority">
+            <summary>
+              Priority for ordering categories at the same level. Lower numbers are higher priority. Default is 1.
+            </summary>
+        </member>
         <member name="P:AStar.Dev.Infrastructure.AppDb.Entities.FileClassificationCategoryEntity.ParentId">
             <summary>FK to parent category; null for root nodes.</summary>
         </member>
@@ -1559,6 +1564,18 @@
             <inheritdoc />
         </member>
         <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.AddCaseInsensitivityToSomeColumns.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:AStar.Dev.Infrastructure.AppDb.Migrations.AddPriorityColumnToFileClassificationCategoryEntity">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.AddPriorityColumnToFileClassificationCategoryEntity.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.AddPriorityColumnToFileClassificationCategoryEntity.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:AStar.Dev.Infrastructure.AppDb.Migrations.AddPriorityColumnToFileClassificationCategoryEntity.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:AStar.Dev.Infrastructure.AppDb.ValueTypes.AccountId">

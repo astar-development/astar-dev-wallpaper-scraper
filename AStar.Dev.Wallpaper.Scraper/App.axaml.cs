@@ -1,6 +1,7 @@
 using AStar.Dev.Infrastructure.AppDb;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.Startup;
+using AStar.Dev.Wallpaper.Scraper.Theming;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -30,6 +31,7 @@ public partial class App : Application, IDisposable
     {
         services = BuildServices();
         MigrateDatabase(services);
+        services.GetRequiredService<IThemeService>().Initialize();
         ShowMainWindow(services);
 
         base.OnFrameworkInitializationCompleted();

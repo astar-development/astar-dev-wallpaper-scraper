@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:AStar.Dev.Wallpaper.Scraper.Home"
+        xmlns:theming="using:AStar.Dev.Wallpaper.Scraper.Theming"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="AStar.Dev.Wallpaper.Scraper.Home.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -24,7 +25,16 @@
                     <MenuItem Header="Edit Tag to Ignore" Command="{Binding OpenTagToIgnoreCommand}" />
                     <MenuItem Header="Edit User Configuration" Command="{Binding OpenUserConfigurationCommand}" />
                 </MenuItem>
-                <MenuItem Header="Placeholder 2" />
+                <MenuItem Header="_Theme">
+                    <MenuItem Header="_System" ToggleType="Radio" IsChecked="{Binding IsSystemThemeSelected}"
+                              Command="{Binding SelectThemeCommand}" CommandParameter="{x:Static theming:ThemeMode.System}" />
+                    <MenuItem Header="_Light" ToggleType="Radio" IsChecked="{Binding IsLightThemeSelected}"
+                              Command="{Binding SelectThemeCommand}" CommandParameter="{x:Static theming:ThemeMode.Light}" />
+                    <MenuItem Header="_Dark" ToggleType="Radio" IsChecked="{Binding IsDarkThemeSelected}"
+                              Command="{Binding SelectThemeCommand}" CommandParameter="{x:Static theming:ThemeMode.Dark}" />
+                    <MenuItem Header="_Hacker" ToggleType="Radio" IsChecked="{Binding IsHackerThemeSelected}"
+                              Command="{Binding SelectThemeCommand}" CommandParameter="{x:Static theming:ThemeMode.Hacker}" />
+                </MenuItem>
                 <MenuItem Header="Placeholder 3" />
                 <Separator />
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Ctrl+Q" />
@@ -44,7 +54,8 @@
             <Border VerticalAlignment="Top" CornerRadius="10" ClipToBounds="True">
                 <Image x:Name="ThumbnailImage" Width="750" Height="750" Stretch="Uniform" />
             </Border>
-            <TextBlock Text="{Binding ThumbnailCategoryName}" FontSize="32" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" Height="50" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding ThumbnailCategoryName}" FontSize="32" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Width="475" />
+            <TextBlock Text=" " Height="20" />
             <TextBlock Text="{Binding ThumbnailTags}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
         </StackPanel>
 
