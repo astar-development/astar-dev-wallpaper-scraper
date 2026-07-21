@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Utilities;
 using AStar.Dev.Wallpaper.Scraper.Services;
@@ -23,7 +24,8 @@ public sealed class SearchCategoryScrapeAction(
     IWallpaperCategoryRegistrar categoryRegistrar,
     IWallpaperFileClassificationRepository fileClassificationRepository,
     IWallpaperThumbnailPublisher thumbnailPublisher,
-    Clock clock) : IScrapeAction
+    Clock clock,
+    IFileSystem fileSystem) : IScrapeAction
 {
     private const int ImagesPerPage = 24;
     private const int WallpaperPageTimeoutMilliseconds = 30_000;
@@ -116,7 +118,7 @@ public sealed class SearchCategoryScrapeAction(
 
         var tags = await tagReader.ReadAsync(context.Page, cancellationToken);
         var curation = TagCurator.Curate(tags, context.ScrapeContext.ModelsToIgnore, context.ScrapeContext.TagsToIgnore);
-        var directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, curation.Kept, context.Category, context.FileClassifications);
+        var directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, curation.Kept, context.Category, context.FileClassifications, fileSystem);
 
         var imageUrlOption = await imageLocator.LocateAsync(context.Page, cancellationToken);
 
