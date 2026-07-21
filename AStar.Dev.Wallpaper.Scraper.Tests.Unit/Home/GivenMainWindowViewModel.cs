@@ -7,6 +7,7 @@ using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
 using AStar.Dev.Wallpaper.Scraper.Home;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
+using AStar.Dev.Wallpaper.Scraper.Theming;
 using Microsoft.Extensions.Options;
 using Microsoft.Playwright;
 using NSubstitute.Core;
@@ -20,6 +21,7 @@ public sealed class GivenMainWindowViewModel
     private readonly IPlaywrightService playwrightService = Substitute.For<IPlaywrightService>();
     private readonly IScrapeAction searchCategoryScrapeAction = Substitute.For<IScrapeAction>();
     private readonly IEntityEditorFactory entityEditorFactory = Substitute.For<IEntityEditorFactory>();
+    private readonly IThemeService themeService = Substitute.For<IThemeService>();
 
     static GivenMainWindowViewModel()
     {
@@ -383,6 +385,42 @@ public sealed class GivenMainWindowViewModel
     }
 
     [Fact]
+    public void when_constructed_then_the_selected_theme_reflects_the_theme_service_current_theme()
+    {
+        themeService.CurrentTheme.Returns(ThemeMode.Dark);
+
+        var sut = CreateViewModel();
+
+        sut.IsDarkThemeSelected.ShouldBeTrue();
+        sut.IsSystemThemeSelected.ShouldBeFalse();
+        sut.IsLightThemeSelected.ShouldBeFalse();
+        sut.IsHackerThemeSelected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task when_select_theme_command_executes_then_the_theme_service_applies_the_selected_theme()
+    {
+        var sut = CreateViewModel();
+
+        await sut.SelectThemeCommand.Execute(ThemeMode.Hacker);
+
+        themeService.Received().ApplyTheme(ThemeMode.Hacker);
+    }
+
+    [Fact]
+    public async Task when_select_theme_command_executes_then_the_selected_theme_properties_update()
+    {
+        var sut = CreateViewModel();
+
+        await sut.SelectThemeCommand.Execute(ThemeMode.Light);
+
+        sut.IsLightThemeSelected.ShouldBeTrue();
+        sut.IsSystemThemeSelected.ShouldBeFalse();
+        sut.IsDarkThemeSelected.ShouldBeFalse();
+        sut.IsHackerThemeSelected.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task when_main_window_loads_then_the_width_is_set_from_the_appsettings()
     {
         var sut = CreateViewModel();
@@ -412,7 +450,7 @@ public sealed class GivenMainWindowViewModel
             .Returns(scrapeActionBehavior ?? (_ => Task.FromResult(scrapeActionResult ?? Exceptional.Success(FunctionalParadigm.Unit.Instance))));
 
         var scrapeConfiguration = Options.Create(new ScrapeConfiguration { ApplicationName = "Test App", WindowSize = new WindowSize(1_234, 567) });
-        var sut = new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction, entityEditorFactory);
+        var sut = new MainWindowViewModel(scrapeConfiguration, playwrightService, searchCategoryScrapeAction, entityEditorFactory, themeService);
 
         if (confirmScrape.HasValue)
         {
