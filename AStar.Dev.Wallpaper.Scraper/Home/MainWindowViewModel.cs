@@ -3,6 +3,7 @@ using System.Reflection;
 using AStar.Dev.FunctionalParadigm;
 using AStar.Dev.Wallpaper.Scraper.Configuration;
 using AStar.Dev.Wallpaper.Scraper.Configuration.EntityEditor;
+using AStar.Dev.Wallpaper.Scraper.Maintenance;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using AStar.Dev.Wallpaper.Scraper.Theming;
@@ -27,15 +28,17 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private CancellationTokenSource? scrapeCancellationSource;
     private readonly IPlaywrightService playwrightService;
     private readonly IThemeService themeService;
+    private readonly IDatabaseResetService databaseResetService;
     private readonly Queue<string> statusLines = new();
     private ThemeMode selectedTheme;
 
     public MainWindowViewModel(IOptions<ScrapeConfiguration> scrapeConfiguration, IPlaywrightService playwrightService, IScrapeAction searchCategoryScrapeAction,
-        IEntityEditorFactory entityEditorFactory, IThemeService themeService)
+        IEntityEditorFactory entityEditorFactory, IThemeService themeService, IDatabaseResetService databaseResetService)
     {
         Title = $"{scrapeConfiguration.Value.ApplicationName} V{ApplicationVersion}";
         this.playwrightService = playwrightService;
         this.themeService = themeService;
+        this.databaseResetService = databaseResetService;
         SetWindowSize(scrapeConfiguration.Value.WindowSize);
         SetSelectedTheme(themeService.CurrentTheme);
         SelectThemeCommand = ReactiveCommand.Create<ThemeMode>(SelectTheme);
@@ -54,6 +57,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         OpenSearchCategoriesCommand = CreateOpenEditorCommand(entityEditorFactory.CreateSearchCategoriesEditor);
         OpenTagToIgnoreCommand = CreateOpenEditorCommand(entityEditorFactory.CreateTagToIgnoreEditor);
         OpenUserConfigurationCommand = CreateOpenEditorCommand(entityEditorFactory.CreateUserConfigurationEditor);
+
+        ResetDatabaseAndDirectoriesCommand = CreateResetDatabaseAndDirectoriesCommand();
     }
 
     private void SetWindowSize(WindowSize windowSize)
@@ -108,6 +113,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Opens the User Configuration editor.</summary>
     public ReactiveCommand<Unit, Unit> OpenUserConfigurationCommand { get; }
+
+    /// <summary>Clears the scraped data tables and, separately, deletes the downloaded files on disk, each behind its own confirmation prompt.</summary>
+    public ReactiveCommand<Unit, Unit> ResetDatabaseAndDirectoriesCommand { get; }
 
     /// <summary>Applies and persists the chosen <see cref="ThemeMode" />.</summary>
     public ReactiveCommand<ThemeMode, Unit> SelectThemeCommand { get; }
@@ -191,6 +199,31 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private ReactiveCommand<Unit, Unit> CreateOpenEditorCommand(Func<EntityEditorViewModelBase> createEditor) =>
         ReactiveCommand.CreateFromTask(async () => await OpenEditor.Handle(createEditor()));
+
+    private ReactiveCommand<Unit, Unit> CreateResetDatabaseAndDirectoriesCommand()
+    {
+        var command = ReactiveCommand.CreateFromTask(ResetDatabaseAndDirectoriesAsync);
+
+        command.ThrownExceptions.Subscribe(exception =>
+            AppendStatusLine($"Reset Database and Directories: Unexpected error - {exception.Message}"));
+
+        return command;
+    }
+
+    private async Task ResetDatabaseAndDirectoriesAsync()
+    {
+        if (await ConfirmScrape.Handle("Reset the database?"))
+        {
+            await databaseResetService.ResetDatabaseAsync(CancellationToken.None);
+            AppendStatusLine("Reset Database and Directories: Database reset.");
+        }
+
+        if (await ConfirmScrape.Handle("Remove all downloaded files?"))
+        {
+            await databaseResetService.RemoveDownloadedFilesAsync(CancellationToken.None);
+            AppendStatusLine("Reset Database and Directories: Downloaded files removed.");
+        }
+    }
 
     private ReactiveCommand<Unit, Unit> CreateScrapeCommand(string actionName, IScrapeAction? action = null)
     {
