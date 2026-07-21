@@ -55,7 +55,7 @@
                 <Image x:Name="ThumbnailImage" Width="750" Height="750" Stretch="Uniform" />
             </Border>
             <TextBlock Text="{Binding ThumbnailCategoryName}" FontSize="32" FontWeight="Bold" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Width="475" />
-            <TextBlock Text=" " Height="20" />
+            <TextBlock Text="----------------" Height="20" VerticalAlignment="Center" TextAlignment="Center" />
             <TextBlock Text="{Binding ThumbnailTags}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
         </StackPanel>
 
