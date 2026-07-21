@@ -274,6 +274,24 @@ public sealed class GivenWallpaperDirectoryResolver
     }
 
     [Fact]
+    public void when_an_existing_directory_contains_a_segment_not_in_the_computed_set_then_it_is_excluded_in_favour_of_a_fully_compatible_directory()
+    {
+        fileSystem.Directory.CreateDirectory("/root/regular/L/Landscapes/folderb/folderx/foldery");
+        fileSystem.Directory.CreateDirectory("/root/regular/L/Landscapes/folderb/folderc");
+        List<TagData> tags = [new("folderb", "cat"), new("folderc", "cat"), new("foldery", "cat")];
+        List<FileClassificationCategoryEntity> classifications =
+        [
+            new() { Name = "folderb", IncludeInSearch = true, Level = 1 },
+            new() { Name = "folderc", IncludeInSearch = true, Level = 1 },
+            new() { Name = "foldery", IncludeInSearch = true, Level = 1 }
+        ];
+
+        var directory = WallpaperDirectoryResolver.Resolve(layout, tags, category, classifications, fileSystem);
+
+        directory.ShouldBe("/root/regular/L/Landscapes/folderb/folderc/foldery");
+    }
+
+    [Fact]
     public void when_multiple_existing_directories_overlap_the_computed_segments_then_the_directory_with_the_greatest_overlap_is_chosen()
     {
         fileSystem.Directory.CreateDirectory("/root/regular/L/Landscapes/folderb/folderx");
