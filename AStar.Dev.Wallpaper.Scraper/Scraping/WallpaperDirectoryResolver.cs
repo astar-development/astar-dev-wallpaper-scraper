@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using AStar.Dev.Infrastructure.AppDb.Entities;
 using AStar.Dev.Utilities;
 
@@ -15,23 +16,80 @@ public static class WallpaperDirectoryResolver
     ///     Builds the directory path for a wallpaper, nesting one path segment per categorised tag: famous and
     ///     internet-model tags first, then the remaining tags in alphabetical order. Tags without a category, or
     ///     matching the search category's name, contribute no path segment. At most twelve tag segments are used.
+    ///     If a directory already exists on disk under the base category directory whose segments overlap the
+    ///     computed tag segments, that directory's existing order is reused rather than creating a differently
+    ///     ordered duplicate: segments no longer present in the computed set are dropped, and newly eligible
+    ///     segments are appended to the end, ordered by <see cref="FileClassificationCategoryEntity.Level" />
+    ///     ascending then <see cref="FileClassificationCategoryEntity.Priority" /> ascending.
     /// </summary>
     /// <param name="directoryLayout">The directory naming conventions to use.</param>
     /// <param name="tags">The wallpaper's curated tags.</param>
     /// <param name="category">The search category the wallpaper was found under.</param>
-    public static string Resolve(DirectoryLayout directoryLayout, IReadOnlyList<TagData> tags, ScrapeCategory category, IReadOnlyList<FileClassificationCategoryEntity> fileClassifications)
+    /// <param name="fileClassifications">The known file classification categories used to order and name path segments.</param>
+    /// <param name="fileSystem">The file system used to detect an existing directory to reuse.</param>
+    public static string Resolve(DirectoryLayout directoryLayout, IReadOnlyList<TagData> tags, ScrapeCategory category, IReadOnlyList<FileClassificationCategoryEntity> fileClassifications, IFileSystem fileSystem)
     {
-        var baseDirectory = directoryLayout.RootDirectory + (tags.Any(tag => tag.IsFamous) ? directoryLayout.BaseDirectoryFamous : directoryLayout.BaseDirectory);
-        var baseDirectoryWithCategory = baseDirectory.CombinePath(category.Name[0].ToString()).CombinePath(category.Name);
-
-        var eligibleTags = tags.Where(tag => tag.Category is not null && !tag.Tag.Equals(category.Name, StringComparison.OrdinalIgnoreCase)).ToList();
-        var orderedFileClassifications = GetOrderedFileClassifications(fileClassifications, eligibleTags)
-            .Take(MaxTagSegments);
-
-        var path = orderedFileClassifications.Aggregate(baseDirectoryWithCategory, (directory, tag) => directory.CombinePath(tag.Name));
+        string baseDirectoryWithCategory = SetBaseDirectory(directoryLayout, tags, category);
+        IReadOnlyList<FileClassificationCategoryEntity> orderedFileClassifications = FilterTagsAndRetrieveFileClassifications(tags, category, fileClassifications);
+        string path = BuildDirectoryPath(baseDirectoryWithCategory, orderedFileClassifications, fileSystem);
         var drivePrefixLength = Math.Min(DrivePrefixLength, path.Length);
 
         return path[..drivePrefixLength] + path[drivePrefixLength..].Replace(":", string.Empty).CleanPath();
+    }
+
+    private static string BuildDirectoryPath(string baseDirectoryWithCategory, IReadOnlyList<FileClassificationCategoryEntity> orderedFileClassifications, IFileSystem fileSystem)
+    {
+        List<string>? existingSegments = FindBestMatchingExistingSegments(baseDirectoryWithCategory, orderedFileClassifications, fileSystem);
+
+        if (existingSegments is null)
+            return orderedFileClassifications.Aggregate(baseDirectoryWithCategory, (directory, classification) => directory.CombinePath(classification.Name));
+
+        var retainedNames = new HashSet<string>(existingSegments, StringComparer.OrdinalIgnoreCase);
+        var newSegments = orderedFileClassifications
+            .Where(classification => !retainedNames.Contains(classification.Name))
+            .OrderBy(classification => classification.Level)
+            .ThenBy(classification => classification.Priority);
+        var reusedDirectory = existingSegments.Aggregate(baseDirectoryWithCategory, (directory, segment) => directory.CombinePath(segment));
+
+        return newSegments.Aggregate(reusedDirectory, (directory, classification) => directory.CombinePath(classification.Name));
+    }
+
+    private static List<string>? FindBestMatchingExistingSegments(string baseDirectoryWithCategory, IReadOnlyList<FileClassificationCategoryEntity> orderedFileClassifications, IFileSystem fileSystem)
+    {
+        if (!fileSystem.Directory.Exists(baseDirectoryWithCategory))
+            return null;
+
+        var computedNames = new HashSet<string>(orderedFileClassifications.Select(classification => classification.Name), StringComparer.OrdinalIgnoreCase);
+        List<string> bestSegments = [];
+        var bestOverlap = 0;
+
+        foreach (var directory in fileSystem.Directory.GetDirectories(baseDirectoryWithCategory, "*", SearchOption.AllDirectories))
+        {
+            var segments = fileSystem.Path.GetRelativePath(baseDirectoryWithCategory, directory).Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+            var retained = segments.Where(segment => computedNames.Contains(segment)).ToList();
+
+            if (retained.Count > bestOverlap || (retained.Count == bestOverlap && segments.Length > bestSegments.Count))
+            {
+                bestOverlap = retained.Count;
+                bestSegments = retained;
+            }
+        }
+
+        return bestOverlap > 0 ? bestSegments : null;
+    }
+
+    private static IReadOnlyList<FileClassificationCategoryEntity> FilterTagsAndRetrieveFileClassifications(IReadOnlyList<TagData> tags, ScrapeCategory category, IReadOnlyList<FileClassificationCategoryEntity> fileClassifications)
+    {
+        var eligibleTags = tags.Where(tag => tag.Category is not null && !tag.Tag.Equals(category.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        return [.. GetOrderedFileClassifications(fileClassifications, eligibleTags).Take(MaxTagSegments)];
+    }
+
+    private static string SetBaseDirectory(DirectoryLayout directoryLayout, IReadOnlyList<TagData> tags, ScrapeCategory category)
+    {
+        var baseDirectory = directoryLayout.RootDirectory + (tags.Any(tag => tag.IsFamous) ? directoryLayout.BaseDirectoryFamous : directoryLayout.BaseDirectory);
+
+        return baseDirectory.CombinePath(category.Name[0].ToString()).CombinePath(category.Name);
     }
 
     private static IReadOnlyList<FileClassificationCategoryEntity> GetOrderedFileClassifications(IReadOnlyList<FileClassificationCategoryEntity> fileClassifications, List<TagData> eligibleTags)
