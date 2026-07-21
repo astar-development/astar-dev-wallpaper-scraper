@@ -16,11 +16,12 @@ public static class WallpaperDirectoryResolver
     ///     Builds the directory path for a wallpaper, nesting one path segment per categorised tag: famous and
     ///     internet-model tags first, then the remaining tags in alphabetical order. Tags without a category, or
     ///     matching the search category's name, contribute no path segment. At most twelve tag segments are used.
-    ///     If a directory already exists on disk under the base category directory whose segments overlap the
-    ///     computed tag segments, that directory's existing order is reused rather than creating a differently
-    ///     ordered duplicate: segments no longer present in the computed set are dropped, and newly eligible
-    ///     segments are appended to the end, ordered by <see cref="FileClassificationCategoryEntity.Level" />
-    ///     ascending then <see cref="FileClassificationCategoryEntity.Priority" /> ascending.
+    ///     If a directory already exists on disk under the base category directory whose segments are all present
+    ///     in the computed tag set (no unrelated segments), that directory's existing order is reused rather than
+    ///     creating a differently ordered duplicate, preferring the deepest such directory. Segments no longer
+    ///     present in the computed set are dropped, and newly eligible segments are appended to the end, ordered by
+    ///     <see cref="FileClassificationCategoryEntity.Level" /> ascending then
+    ///     <see cref="FileClassificationCategoryEntity.Priority" /> ascending.
     /// </summary>
     /// <param name="directoryLayout">The directory naming conventions to use.</param>
     /// <param name="tags">The wallpaper's curated tags.</param>
@@ -60,22 +61,20 @@ public static class WallpaperDirectoryResolver
             return null;
 
         var computedNames = new HashSet<string>(orderedFileClassifications.Select(classification => classification.Name), StringComparer.OrdinalIgnoreCase);
-        List<string> bestSegments = [];
-        var bestOverlap = 0;
+        List<string>? bestSegments = null;
 
-        foreach (var directory in fileSystem.Directory.GetDirectories(baseDirectoryWithCategory, "*", SearchOption.AllDirectories))
+        foreach (var directory in fileSystem.Directory.GetDirectories(baseDirectoryWithCategory, "*", SearchOption.AllDirectories).OrderBy(directory => directory, StringComparer.Ordinal))
         {
             var segments = fileSystem.Path.GetRelativePath(baseDirectoryWithCategory, directory).Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
-            var retained = segments.Where(segment => computedNames.Contains(segment)).ToList();
 
-            if (retained.Count > bestOverlap || (retained.Count == bestOverlap && segments.Length > bestSegments.Count))
-            {
-                bestOverlap = retained.Count;
-                bestSegments = retained;
-            }
+            if (segments.Any(segment => !computedNames.Contains(segment)))
+                continue;
+
+            if (bestSegments is null || segments.Length > bestSegments.Count)
+                bestSegments = [.. segments];
         }
 
-        return bestOverlap > 0 ? bestSegments : null;
+        return bestSegments;
     }
 
     private static IReadOnlyList<FileClassificationCategoryEntity> FilterTagsAndRetrieveFileClassifications(IReadOnlyList<TagData> tags, ScrapeCategory category, IReadOnlyList<FileClassificationCategoryEntity> fileClassifications)
