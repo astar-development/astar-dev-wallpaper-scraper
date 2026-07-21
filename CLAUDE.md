@@ -13,7 +13,7 @@ Full test suite runs automatically at end of turn - only run new / affected test
 - Add XML docs on ALL production public methods / properties etc. NEVER add comments within code blocks. NO exception. NEVER document tests.
 - Async methods MUST end in `Async` - exceptions: EventHandlers and tests. Neither have the suffix
 - return statements MUST be proceeded by a blank line - except when they immediately follow a control statement (`if` etc.)
-- ALL new code must use have GH issue, must use TDD, commit failing test first (red), confirm fail, then implement + commit production code separately (green). Never batch test + production code in one commit. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc.
+- ALL new code must use have GH issue (Create if not exist), must use TDD, commit failing test first (red), confirm fail, then implement + commit production code separately (green). Never batch test + production code in one commit. New Git branch MUST be created: `feature/<gh-issue-number-if-available>-short-description` / `bug/<gh-issue-number-if-available>-short-description` / etc.
 - When a class is not testable/offers little regression: add `[ExcludeFromCodeCoverage]`
 - When development complete: push branch and raise PR, then request human review
 - NEVER change code unrelated to the requested change (no judgement-call restructuring, reordering, or "while I'm here" cleanup). If a change might be beneficial (logical grouping, indirect refactor, etc.), SUGGEST it as a separate item - do NOT implement it

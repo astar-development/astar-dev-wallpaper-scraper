@@ -1,3 +1,4 @@
+using AStar.Dev.Wallpaper.Scraper.Maintenance;
 using AStar.Dev.Wallpaper.Scraper.Scraping;
 using AStar.Dev.Wallpaper.Scraper.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ public static class ScrapingServiceCollectionExtensions
         services.AddSingleton<IWallpaperCategoryRegistrar, WallpaperCategoryRegistrar>();
         services.AddSingleton<IWallpaperFileClassificationRepository, WallpaperFileClassificationRepository>();
         services.AddSingleton<IScrapeAction, SearchCategoryScrapeAction>();
+        services.AddSingleton<IDatabaseResetService, DatabaseResetService>();
 
         return services;
     }

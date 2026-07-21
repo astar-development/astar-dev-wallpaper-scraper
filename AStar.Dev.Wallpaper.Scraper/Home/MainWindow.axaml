@@ -35,7 +35,7 @@
                     <MenuItem Header="_Hacker" ToggleType="Radio" IsChecked="{Binding IsHackerThemeSelected}"
                               Command="{Binding SelectThemeCommand}" CommandParameter="{x:Static theming:ThemeMode.Hacker}" />
                 </MenuItem>
-                <MenuItem Header="Placeholder 3" />
+                <MenuItem Header="Reset Database and Directories" Command="{Binding ResetDatabaseAndDirectoriesCommand}" />
                 <Separator />
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Ctrl+Q" />
             </MenuItem>
