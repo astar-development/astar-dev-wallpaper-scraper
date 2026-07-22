@@ -18,8 +18,8 @@ public sealed class TagReader : ITagReader
 
     private static async Task<TagData> ReadTagAsync(ILocator tag)
     {
-        var text = await tag.InnerTextAsync().ConfigureAwait(false);
-        var category = await tag.GetAttributeAsync("original-title").ConfigureAwait(false);
+        string text = await tag.InnerTextAsync().ConfigureAwait(false);
+        string? category = await tag.GetAttributeAsync("original-title").ConfigureAwait(false);
 
         return TagDataFactory.Create(text, category);
     }

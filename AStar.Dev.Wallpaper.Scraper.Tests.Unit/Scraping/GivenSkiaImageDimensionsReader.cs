@@ -9,7 +9,7 @@ public sealed class GivenSkiaImageDimensionsReader
     [Fact]
     public void when_a_valid_image_is_decoded_then_its_pixel_dimensions_are_returned()
     {
-        var imageBytes = Convert.FromBase64String(OnePixelPngBase64);
+        byte[] imageBytes = Convert.FromBase64String(OnePixelPngBase64);
         var sut = new SkiaImageDimensionsReader();
 
         var dimensions = sut.Read(imageBytes);

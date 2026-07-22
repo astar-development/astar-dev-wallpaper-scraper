@@ -22,7 +22,7 @@ public sealed class GivenUpdateService
 
         await Should.NotThrowAsync(() => sut.CheckForUpdatesAsync(null!));
 
-        var logContent = ReadLog();
+        string logContent = ReadLog();
         logContent.ShouldContain("Not a Velopack install");
         logContent.ShouldNotContain("Update check failed");
     }
@@ -42,7 +42,7 @@ public sealed class GivenUpdateService
 
     private string ReadLog()
     {
-        var logPath = Path.Combine(Path.GetTempPath(), LogFileName);
+        string logPath = Path.Combine(Path.GetTempPath(), LogFileName);
 
         return fileSystem.File.ReadAllText(logPath);
     }

@@ -18,7 +18,7 @@ public class GivenEncryptionExtensions
         const string key = "0123456789abcdef0123456789abcdef";
         const string iv  = "0123456789abcdef";
 
-        var encrypted = "irrelevant-string".Encrypt(key, iv);
+        string encrypted = "irrelevant-string".Encrypt(key, iv);
 
         encrypted.Decrypt(key, iv).ShouldBe("irrelevant-string");
     }

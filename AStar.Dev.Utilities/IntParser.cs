@@ -20,5 +20,5 @@ public static class IntParser
     /// <param name="value">The value to parse to the int</param>
     /// <returns>The parsed value as the matching int value, or 0 if the string is not a valid int value</returns>
     public static int ToIntSafe(this string value) =>
-        int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var result) ? result : 0;
+        int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int result) ? result : 0;
 }

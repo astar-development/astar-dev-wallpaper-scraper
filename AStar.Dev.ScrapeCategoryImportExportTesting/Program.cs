@@ -10,7 +10,7 @@ var options = new DbContextOptionsBuilder<AppDbContext>()
     .Options;
 var context = new AppDbContext(options);
 await context.Database.MigrateAsync();
-var skip = true;
+bool skip = true;
 if(!skip)
 {
     ExportPlaying(context);

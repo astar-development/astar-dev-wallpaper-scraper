@@ -47,7 +47,7 @@ public static partial class StatusMarkupParser
         var stack = new Stack<(string Name, IList<Inline> Target)>();
         stack.Push((string.Empty, root));
 
-        var position = 0;
+        int position = 0;
 
         while (position < text.Length)
         {
@@ -62,8 +62,8 @@ public static partial class StatusMarkupParser
 
             AppendLiteral(stack.Peek().Target, text[position..match.Index]);
 
-            var name = match.Groups["name"].Value;
-            var isClosing = match.Groups["slash"].Value == "/";
+            string name = match.Groups["name"].Value;
+            bool isClosing = match.Groups["slash"].Value == "/";
 
             if (isClosing)
             {
@@ -153,22 +153,22 @@ public static partial class StatusMarkupParser
 
     private static void ApplyAttributes(Inline inline, IReadOnlyDictionary<string, string> attributes)
     {
-        if (attributes.TryGetValue("FontSize", out var fontSize))
+        if (attributes.TryGetValue("FontSize", out string? fontSize))
         {
             inline.FontSize = double.Parse(fontSize, CultureInfo.InvariantCulture);
         }
 
-        if (attributes.TryGetValue("Foreground", out var foreground))
+        if (attributes.TryGetValue("Foreground", out string? foreground))
         {
             inline.Foreground = Brush.Parse(foreground);
         }
 
-        if (attributes.TryGetValue("FontWeight", out var fontWeight))
+        if (attributes.TryGetValue("FontWeight", out string? fontWeight))
         {
             inline.FontWeight = Enum.Parse<FontWeight>(fontWeight, ignoreCase: true);
         }
 
-        if (attributes.TryGetValue("FontStyle", out var fontStyle))
+        if (attributes.TryGetValue("FontStyle", out string? fontStyle))
         {
             inline.FontStyle = Enum.Parse<FontStyle>(fontStyle, ignoreCase: true);
         }

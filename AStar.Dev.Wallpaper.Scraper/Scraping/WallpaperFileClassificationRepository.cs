@@ -25,9 +25,9 @@ public sealed class WallpaperFileClassificationRepository(IDbContextFactory<AppD
 
         var tagNames = tags.Select(tag => tag.Tag).ToList();
 
-        foreach (var tagName in tagNames)
+        foreach (string? tagName in tagNames)
         {
-            var categoryId = await FindCategoryIdAsync(context, tagName, cancellationToken);
+            int categoryId = await FindCategoryIdAsync(context, tagName, cancellationToken);
 
             context.FileClassifications.Add(CreateClassification(categoryId, imageUrl, directoryPath, sizeBytes, dimensions));
         }

@@ -36,10 +36,10 @@ public static class PathOperationExtensions
     /// <returns></returns>
     public static string CleanPath(this string path)
     {
-        var invalidFileChars = Path.GetInvalidPathChars();
+        char[] invalidFileChars = Path.GetInvalidPathChars();
         path = Regex.Replace(path, """[^\u0000-\u007F]+""", string.Empty);
 
-        foreach(var invalidFileChar in invalidFileChars) path = path.Replace(invalidFileChar, ' ');
+        foreach(char invalidFileChar in invalidFileChars) path = path.Replace(invalidFileChar, ' ');
 
         return path.Replace("\"", "'").Replace("|", string.Empty).Replace("煙", string.Empty).Trim();
     }

@@ -11,7 +11,7 @@ public sealed class WallpaperImageLocator : IWallpaperImageLocator
     /// <inheritdoc />
     public async Task<Option<string>> LocateAsync(IPage page, CancellationToken cancellationToken)
     {
-        var imageUrl = await page.Locator("#wallpaper").GetAttributeAsync("src").ConfigureAwait(false);
+        string? imageUrl = await page.Locator("#wallpaper").GetAttributeAsync("src").ConfigureAwait(false);
 
         return (imageUrl ?? string.Empty).ToOption(url => !string.IsNullOrWhiteSpace(url));
     }

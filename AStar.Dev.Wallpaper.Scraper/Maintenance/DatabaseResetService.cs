@@ -30,7 +30,7 @@ public sealed class DatabaseResetService(IDbContextFactory<AppDbContext> dbConte
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var rootDirectory = await context.ScrapeDirectories.Select(directories => directories.RootDirectory).FirstAsync(cancellationToken);
+        string rootDirectory = await context.ScrapeDirectories.Select(directories => directories.RootDirectory).FirstAsync(cancellationToken);
 
         if (fileSystem.Directory.Exists(rootDirectory))
         {

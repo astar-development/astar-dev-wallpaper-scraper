@@ -11,7 +11,7 @@ public sealed class GivenWallpaperCountReader
         var page = CreatePageWithHeaderText("50 Wallpapers found for \"nature\"");
         var sut = new WallpaperCountReader();
 
-        var count = await sut.ReadAsync(page, TestContext.Current.CancellationToken);
+        int count = await sut.ReadAsync(page, TestContext.Current.CancellationToken);
 
         count.ShouldBe(50);
     }
@@ -22,7 +22,7 @@ public sealed class GivenWallpaperCountReader
         var page = CreatePageWithHeaderText("1,234 Wallpapers found for \"nature\"");
         var sut = new WallpaperCountReader();
 
-        var count = await sut.ReadAsync(page, TestContext.Current.CancellationToken);
+        int count = await sut.ReadAsync(page, TestContext.Current.CancellationToken);
 
         count.ShouldBe(1234);
     }
@@ -33,7 +33,7 @@ public sealed class GivenWallpaperCountReader
         var page = CreatePageWithHeaderText("No Wallpapers found for \"nature\"");
         var sut = new WallpaperCountReader();
 
-        var count = await sut.ReadAsync(page, TestContext.Current.CancellationToken);
+        int count = await sut.ReadAsync(page, TestContext.Current.CancellationToken);
 
         count.ShouldBe(0);
     }

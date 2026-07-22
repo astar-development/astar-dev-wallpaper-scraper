@@ -13,8 +13,8 @@ public sealed class WallpaperHrefCollector(IOptions<ScrapeConfiguration> scrapeC
     public async Task<IReadOnlyList<string>> CollectAsync(IPage page, CancellationToken cancellationToken)
     {
         var previews = await page.GetByRole(AriaRole.Link).AllAsync().ConfigureAwait(false);
-        var baseUrl = scrapeConfiguration.Value.SearchConfiguration.BaseUrl.ToString().TrimEnd('/');
-        var hrefs = await Task.WhenAll(previews.Select(preview => preview.GetAttributeAsync("href"))).ConfigureAwait(false);
+        string baseUrl = scrapeConfiguration.Value.SearchConfiguration.BaseUrl.ToString().TrimEnd('/');
+        string?[] hrefs = await Task.WhenAll(previews.Select(preview => preview.GetAttributeAsync("href"))).ConfigureAwait(false);
 
         return hrefs
             .Where(href => href is not null && href.StartsWith($"{baseUrl}/w/", StringComparison.InvariantCultureIgnoreCase))

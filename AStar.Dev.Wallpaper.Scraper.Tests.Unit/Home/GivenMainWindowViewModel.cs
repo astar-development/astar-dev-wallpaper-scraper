@@ -100,7 +100,7 @@ public sealed class GivenMainWindowViewModel
         {
             var progress = callInfo.ArgAt<IProgress<string>>(1);
 
-            for (var i = 0; i < 1005; i++)
+            for (int i = 0; i < 1005; i++)
             {
                 progress.Report($"Message {i}");
             }
@@ -120,7 +120,7 @@ public sealed class GivenMainWindowViewModel
     {
         var sut = CreateViewModel();
 
-        var canExecute = sut.CancelCommand.CanExecute.FirstAsync().Wait();
+        bool canExecute = sut.CancelCommand.CanExecute.FirstAsync().Wait();
 
         canExecute.ShouldBeFalse();
     }
@@ -512,7 +512,7 @@ public sealed class GivenMainWindowViewModel
 
         if (confirmScrape.HasValue)
         {
-            var confirmed = confirmScrape.Value;
+            bool confirmed = confirmScrape.Value;
             sut.ConfirmScrape.RegisterHandler(context => { context.SetOutput(confirmed); return Task.CompletedTask; });
         }
 
@@ -542,7 +542,7 @@ public sealed class GivenMainWindowViewModel
         sut.ConfirmScrape.RegisterHandler(async context =>
         {
             handlerEntered.TrySetResult();
-            var confirmed = await confirmationGate.Task;
+            bool confirmed = await confirmationGate.Task;
             context.SetOutput(confirmed);
         });
 

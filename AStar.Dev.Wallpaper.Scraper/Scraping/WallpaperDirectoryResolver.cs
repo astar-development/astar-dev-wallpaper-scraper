@@ -33,7 +33,7 @@ public static class WallpaperDirectoryResolver
         string baseDirectoryWithCategory = SetBaseDirectory(directoryLayout, tags, category);
         IReadOnlyList<FileClassificationCategoryEntity> orderedFileClassifications = FilterTagsAndRetrieveFileClassifications(tags, category, fileClassifications);
         string path = BuildDirectoryPath(baseDirectoryWithCategory, orderedFileClassifications, fileSystem);
-        var drivePrefixLength = Math.Min(DrivePrefixLength, path.Length);
+        int drivePrefixLength = Math.Min(DrivePrefixLength, path.Length);
 
         return path[..drivePrefixLength] + path[drivePrefixLength..].Replace(":", string.Empty).CleanPath();
     }
@@ -50,7 +50,7 @@ public static class WallpaperDirectoryResolver
             .Where(classification => !retainedNames.Contains(classification.Name))
             .OrderBy(classification => classification.Level)
             .ThenBy(classification => classification.Priority);
-        var reusedDirectory = existingSegments.Aggregate(baseDirectoryWithCategory, (directory, segment) => directory.CombinePath(segment));
+        string reusedDirectory = existingSegments.Aggregate(baseDirectoryWithCategory, (directory, segment) => directory.CombinePath(segment));
 
         return newSegments.Aggregate(reusedDirectory, (directory, classification) => directory.CombinePath(classification.Name));
     }
@@ -63,9 +63,9 @@ public static class WallpaperDirectoryResolver
         var computedNames = new HashSet<string>(orderedFileClassifications.Select(classification => classification.Name), StringComparer.OrdinalIgnoreCase);
         List<string>? bestSegments = null;
 
-        foreach (var directory in fileSystem.Directory.GetDirectories(baseDirectoryWithCategory, "*", SearchOption.AllDirectories).OrderBy(directory => directory, StringComparer.Ordinal))
+        foreach (string? directory in fileSystem.Directory.GetDirectories(baseDirectoryWithCategory, "*", SearchOption.AllDirectories).OrderBy(directory => directory, StringComparer.Ordinal))
         {
-            var segments = fileSystem.Path.GetRelativePath(baseDirectoryWithCategory, directory).Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+            string[] segments = fileSystem.Path.GetRelativePath(baseDirectoryWithCategory, directory).Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
 
             if (segments.Any(segment => !computedNames.Contains(segment)))
                 continue;
@@ -86,7 +86,7 @@ public static class WallpaperDirectoryResolver
 
     private static string SetBaseDirectory(DirectoryLayout directoryLayout, IReadOnlyList<TagData> tags, ScrapeCategory category)
     {
-        var baseDirectory = directoryLayout.RootDirectory + (tags.Any(tag => tag.IsFamous) ? directoryLayout.BaseDirectoryFamous : directoryLayout.BaseDirectory);
+        string baseDirectory = directoryLayout.RootDirectory + (tags.Any(tag => tag.IsFamous) ? directoryLayout.BaseDirectoryFamous : directoryLayout.BaseDirectory);
 
         return baseDirectory.CombinePath(category.Name[0].ToString()).CombinePath(category.Name);
     }

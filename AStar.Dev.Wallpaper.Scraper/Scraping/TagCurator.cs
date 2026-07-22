@@ -36,7 +36,7 @@ public static class TagCurator
 
     private static TagCurationOutcome Evaluate(TagData tag, IReadOnlyList<string> modelsToIgnore, IReadOnlyList<string> tagsToIgnore)
     {
-        var foundMessage = $"Found tag: {tag.Tag}, category: {tag.Category}, isFamous: {tag.IsFamous}, isInternet: {tag.IsInternet}";
+        string foundMessage = $"Found tag: {tag.Tag}, category: {tag.Category}, isFamous: {tag.IsFamous}, isInternet: {tag.IsInternet}";
 
         if (ModelOrTagToIgnore(modelsToIgnore, tagsToIgnore, tag)) return new TagCurationOutcome(false, tag, [foundMessage]);
 

@@ -53,7 +53,7 @@ public class GivenOption
     {
         var option = Option.Some(42);
 
-        var actual = option.Match(value => value * 2, () => -1);
+        int actual = option.Match(value => value * 2, () => -1);
 
         actual.ShouldBe(84);
     }
@@ -63,7 +63,7 @@ public class GivenOption
     {
         var option = Option.None<int>();
 
-        var actual = option.Match(value => value * 2, () => -1);
+        int actual = option.Match(value => value * 2, () => -1);
 
         actual.ShouldBe(-1);
     }

@@ -145,8 +145,8 @@ public sealed class EntityEditorFactory(IDbContextFactory<AppDbContext> dbContex
 
         var classifications = context.Set<FileClassificationCategoryEntity>().Local.Where(classification => !string.IsNullOrWhiteSpace(classification.Name)).ToList();
         var tagsToIgnore = context.Set<TagToIgnoreEntity>().Local.ToList();
-        var addedCount = 0;
-        var removedCount = 0;
+        int addedCount = 0;
+        int removedCount = 0;
 
         foreach (var classification in classifications)
         {

@@ -75,7 +75,7 @@ public class GivenLinqExtensions
 
     private static async IAsyncEnumerable<string> AsyncSequence(params string[] items)
     {
-        foreach (var item in items)
+        foreach (string item in items)
         {
             await Task.CompletedTask;
 

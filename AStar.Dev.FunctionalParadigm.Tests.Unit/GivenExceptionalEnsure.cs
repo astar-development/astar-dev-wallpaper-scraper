@@ -20,7 +20,7 @@ public class GivenExceptionalEnsure
     {
         var exception = new InvalidOperationException("boom");
         var resultTask = Task.FromResult<Exceptional<int>>(new Failure<int>(exception));
-        var finalizerInvoked = false;
+        bool finalizerInvoked = false;
 
         var actual = await resultTask.Ensure(_ => finalizerInvoked = true);
 
@@ -33,7 +33,7 @@ public class GivenExceptionalEnsure
     public async Task when_task_resolves_to_failure_then_finalizer_receives_default_value()
     {
         var resultTask = Task.FromResult<Exceptional<string>>(new Failure<string>(new InvalidOperationException("boom")));
-        var finalizerValue = "not-null";
+        string finalizerValue = "not-null";
 
         await resultTask.Ensure(value => finalizerValue = value);
 
@@ -43,7 +43,7 @@ public class GivenExceptionalEnsure
     [Fact]
     public async Task when_chained_directly_onto_run_async_then_finalizer_runs_before_awaited_result_is_used()
     {
-        var finalizerInvoked = false;
+        bool finalizerInvoked = false;
 
         var actual = await Try.RunAsync(() => Task.FromResult(3))
             .Ensure(_ => finalizerInvoked = true);

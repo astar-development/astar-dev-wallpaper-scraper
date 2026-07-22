@@ -7,7 +7,7 @@ public class GivenOptionExtensions
     {
         var option = Option.Some(42);
 
-        var result = option.TryGetValue(out var value);
+        bool result = option.TryGetValue(out int value);
 
         result.ShouldBeTrue();
         value.ShouldBe(42);
@@ -18,7 +18,7 @@ public class GivenOptionExtensions
     {
         var option = Option.None<int>();
 
-        var result = option.TryGetValue(out var value);
+        bool result = option.TryGetValue(out int value);
 
         result.ShouldBeFalse();
         value.ShouldBe(0);
@@ -117,7 +117,7 @@ public class GivenOptionExtensions
     [Fact]
     public void when_tap_is_called_on_some_then_invokes_the_action_and_returns_the_original_option()
     {
-        var tappedValue = 0;
+        int tappedValue = 0;
 
         var option = Option.Some(42).Tap(value => tappedValue = value);
 
@@ -128,7 +128,7 @@ public class GivenOptionExtensions
     [Fact]
     public void when_tap_is_called_on_none_then_does_not_invoke_the_action_and_returns_the_original_option()
     {
-        var actionInvoked = false;
+        bool actionInvoked = false;
 
         var option = Option.None<int>().Tap(_ => actionInvoked = true);
 

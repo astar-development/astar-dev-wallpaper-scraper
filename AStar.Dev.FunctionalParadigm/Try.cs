@@ -17,6 +17,7 @@ public static class Try
     /// </summary>
     public static Exceptional<T> Run<T>(Func<T> operation)
     {
+#pragma warning disable CA1031 // Do not catch general exception types - this is the point of this method
         try
         {
             return new Success<T>(operation());
@@ -29,6 +30,7 @@ public static class Try
         {
             return new Failure<T>(exception);
         }
+#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     /// <summary>
@@ -49,6 +51,7 @@ public static class Try
     /// </summary>
     public static async Task<Exceptional<T>> RunAsync<T>(Func<Task<T>> operation)
     {
+#pragma warning disable CA1031 // Do not catch general exception types - this is the point of this method
         try
         {
             var value = await operation().ConfigureAwait(false);
@@ -63,6 +66,7 @@ public static class Try
         {
             return new Failure<T>(exception);
         }
+#pragma warning restore CA1031 // Do not catch general exception types
     }
 
     /// <summary>
@@ -77,9 +81,17 @@ public static class Try
         return await RunAsync(operation).ConfigureAwait(false);
     }
 
+    /// <summary>
+    ///    Runs the specified operation, executing <paramref name="finallyAction" /> after the operation completes,
+    /// </summary>
+    /// <typeparam name="T">The type of the result.</typeparam>
+    /// <param name="result">The result of the operation.</param>
+    /// <param name="finallyAction">The action to execute after the operation completes.</param>
+    /// <returns>The original result.</returns>
     public static Exceptional<T> Ensure<T>(this Exceptional<T> result, Action finallyAction)
     {
         finallyAction();
+
         return result;
     }
 }

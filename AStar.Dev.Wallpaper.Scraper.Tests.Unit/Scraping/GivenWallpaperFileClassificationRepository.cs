@@ -27,7 +27,7 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
     {
         var sut = new WallpaperFileClassificationRepository(dbContextFactory);
 
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("pic.jpg", TestContext.Current.CancellationToken);
+        bool alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("pic.jpg", TestContext.Current.CancellationToken);
 
         alreadyDownloaded.ShouldBeFalse();
     }
@@ -48,7 +48,7 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
 
         var sut = new WallpaperFileClassificationRepository(dbContextFactory);
 
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("abc123", TestContext.Current.CancellationToken);
+        bool alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("abc123", TestContext.Current.CancellationToken);
 
         alreadyDownloaded.ShouldBeTrue();
     }
@@ -69,7 +69,7 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
 
         var sut = new WallpaperFileClassificationRepository(dbContextFactory);
 
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("abc123", TestContext.Current.CancellationToken);
+        bool alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("abc123", TestContext.Current.CancellationToken);
 
         alreadyDownloaded.ShouldBeTrue();
     }
@@ -90,7 +90,7 @@ public sealed class GivenWallpaperFileClassificationRepository : IDisposable
 
         var sut = new WallpaperFileClassificationRepository(dbContextFactory);
 
-        var alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("def456", TestContext.Current.CancellationToken);
+        bool alreadyDownloaded = await sut.IsAlreadyDownloadedAsync("def456", TestContext.Current.CancellationToken);
 
         alreadyDownloaded.ShouldBeFalse();
     }

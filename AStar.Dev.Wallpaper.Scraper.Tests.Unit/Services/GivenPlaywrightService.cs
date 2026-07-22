@@ -73,7 +73,7 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
         await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
 
         await page.GotoAsync("https://localhost/browser-brand-check");
-        var brands = await page.EvaluateAsync<string>("JSON.stringify((navigator.userAgentData?.brands ?? []).map(b => b.brand))");
+        string brands = await page.EvaluateAsync<string>("JSON.stringify((navigator.userAgentData?.brands ?? []).map(b => b.brand))");
 
         brands.ShouldContain("Google Chrome");
     }
@@ -97,7 +97,7 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
         var result = await sut.ConfigurePlaywrightAsync(TestContext.Current.CancellationToken);
 
         var page = result.ShouldBeOfType<Success<IPage>>().Value;
-        var userAgent = await page.EvaluateAsync<string>("navigator.userAgent");
+        string userAgent = await page.EvaluateAsync<string>("navigator.userAgent");
         await page.Context.CloseAsync();
         userAgent.ShouldNotContain("HeadlessChrome");
     }
@@ -109,7 +109,7 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
         await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
 
         await page.GotoAsync("https://localhost/webdriver-check");
-        var webdriver = await page.EvaluateAsync<object?>("navigator.webdriver");
+        object? webdriver = await page.EvaluateAsync<object?>("navigator.webdriver");
 
         webdriver.ShouldBeNull();
     }
@@ -134,7 +134,7 @@ public sealed class GivenPlaywrightService(PlaywrightServiceFixture fixture) : I
         var page = result.ShouldBeOfType<Success<IPage>>().Value;
         await page.RouteAsync("https://localhost/**", route => route.FulfillAsync(new RouteFulfillOptions { ContentType = "text/html", Body = "<html></html>" }));
         await page.GotoAsync("page2");
-        var url = page.Url;
+        string url = page.Url;
         await page.Context.CloseAsync();
         url.ShouldBe("https://localhost/gallery/page2");
     }

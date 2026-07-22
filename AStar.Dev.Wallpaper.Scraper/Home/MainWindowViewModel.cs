@@ -256,7 +256,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private async Task ConfirmAndRunAsync(string actionName, IScrapeAction? action, CancellationToken cancellationToken)
     {
-        var confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
+        bool confirmed = await ConfirmScrape.Handle($"Are you sure you want to start the '{actionName}'?");
 
         if (!confirmed)
         {

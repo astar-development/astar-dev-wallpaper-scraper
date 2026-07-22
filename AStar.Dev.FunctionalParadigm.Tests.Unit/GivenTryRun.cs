@@ -31,6 +31,17 @@ public class GivenTryRun
         Should.Throw<TaskCanceledException>(() => Try.Run<int>(() => throw new TaskCanceledException()));
 
     [Fact]
+    public async Task when_awaited_task_is_canceled_then_operation_canceled_exception_propagates()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        Task<int> Operation() => Task.FromCanceled<int>(cts.Token);
+
+        await Should.ThrowAsync<OperationCanceledException>(() => Try.RunAsync(Operation));
+    }
+
+    [Fact]
     public void when_cancellation_token_is_already_cancelled_then_operation_canceled_exception_propagates()
     {
         using var cts = new CancellationTokenSource();

@@ -69,8 +69,8 @@ public sealed class GivenPathOperationExtensions
     [Fact]
     public void when_clean_path_is_called_with_an_invalid_path_character_then_replaces_it_with_a_space()
     {
-        var invalidChar = Path.GetInvalidPathChars().First();
-        var path         = $"path{invalidChar}file.txt";
+        char invalidChar = Path.GetInvalidPathChars().First();
+        string path         = $"path{invalidChar}file.txt";
 
         path.CleanPath().ShouldBe("path file.txt");
     }

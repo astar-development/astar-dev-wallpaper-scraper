@@ -68,7 +68,7 @@ public sealed class UpdateService(IOptions<UpdateConfiguration> updateConfigurat
     {
         if (!context.ShouldContinue) return context;
 
-        var restartNow = await Dispatcher.UIThread.InvokeAsync(() => PromptToRestartAsync(owner, context.Update!.TargetFullRelease.Version.ToString())).ConfigureAwait(false);
+        bool restartNow = await Dispatcher.UIThread.InvokeAsync(() => PromptToRestartAsync(owner, context.Update!.TargetFullRelease.Version.ToString())).ConfigureAwait(false);
         Log($"Prompt answered; restart now: {restartNow}");
 
         if (restartNow) context.Manager.ApplyUpdatesAndRestart(context.Update!);
@@ -116,7 +116,7 @@ public sealed class UpdateService(IOptions<UpdateConfiguration> updateConfigurat
 
     private static async Task<bool> PromptToRestartAsync(Window owner, string version)
     {
-        var restartNow = false;
+        bool restartNow = false;
 
         var dialog = new Window
         {

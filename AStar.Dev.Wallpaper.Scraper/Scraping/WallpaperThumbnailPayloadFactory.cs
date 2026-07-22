@@ -15,7 +15,7 @@ public static class WallpaperThumbnailPayloadFactory
     /// <param name="tags">The tags kept for the wallpaper after curation, if any.</param>
     public static WallpaperThumbnailPayload Create(byte[] bytes, string? categoryName, IReadOnlyList<string>? tags)
     {
-        var normalizedCategoryName = string.IsNullOrWhiteSpace(categoryName) ? "Uncategorized" : categoryName.Trim();
+        string normalizedCategoryName = string.IsNullOrWhiteSpace(categoryName) ? "Uncategorized" : categoryName.Trim();
         var normalizedTags = tags ?? [];
 
         return new WallpaperThumbnailPayload(bytes, normalizedCategoryName, normalizedTags);

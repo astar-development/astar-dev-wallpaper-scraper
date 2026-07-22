@@ -139,7 +139,7 @@ public static class StringExtensions
     {
         if (value is null || string.IsNullOrEmpty(ensureTrailing)) return string.Empty;
 
-        var valueString = value.ToString();
+        string valueString = value.ToString();
         return valueString.EndsWith(ensureTrailing, StringComparison.OrdinalIgnoreCase)
             ? valueString
             : valueString + ensureTrailing;

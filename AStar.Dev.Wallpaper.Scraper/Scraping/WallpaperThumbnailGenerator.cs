@@ -24,15 +24,15 @@ public sealed class WallpaperThumbnailGenerator : IWallpaperThumbnailGenerator
 
     private static SKBitmap Resize(SKBitmap source)
     {
-        var scale = Math.Min(1f, MaxDimension / (float)Math.Max(source.Width, source.Height));
+        float scale = Math.Min(1f, MaxDimension / (float)Math.Max(source.Width, source.Height));
 
         if (scale >= 1f)
         {
             return source.Copy();
         }
 
-        var width = Math.Max(1, (int)Math.Round(source.Width * scale));
-        var height = Math.Max(1, (int)Math.Round(source.Height * scale));
+        int width = Math.Max(1, (int)Math.Round(source.Width * scale));
+        int height = Math.Max(1, (int)Math.Round(source.Height * scale));
 
         return source.Resize(new SKImageInfo(width, height), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None));
     }

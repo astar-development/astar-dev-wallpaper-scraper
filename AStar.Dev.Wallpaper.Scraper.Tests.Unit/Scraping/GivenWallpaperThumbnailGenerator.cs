@@ -10,9 +10,9 @@ public sealed class GivenWallpaperThumbnailGenerator
     [Fact]
     public void when_the_source_image_exceeds_the_max_dimension_then_it_is_scaled_down_proportionally()
     {
-        var imageBytes = CreateOpaqueSquarePng(1_000, 750);
+        byte[] imageBytes = CreateOpaqueSquarePng(1_000, 750);
 
-        var thumbnailBytes = sut.Generate(imageBytes);
+        byte[] thumbnailBytes = sut.Generate(imageBytes);
 
         using var thumbnail = SKBitmap.Decode(thumbnailBytes);
         thumbnail.Width.ShouldBe(750);
@@ -22,9 +22,9 @@ public sealed class GivenWallpaperThumbnailGenerator
     [Fact]
     public void when_the_source_image_is_within_the_max_dimension_then_it_is_not_upscaled()
     {
-        var imageBytes = CreateOpaqueSquarePng(100, 50);
+        byte[] imageBytes = CreateOpaqueSquarePng(100, 50);
 
-        var thumbnailBytes = sut.Generate(imageBytes);
+        byte[] thumbnailBytes = sut.Generate(imageBytes);
 
         using var thumbnail = SKBitmap.Decode(thumbnailBytes);
         thumbnail.Width.ShouldBe(100);
@@ -34,9 +34,9 @@ public sealed class GivenWallpaperThumbnailGenerator
     [Fact]
     public void when_a_thumbnail_is_generated_then_its_corners_are_rounded_transparent()
     {
-        var imageBytes = CreateOpaqueSquarePng(100, 100);
+        byte[] imageBytes = CreateOpaqueSquarePng(100, 100);
 
-        var thumbnailBytes = sut.Generate(imageBytes);
+        byte[] thumbnailBytes = sut.Generate(imageBytes);
 
         using var thumbnail = SKBitmap.Decode(thumbnailBytes);
         thumbnail.GetPixel(0, 0).Alpha.ShouldBe((byte)0);

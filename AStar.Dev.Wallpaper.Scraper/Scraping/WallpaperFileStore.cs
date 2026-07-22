@@ -11,7 +11,7 @@ public sealed class WallpaperFileStore(IFileSystem fileSystem) : IWallpaperFileS
     public Task<SavedWallpaperFile> SaveAsync(string directoryPath, string fileName, byte[] imageBytes, CancellationToken cancellationToken)
     {
         fileSystem.Directory.CreateDirectory(directoryPath);
-        var fullPath = fileSystem.Path.Combine(directoryPath, fileName);
+        string fullPath = fileSystem.Path.Combine(directoryPath, fileName);
         fileSystem.File.WriteAllBytes(fullPath, imageBytes);
 
         return Task.FromResult(new SavedWallpaperFile(fullPath, fileSystem.FileInfo.New(fullPath).Length));

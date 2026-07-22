@@ -50,12 +50,12 @@ public sealed class SearchCategoryScrapeAction(
         context.Progress.Report($"{clock():T} Visiting category: <Run FontSize=\"18\">{context.Category.Name}</Run>");
         await context.Page.GotoAsync(context.Category.SearchUrl);
 
-        var wallpaperCount = await countReader.ReadAsync(context.Page, cancellationToken);
+        int wallpaperCount = await countReader.ReadAsync(context.Page, cancellationToken);
         context.Progress.Report($"{clock():T} Number of wallpapers found for category: <Run FontSize=\"18\">{context.Category.Name}</Run> is <Span Foreground=\"Green\"><Run FontSize=\"18\">{wallpaperCount}</Run></Span>");
 
-        var pageCount = (int)Math.Ceiling(wallpaperCount / (double)ImagesPerPage);
+        int pageCount = (int)Math.Ceiling(wallpaperCount / (double)ImagesPerPage);
         var progressOption = await searchCategoryReader.GetProgressAsync(context.Category.Name, cancellationToken);
-        var isFullyVisited = progressOption.MapOrDefault(progress => progress.LastKnownImageCount == wallpaperCount && progress.LastPageVisited == pageCount, false);
+        bool isFullyVisited = progressOption.MapOrDefault(progress => progress.LastKnownImageCount == wallpaperCount && progress.LastPageVisited == pageCount, false);
 
         if (isFullyVisited)
         {
@@ -82,7 +82,7 @@ public sealed class SearchCategoryScrapeAction(
                 return Unit.Instance;
             });
 
-        var pageUrl = $"{context.Category.SearchUrl}&page={pageNumber}";
+        string pageUrl = $"{context.Category.SearchUrl}&page={pageNumber}";
         context.Progress.Report($"{clock():T} Visiting category: <Run FontSize=\"18\">{context.Category.Name}</Run>, page <Span Foreground=\"Green\">{pageNumber}</Span> of <Span Foreground=\"Green\">{pageCount}</Span>");
         await context.Page.GotoAsync(pageUrl);
 
@@ -95,7 +95,7 @@ public sealed class SearchCategoryScrapeAction(
 
     private async Task VisitWallpaperAsync(CategoryScrapeContext context, string href, CancellationToken cancellationToken)
     {
-        var wallpaperId = Path.GetFileName(href);
+        string wallpaperId = Path.GetFileName(href);
 
         if (await fileClassificationRepository.IsAlreadyDownloadedAsync(wallpaperId, cancellationToken))
         {
@@ -118,7 +118,7 @@ public sealed class SearchCategoryScrapeAction(
 
         var tags = await tagReader.ReadAsync(context.Page, cancellationToken);
         var curation = TagCurator.Curate(tags, context.ScrapeContext.ModelsToIgnore, context.ScrapeContext.TagsToIgnore);
-        var directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, curation.Kept, context.Category, context.FileClassifications, fileSystem);
+        string directoryPath = WallpaperDirectoryResolver.Resolve(context.ScrapeContext.Directories, curation.Kept, context.Category, context.FileClassifications, fileSystem);
 
         var imageUrlOption = await imageLocator.LocateAsync(context.Page, cancellationToken);
 
@@ -137,7 +137,7 @@ public sealed class SearchCategoryScrapeAction(
         {
             await categoryRegistrar.EnsureCategoriesExistAsync(download.Tags, cancellationToken);
 
-            var fileName = Path.GetFileName(download.ImageUrl);
+            string fileName = Path.GetFileName(download.ImageUrl);
 
             return await (await imageDownloader.DownloadAsync(context.Page, download.ImageUrl, context.Category.Name, download.Tags.Select(tag => tag.Tag).ToList(), cancellationToken)).MatchAsync(
                 onSuccess: async imageBytes =>

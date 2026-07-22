@@ -6,7 +6,7 @@ public class GivenTap
     public async Task when_called_on_task_result_then_returns_same_result_and_executes_side_effect()
     {
         var resultTask = Task.FromResult(Result.Success<int, string>(7));
-        var sideEffect = false;
+        bool sideEffect = false;
 
         var actual = await resultTask.Tap(value => sideEffect = value == 7);
 
@@ -19,7 +19,7 @@ public class GivenTap
     public async Task when_called_on_value_task_result_then_returns_same_result_and_executes_side_effect()
     {
         var resultTask = ValueTask.FromResult(Result.Success<int, string>(9));
-        var sideEffect = false;
+        bool sideEffect = false;
 
         var actual = await resultTask.Tap(value => sideEffect = value == 9);
 
@@ -32,7 +32,7 @@ public class GivenTap
     public async Task when_called_on_task_failure_then_returns_same_failure_and_executes_failure_handler()
     {
         var resultTask = Task.FromResult(Result.Failure<int, string>("error"));
-        var sideEffect = false;
+        bool sideEffect = false;
 
         var actual = await resultTask.Tap(_ => { }, error => sideEffect = error == "error");
 

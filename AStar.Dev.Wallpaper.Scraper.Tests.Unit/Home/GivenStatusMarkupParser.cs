@@ -75,7 +75,7 @@ public sealed class GivenStatusMarkupParser
     [Fact]
     public void when_a_tag_is_unterminated_then_the_original_text_is_returned_as_a_single_run()
     {
-        var original = "Visiting category: <Bold>Landscapes";
+        string original = "Visiting category: <Bold>Landscapes";
 
         var inlines = StatusMarkupParser.Parse(original);
 
@@ -86,7 +86,7 @@ public sealed class GivenStatusMarkupParser
     [Fact]
     public void when_a_closing_tag_has_no_matching_opening_tag_then_the_original_text_is_returned_as_a_single_run()
     {
-        var original = "Visiting category: Landscapes</Bold>";
+        string original = "Visiting category: Landscapes</Bold>";
 
         var inlines = StatusMarkupParser.Parse(original);
 
@@ -97,7 +97,7 @@ public sealed class GivenStatusMarkupParser
     [Fact]
     public void when_text_contains_an_unescaped_ampersand_then_it_is_treated_as_literal_text()
     {
-        var original = "Visiting category: Landscapes, page 1 with searchString: /search?q=x&page=2";
+        string original = "Visiting category: Landscapes, page 1 with searchString: /search?q=x&page=2";
 
         var inlines = StatusMarkupParser.Parse(original);
 
@@ -108,7 +108,7 @@ public sealed class GivenStatusMarkupParser
     [Fact]
     public void when_a_run_attribute_value_is_not_a_valid_number_then_the_original_text_is_returned_as_a_single_run()
     {
-        var original = "<Run FontSize=\"huge\">Visiting category:</Run> Landscapes";
+        string original = "<Run FontSize=\"huge\">Visiting category:</Run> Landscapes";
 
         var inlines = StatusMarkupParser.Parse(original);
 

@@ -32,7 +32,7 @@ public class GivenApplicationConfigurationFactory
     [Fact]
     public void when_base_path_has_no_appsettings_json_then_build_throws()
     {
-        var emptyDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string emptyDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(emptyDirectory);
 
         try

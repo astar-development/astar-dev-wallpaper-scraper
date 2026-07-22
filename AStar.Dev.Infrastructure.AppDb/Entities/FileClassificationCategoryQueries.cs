@@ -34,7 +34,7 @@ public static class FileClassificationCategoryQueries
 
         var existingNameSet = new HashSet<string>(existingNames, StringComparer.OrdinalIgnoreCase);
 
-        foreach (var name in categoryNames.Where(name => !existingNameSet.Contains(name)))
+        foreach (string? name in categoryNames.Where(name => !existingNameSet.Contains(name)))
         {
             context.Set<FileClassificationCategoryEntity>().Add(new FileClassificationCategoryEntity
             {

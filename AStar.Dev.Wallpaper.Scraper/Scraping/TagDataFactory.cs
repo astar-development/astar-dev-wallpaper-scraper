@@ -14,8 +14,8 @@ public static class TagDataFactory
     /// <param name="category">The raw category attribute scraped from the wallpaper detail page, if present.</param>
     public static TagData Create(string tag, string? category)
     {
-        var normalizedTag = tag.Trim();
-        var normalizedCategory = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
+        string normalizedTag = tag.Trim();
+        string? normalizedCategory = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
 
         return new TagData(normalizedTag, normalizedCategory);
     }

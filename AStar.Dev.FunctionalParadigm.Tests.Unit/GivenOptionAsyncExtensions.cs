@@ -85,7 +85,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_tap_async_is_called_on_an_option_with_some_then_invokes_the_action_and_returns_the_original_option()
     {
-        var tappedValue = 0;
+        int tappedValue = 0;
 
         var option = await Option.Some(42).TapAsync(value =>
         {
@@ -101,7 +101,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_tap_async_is_called_on_an_option_with_none_then_does_not_invoke_the_action()
     {
-        var actionInvoked = false;
+        bool actionInvoked = false;
 
         var option = await Option.None<int>().TapAsync(_ =>
         {
@@ -117,7 +117,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_tap_async_is_called_on_a_task_of_option_with_a_sync_action_then_invokes_the_action_and_returns_the_original_option()
     {
-        var tappedValue = 0;
+        int tappedValue = 0;
 
         var option = await Task.FromResult(Option.Some(42)).TapAsync(value => tappedValue = value);
 
@@ -128,7 +128,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_tap_async_is_called_on_a_task_of_option_with_an_async_action_then_invokes_the_action_and_returns_the_original_option()
     {
-        var tappedValue = 0;
+        int tappedValue = 0;
 
         var option = await Task.FromResult(Option.Some(42)).TapAsync(value =>
         {
@@ -144,7 +144,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_match_async_is_called_with_an_async_on_some_and_the_option_is_some_then_invokes_on_some_async()
     {
-        var actual = await Option.Some(42).MatchAsync(value => Task.FromResult(value * 2), () => -1);
+        int actual = await Option.Some(42).MatchAsync(value => Task.FromResult(value * 2), () => -1);
 
         actual.ShouldBe(84);
     }
@@ -152,7 +152,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_match_async_is_called_with_an_async_on_some_and_the_option_is_none_then_invokes_on_none()
     {
-        var actual = await Option.None<int>().MatchAsync(value => Task.FromResult(value * 2), () => -1);
+        int actual = await Option.None<int>().MatchAsync(value => Task.FromResult(value * 2), () => -1);
 
         actual.ShouldBe(-1);
     }
@@ -160,7 +160,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_match_async_is_called_with_an_async_on_none_and_the_option_is_some_then_invokes_on_some()
     {
-        var actual = await Option.Some(42).MatchAsync(value => value * 2, () => Task.FromResult(-1));
+        int actual = await Option.Some(42).MatchAsync(value => value * 2, () => Task.FromResult(-1));
 
         actual.ShouldBe(84);
     }
@@ -168,7 +168,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_match_async_is_called_with_an_async_on_none_and_the_option_is_none_then_invokes_on_none_async()
     {
-        var actual = await Option.None<int>().MatchAsync(value => value * 2, () => Task.FromResult(-1));
+        int actual = await Option.None<int>().MatchAsync(value => value * 2, () => Task.FromResult(-1));
 
         actual.ShouldBe(-1);
     }
@@ -176,7 +176,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_match_async_is_called_with_both_async_functions_and_the_option_is_some_then_invokes_on_some_async()
     {
-        var actual = await Option.Some(42).MatchAsync(value => Task.FromResult(value * 2), () => Task.FromResult(-1));
+        int actual = await Option.Some(42).MatchAsync(value => Task.FromResult(value * 2), () => Task.FromResult(-1));
 
         actual.ShouldBe(84);
     }
@@ -184,7 +184,7 @@ public class GivenOptionAsyncExtensions
     [Fact]
     public async Task when_match_async_is_called_with_both_async_functions_and_the_option_is_none_then_invokes_on_none_async()
     {
-        var actual = await Option.None<int>().MatchAsync(value => Task.FromResult(value * 2), () => Task.FromResult(-1));
+        int actual = await Option.None<int>().MatchAsync(value => Task.FromResult(value * 2), () => Task.FromResult(-1));
 
         actual.ShouldBe(-1);
     }
