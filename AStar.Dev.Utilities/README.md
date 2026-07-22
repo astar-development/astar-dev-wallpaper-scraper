@@ -33,7 +33,7 @@ Or via the NuGet Package Manager in Visual Studio / Rider.
 
 ## Build
 
-This package lives inside the [astar-dev-scrapper](https://github.com/astar-development/astar-dev-scrapper) mono-repo and inherits all build configuration from the root `Directory.Build.props`.
+This package lives inside the [astar-dev-Scraper](https://github.com/astar-development/astar-dev-Scraper) mono-repo and inherits all build configuration from the root `Directory.Build.props`.
 
 ```bash
 # From the repo root — builds everything

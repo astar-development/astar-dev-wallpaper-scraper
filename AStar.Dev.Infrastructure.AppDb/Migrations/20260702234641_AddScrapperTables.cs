@@ -5,7 +5,7 @@
 namespace AStar.Dev.Infrastructure.AppDb.Migrations
 {
     /// <inheritdoc />
-    public partial class AddScrapperTables : Migration
+    public partial class AddScraperTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

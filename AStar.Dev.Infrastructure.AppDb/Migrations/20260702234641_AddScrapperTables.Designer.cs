@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AStar.Dev.Infrastructure.AppDb.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260702234641_AddScrapperTables")]
-    partial class AddScrapperTables
+    [Migration("20260702234641_AddScraperTables")]
+    partial class AddScraperTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
